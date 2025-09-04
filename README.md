@@ -87,11 +87,11 @@ O sistema será disponibilizado através de:
 ## 👥 Desenvolvedores  
 - [@Kauaog13](https://github.com/Kauaog13)
 - [@victoriafe-sa](https://github.com/victoriafe-sa)
-- [@nome3](link3)
-- [@nome4](link3)
-- [@nome5](link3)
-- [@nome6](link3)
-- [@nome7](link3)  
+- [@IuriCarvalho13](https://github.com/IuriCarvalho13)
+- [@leonardooliveira9](https://github.com/leonardooliveira9)
+- [@BrunoAlves20](https://github.com/BrunoAlves20)
+- [@andradess-05](https://github.com/andradess-05)
+- [@LuisBSB23](https://github.com/LuisBSB23)  
 
 ---
 
