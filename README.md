@@ -1,104 +1,41 @@
-# MedControl  
+## Projeto MedControl - Guia Completo
 
-## 📌 Visão Geral  
-O **MedControl** é uma ferramenta digital gratuita que elimina a incerteza e o estresse na busca por medicamentos no **SUS (Sistema Único de Saúde)**.  
+Este é o guia para o projeto MedControl, um sistema de monitoramento de medicamentos para UBS do Distrito Federal.
 
-Nossa proposta é centralizar informações sobre disponibilidade de medicamentos na rede pública do Distrito Federal, permitindo que o cidadão economize tempo, dinheiro e evite deslocamentos desnecessários.  
+## Estrutura de Pastas e Arquivos
 
-Através da **geolocalização**, o usuário poderá verificar:  
-- Quais **UBS** próximas possuem o medicamento desejado.  
-- **Quantidade disponível em estoque**.  
-- **Data da última atualização** (garantindo transparência).  
-- Possibilidade de **agendamento da retirada**, evitando filas e assegurando previsibilidade.  
+A estrutura abaixo reflete o padrão Maven/Java, onde a organização dos diretórios corresponde à declaração de package nos arquivos .java.
 
-No ato da retirada, o sistema valida a carteirinha do SUS e a receita médica, garantindo acesso justo e correto ao benefício.  
+medcontrol-projeto-completo/
+│
+├── 📁 backend/
+│   ├── 📄 pom.xml
+│   └── 📁 src/main/java/br/com/medcontrol/
+│                                ├── 📄 ApiServer.java  <-- Arquivo principal
+│                                ├── 📁 controlador/
+│                                │          ├── 📄 MedicamentoController.java
+│                                │          ├── 📄 UBSController.java
+│                                │          └── 📄 UsuarioController.java
+│                                └── 📁 db/
+│                                        └── 📄 DB.java
+│
+├── 📁 database/
+│   └── 📄 schema.sql
+│
+├── 📁 frontend/
+│   ├── 📁 pages/
+│   ├── 📁 scripts/
+│   └── 📁 styles/
+│
+└── 📄 README.md
 
----
 
-## 🚀 Proposta de Valor  
-Transformamos uma jornada antes frustrante em uma solução:  
-- **Rápida** → informações centralizadas.  
-- **Confiável** → estoque atualizado em tempo real.  
-- **Organizada** → agendamento sem filas.  
-- **Acessível** → plataforma gratuita para toda a população.  
+## Passo a Passo para Executar
+1. Configure o Banco de Dados: Use o schema.sql.
 
----
-
-## ⚙️ Principais Funcionalidades  
-- **Controle de Medicamentos**:  
-  - Registro e atualização dos estoques por UBS.  
-  - Consulta em tempo real da disponibilidade.  
-  - Controle de retiradas para evitar desperdício ou fraude.  
-
-- **Cadastro da UBS**:  
-  - Endereço, mapa e horários de funcionamento.  
-  - Lista atualizada de medicamentos disponíveis.  
-
-- **Reserva para Retirada**:  
-  - Agendamento de data e horário.  
-  - Associação a receita médica válida.  
-  - Notificações sobre confirmação e alterações.  
-
-- **Registro de Usuário**:  
-  - Cadastro via CPF ou CNS.  
-  - Histórico de retiradas e reservas.  
-
-- **Registro de Médicos**:  
-  - Validação de receitas via CRM.  
-  - Associação de prescrições a pacientes e medicamentos.  
-
-- **Manutenção e Operação**:  
-  - Painel administrativo para gestores.  
-  - Monitoramento, suporte e melhorias contínuas.  
-
----
-
-## 📊 Recursos-Chave  
-- **Infraestrutura tecnológica** em nuvem.  
-- **Equipe técnica especializada** no desenvolvimento e suporte.  
-- **Integração com sistemas públicos** já existentes.  
-- **Segurança da informação** e conformidade com a LGPD.  
-- **Treinamentos e suporte técnico** para profissionais da rede pública.  
-
----
-
-## 🌐 Implantação  
-O sistema será disponibilizado através de:  
-- **Plataforma web acessível via navegador**.  
-- Acesso para **gestores da saúde** e para a **população em geral**.  
-- Implantação institucional em parceria com a **Secretaria de Saúde do DF**.  
-- **Integração com sistemas internos da rede pública** para atualização automática dos estoques.  
-
----
-
-## 📢 Estratégia de Divulgação
-- Redes Sociais.
-- Portal de notícias do DF.  
-- Painéis publicitários na cidade.  
-- Canais oficiais do governo (sites, aplicativos e cartazes nas UBS).  
-
----
-
-## 🛠️ Tecnologias Utilizadas  
-*(A definir – espaço reservado para linguagens, frameworks e bibliotecas a serem escolhidas)*  
-
----
-
-## 👥 Desenvolvedores  
-- [@Kauaog13](https://github.com/Kauaog13)
-- [@victoriafe-sa](https://github.com/victoriafe-sa)
-- [@IuriCarvalho13](https://github.com/IuriCarvalho13)
-- [@leonardooliveira9](https://github.com/leonardooliveira9)
-- [@BrunoAlves20](https://github.com/BrunoAlves20)
-- [@andradess-05](https://github.com/andradess-05)
-- [@LuisBSB23](https://github.com/LuisBSB23)  
-
----
-
-## 📜 Licença  
-Este projeto está licenciado sob os termos da **Licença MIT**.  
-Consulte o arquivo [LICENSE](LICENSE) para mais informações.  
-
----
-
-<img width="1536" height="1024" alt="medecontrol-logo-principal" src="https://github.com/user-attachments/assets/fdbcf269-9cc4-431a-8d3f-7ee03d70d70a" />
+2. Certifique-se de estar com Extension pack for JAVA e Maven for JAVA no VSCODE
+3. Execute o Back-end:
+        .No VS Code, vá em Arquivo > Abrir Pasta... e selecione apenas a pasta backend.
+        .Aguarde a extensão Java sincronizar o projeto (pode levar alguns segundos).
+        .Execute(Run) o arquivo ApiServer.java.
+4. Execute o Front-end: Abra o frontend/pages/home.html com a extensão "Live Server".

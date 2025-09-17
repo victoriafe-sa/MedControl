@@ -1,0 +1,56 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.icone-logo {
+    color: #10b981;
+}
+
+.texto-logo {
+    color: #1e3a8a;
+}
+
+.btn-primario {
+    background-color: #1e3a8a;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.btn-primario:hover {
+    background-color: #1c347d;
+}
+
+.modal-busca {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.conteudo-modal-busca {
+    background-color: #fff;
+    margin: auto;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    position: relative;
+}
+
+.btn-fechar {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}

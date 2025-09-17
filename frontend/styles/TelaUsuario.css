@@ -1,0 +1,86 @@
+ body {
+     font-family: 'Inter', sans-serif;
+     scroll-behavior: smooth;
+ }
+
+ .icone-logo {
+     color: #10b981;
+ }
+
+ .texto-logo {
+     color: #1e3a8a;
+ }
+
+ .btn-primario {
+     background-color: #1e3a8a;
+     color: white;
+     transition: background-color 0.2s;
+ }
+
+ .btn-primario:hover {
+     background-color: #1c347d;
+ }
+
+ .btn-sucesso {
+     background-color: #10b981;
+     color: white;
+     transition: background-color 0.2s;
+ }
+
+ .btn-sucesso:hover {
+     background-color: #0f9a6f;
+ }
+
+ .btn-perigo {
+     background-color: #dc2626;
+     color: white;
+     transition: background-color 0.2s;
+ }
+
+ .btn-perigo:hover {
+     background-color: #c02222;
+ }
+
+ .btn-aba {
+     padding: 1rem 0.25rem;
+     border-bottom-width: 2px;
+     border-color: transparent;
+     color: #4b5563;
+ }
+
+ .btn-aba.ativo {
+     border-bottom-color: #1e3a8a;
+     color: #1e3a8a;
+     font-weight: 600;
+ }
+
+ .conteudo-aba {
+     display: none;
+ }
+
+ .conteudo-aba.ativo {
+     display: block;
+ }
+
+ .modal {
+     display: none;
+     position: fixed;
+     z-index: 50;
+     left: 0;
+     top: 0;
+     width: 100%;
+     height: 100%;
+     overflow: auto;
+     background-color: rgba(0, 0, 0, 0.5);
+ }
+
+ .modal.ativo {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ .btn-favorito.favoritado svg {
+     fill: #ca8a04;
+     color: #ca8a04;
+ }

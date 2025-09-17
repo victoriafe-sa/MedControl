@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedControl - App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/TelaUsuario.css">
+   
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Cabeçalho -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <nav class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="Home.html" class="flex items-center space-x-2">
+                <svg class="icone-logo h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 10.5H3.375c-.621 0-1.125.504-1.125 1.125v2.25c0 .621.504 1.125 1.125 1.125H3.75m14.25 0V21a2.25 2.25 0 01-2.25 2.25H8.25A2.25 2.25 0 016 21V15m12 0V3.375c0-.621-.504-1.125-1.125-1.125H9.375c-.621 0-1.125.504-1.125 1.125V15m12 0h-9" /></svg>
+                <h1 class="text-3xl font-bold texto-logo">MedControl</h1>
+            </a>
+            <div id="nav-logado" class="flex items-center space-x-2 sm:space-x-4">
+                 <span id="mensagemBoasVindas" class="text-gray-600 hidden lg:inline">Bem-vindo(a)!</span>
+                 <a href="#area-usuario" class="link-aba-nav font-semibold text-gray-600 hover:text-blue-800 text-sm sm:text-base" data-aba="reservas">Minhas Reservas</a>
+                 <a href="#area-usuario" class="link-aba-nav font-semibold text-gray-600 hover:text-blue-800 text-sm sm:text-base" data-aba="favoritos">Favoritos</a>
+                 <a href="#area-usuario" class="link-aba-nav font-semibold text-gray-600 hover:text-blue-800 text-sm sm:text-base" data-aba="perfil">Meu Perfil</a>
+                 <a href="#area-usuario" class="link-aba-nav relative text-gray-600 hover:text-blue-800 p-2" data-aba="notificacoes">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    <span id="badge-notificacao" class="absolute top-1 right-1 h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>
+                 </a>
+                 <button id="btnSair" class="text-sm text-gray-500 hover:text-blue-800 pl-2">Sair</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        <div class="bg-white p-8 rounded-xl shadow-md max-w-3xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800">Consulte um medicamento</h2>
+            <p class="mt-2 text-gray-600">Digite o nome do medicamento para verificar a disponibilidade nas UBS do DF.</p>
+            <form id="formularioBusca" class="mt-6 flex flex-col sm:flex-row gap-4">
+                <input type="text" id="nomeMedicamento" placeholder="Ex: Paracetamol" class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="btn-primario py-3 px-6 rounded-lg font-semibold whitespace-nowrap">Buscar</button>
+            </form>
+        </div>
+
+        <div id="resultados" class="mt-12 max-w-3xl mx-auto"><div id="mensagemStatus" class="text-center text-gray-600"></div><div id="containerResultados" class="space-y-4"></div></div>
+        
+        <section id="area-usuario" class="mt-16 max-w-3xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Área do Usuário</h2>
+            <div class="bg-white p-8 rounded-xl shadow-md">
+                <div id="view-logado">
+                    <div class="border-b border-gray-300"><nav class="flex flex-wrap -mx-2 sm:-mx-4" id="nav-abas-usuario">
+                        <button data-aba="reservas" class="btn-aba ativo mx-2 sm:mx-4">Minhas Reservas</button>
+                        <button data-aba="favoritos" class="btn-aba mx-2 sm:mx-4">Favoritos</button>
+                        <button data-aba="historico" class="btn-aba mx-2 sm:mx-4">Histórico</button>
+                        <button data-aba="notificacoes" class="btn-aba mx-2 sm:mx-4">Notificações</button>
+                        <button data-aba="perfil" class="btn-aba mx-2 sm:mx-4">Meu Perfil</button>
+                    </nav></div>
+                    <div class="mt-8">
+                        <div id="conteudo-reservas" class="conteudo-aba ativo space-y-4"></div>
+                        <div id="conteudo-favoritos" class="conteudo-aba space-y-4"></div>
+                        <div id="conteudo-historico" class="conteudo-aba space-y-4"></div>
+                        <div id="conteudo-notificacoes" class="conteudo-aba space-y-4"></div>
+                        <div id="conteudo-perfil" class="conteudo-aba space-y-4">
+                            <!-- Os dados do perfil serão preenchidos aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="modalEditarPerfil" class="modal"><div class="bg-white w-full max-w-md p-8 rounded-xl shadow-2xl m-4"><h2 class="text-2xl font-bold text-gray-800">Editar Perfil</h2><form id="formularioEditarPerfil" class="mt-6 space-y-4"><label class="block"><span class="text-gray-700">Nome Completo</span><input type="text" id="editarNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md"></label><label class="block"><span class="text-gray-700">Email</span><input type="email" id="editarEmail" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md"></label><div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg">Salvar Alterações</button></div></form></div></div>
+    <div id="modalConfirmacao" class="modal"><div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl m-4 text-center"><h3 id="tituloConfirmacao" class="text-xl font-bold"></h3><p id="mensagemConfirmacao" class="text-gray-600 mt-2"></p><div class="mt-6 flex gap-4"><button id="btnCancelarConfirmacao" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button><button id="btnConfirmarAcao" class="w-full btn-perigo py-2 px-4 rounded-lg"></button></div></div></div>
+
+    <script src="../scripts/TelaUsuario.js"></script>
+
+  
+</body>
+</html>

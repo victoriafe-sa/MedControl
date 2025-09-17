@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro/Login - MedControl</title>
+    <link rel="stylesheet" href="../styles/TelaLoginCadastro.css">
+</head>
+<body>
+
+    <div class="container" id="container">
+        <!-- Formulário de Cadastro -->
+        <div class="form-container container-cadastro">
+            <form id="formularioCadastro" novalidate>
+                <h1>Criar Conta</h1>
+                <span>Use seu e-mail para se cadastrar</span>
+                <input id="cadastroNome" type="text" placeholder="Nome completo" required />
+                
+                <input id="cadastroEmail" type="email" placeholder="E-mail" required />
+                <p id="erroCadastroEmail" class="error-message"></p>
+
+                <input id="cadastroCpfCns" type="text" placeholder="CPF ou CNS" required />
+                <p id="erroCadastroCpfCns" class="error-message"></p>
+
+                <input id="cadastroCep" type="text" placeholder="CEP" required />
+                <input id="cadastroNascimento" type="date" title="Data de nascimento" />
+                <input id="cadastroSenha" type="password" placeholder="Senha" required />
+                <button type="submit">Cadastrar</button>
+                <div id="mensagemCadastro" class="mensagem" style="display: none;"></div>
+            </form>
+        </div>
+
+        <!-- Formulário de Login -->
+        <div class="form-container container-login">
+            <form id="formularioLogin">
+                <h1>Entrar</h1>
+                <span>Use sua conta</span>
+                <input id="loginEmailCpf" type="text" placeholder="E-mail ou CPF/CNS" required />
+                <input id="loginSenha" type="password" placeholder="Senha" required />
+                <a href="#" id="linkEsqueceuSenha">Esqueceu sua senha?</a>
+                <button type="submit">Entrar</button>
+                <div id="mensagemLogin" class="mensagem" style="display: none;"></div>
+            </form>
+        </div>
+
+        <!-- Painel Sobreposto -->
+        <div class="container-sobreposicao">
+            <div class="sobreposicao">
+                <div class="painel-sobreposicao painel-esquerdo">
+                    <h1>Bem-vindo de volta!</h1>
+                    <p>Para se manter conectado, entre com suas informações de login</p>
+                    <button class="fantasma" id="btnEntrar">Entrar</button>
+                </div>
+                <div class="painel-sobreposicao painel-direito">
+                    <h1>Olá!</h1>
+                    <p>Insira seus dados pessoais e comece sua jornada conosco</p>
+                    <button class="fantasma" id="btnCadastrar">Cadastrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Recuperação de Senha -->
+    <div id="modalEsqueceuSenha" class="modal">
+        <div class="conteudo-modal">
+            <h2>Recuperar Senha</h2>
+            <!-- Passo 1: Verificar Email -->
+            <div id="passo1Recuperacao">
+                <p>Digite seu e-mail para verificar sua conta.</p>
+                <input type="email" id="emailRecuperacao" placeholder="seu-email@exemplo.com">
+                <button id="btnVerificarEmail">Verificar</button>
+                <p id="mensagemPasso1" class="mensagem" style="display: none;"></p>
+            </div>
+            <!-- Passo 2: Nova Senha -->
+            <div id="passo2Recuperacao" style="display: none;">
+                <p>E-mail verificado! Digite sua nova senha.</p>
+                <input type="password" id="novaSenha" placeholder="Nova senha">
+                <input type="password" id="confirmarNovaSenha" placeholder="Confirme a nova senha">
+                <button id="btnAtualizarSenha">Atualizar Senha</button>
+                <p id="mensagemPasso2" class="mensagem" style="display: none;"></p>
+            </div>
+            <button id="btnFecharModal" class="secundario">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Senha Atualizada -->
+    <div id="modalConfirmacaoSenha" class="modal">
+        <div class="conteudo-modal">
+            <h2>Sucesso!</h2>
+            <p>Sua senha foi atualizada com sucesso! Você já pode fazer o login com a nova senha.</p>
+            <button id="btnFecharConfirmacaoSenha">OK</button>
+        </div>
+    </div>
+
+    <script src="../scripts/TelaLoginCadastro.js"></script>
+</body>
+</html>
+
