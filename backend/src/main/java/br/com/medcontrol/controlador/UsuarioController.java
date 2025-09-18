@@ -4,6 +4,7 @@ import br.com.medcontrol.db.DB;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -19,11 +20,11 @@ import java.util.Map;
 public class UsuarioController {
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // ... (outros métodos como login, verificarEmail, etc., permanecem os mesmos)
-        public void login(Context ctx) {
+    public void login(Context ctx) {
         String body = ctx.body();
-        System.out.println("Recebido no /api/login: " + body);
+        // System.out.println("Recebido no /api/login: " + body);
         if (body == null || body.isEmpty()) {
             ctx.status(400).json(Map.of("success", false, "message", "Requisição inválida. Corpo vazio."));
             return;
@@ -33,24 +34,30 @@ public class UsuarioController {
             String emailOuCpf = loginRequest.get("emailOuCpf");
             String senha = loginRequest.get("senha");
 
-            String sql = "SELECT * FROM usuarios WHERE (email = ? OR cpf_cns = ?) AND senha = ? AND ativo = TRUE";
+            String sql = "SELECT * FROM usuarios WHERE (email = ? OR cpf_cns = ?) AND ativo = TRUE";
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, emailOuCpf);
                 ps.setString(2, emailOuCpf);
-                ps.setString(3, senha);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        Map<String, Object> user = new HashMap<>();
-                        user.put("id", rs.getInt("id"));
-                        user.put("nome", rs.getString("nome"));
-                        user.put("email", rs.getString("email"));
-                        user.put("perfil", rs.getString("perfil"));
-                        user.put("cpf_cns", rs.getString("cpf_cns"));
-                        user.put("cep", rs.getString("cep"));
-                        user.put("data_nascimento", rs.getString("data_nascimento"));
-                        user.put("ativo", rs.getBoolean("ativo"));
-                        ctx.json(Map.of("success", true, "user", user));
+                        String senhaHash = rs.getString("senha");
+                        // DEBUG: System.out.println("DEBUG: Senha recuperada do BD para '" + emailOuCpf + "': " + senhaHash);
+                        
+                        if (passwordEncoder.matches(senha, senhaHash)) {
+                            Map<String, Object> user = new HashMap<>();
+                            user.put("id", rs.getInt("id"));
+                            user.put("nome", rs.getString("nome"));
+                            user.put("email", rs.getString("email"));
+                            user.put("perfil", rs.getString("perfil"));
+                            user.put("cpf_cns", rs.getString("cpf_cns"));
+                            user.put("cep", rs.getString("cep"));
+                            user.put("data_nascimento", rs.getString("data_nascimento"));
+                            user.put("ativo", rs.getBoolean("ativo"));
+                            ctx.json(Map.of("success", true, "user", user));
+                        } else {
+                            ctx.status(401).json(Map.of("success", false, "message", "Credenciais inválidas ou usuário inativo."));
+                        }
                     } else {
                         ctx.status(401).json(Map.of("success", false, "message", "Credenciais inválidas ou usuário inativo."));
                     }
@@ -69,6 +76,9 @@ public class UsuarioController {
     public void registrar(Context ctx) {
         try {
             Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
+            String senhaPlana = user.get("senha");
+            String senhaHash = passwordEncoder.encode(senhaPlana);
+
             String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -84,7 +94,7 @@ public class UsuarioController {
                     ps.setDate(5, Date.valueOf(dataNascimento));
                 }
 
-                ps.setString(6, user.get("senha"));
+                ps.setString(6, senhaHash);
                 ps.setString(7, "usuario");
                 ps.executeUpdate();
                 ctx.status(201).json(Map.of("success", true, "message", "Cadastro realizado com sucesso!"));
@@ -129,9 +139,11 @@ public class UsuarioController {
             Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
             String email = req.get("email");
             String newPassword = req.get("newPassword");
+            String hashedNewPassword = passwordEncoder.encode(newPassword);
+
             String sql = "UPDATE usuarios SET senha = ? WHERE email = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, newPassword);
+                ps.setString(1, hashedNewPassword);
                 ps.setString(2, email);
                 int updatedRows = ps.executeUpdate();
                 if (updatedRows > 0) {
@@ -144,6 +156,47 @@ public class UsuarioController {
             ctx.status(500).json(Map.of("success", false, "message", "Erro ao atualizar a senha."));
         }
     }
+    
+    public void redefinirSenha(Context ctx) {
+        try {
+            int id = Integer.parseInt(ctx.pathParam("id"));
+            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
+            String senhaAtual = req.get("senhaAtual");
+            String novaSenha = req.get("novaSenha");
+
+            String sqlSelect = "SELECT senha FROM usuarios WHERE id = ?";
+            try (Connection conn = DB.getConnection();
+                 PreparedStatement psSelect = conn.prepareStatement(sqlSelect)) {
+                
+                psSelect.setInt(1, id);
+                try (ResultSet rs = psSelect.executeQuery()) {
+                    if (rs.next()) {
+                        String senhaHash = rs.getString("senha");
+                        if (passwordEncoder.matches(senhaAtual, senhaHash)) {
+                            // Senha atual correta, prosseguir com a atualização
+                            String novaSenhaHash = passwordEncoder.encode(novaSenha);
+                            String sqlUpdate = "UPDATE usuarios SET senha = ? WHERE id = ?";
+                            try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
+                                psUpdate.setString(1, novaSenhaHash);
+                                psUpdate.setInt(2, id);
+                                psUpdate.executeUpdate();
+                                ctx.json(Map.of("success", true));
+                            }
+                        } else {
+                            // Senha atual incorreta
+                            ctx.status(401).json(Map.of("success", false, "message", "A senha atual está incorreta."));
+                        }
+                    } else {
+                        ctx.status(404).json(Map.of("success", false, "message", "Usuário não encontrado."));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500).json(Map.of("success", false, "message", "Erro interno ao redefinir a senha."));
+        }
+    }
+
 
     public void listarTodos(Context ctx) {
         List<Map<String, Object>> userList = new ArrayList<>();
@@ -175,6 +228,9 @@ public class UsuarioController {
     public void criar(Context ctx) {
         try {
             Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
+            String senhaPlana = user.get("senha");
+            String senhaHash = passwordEncoder.encode(senhaPlana);
+            
             String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -190,7 +246,7 @@ public class UsuarioController {
                     ps.setDate(5, Date.valueOf(dataNascimento));
                 }
                 
-                ps.setString(6, user.get("senha"));
+                ps.setString(6, senhaHash);
                 ps.setString(7, user.get("perfil"));
                 ps.executeUpdate();
                 ctx.status(201).json(Map.of("success", true));
@@ -216,7 +272,6 @@ public class UsuarioController {
             int id = Integer.parseInt(ctx.pathParam("id"));
             Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
             
-            // Lógica para verificar duplicidade antes de atualizar
             String checkSql = "SELECT id FROM usuarios WHERE (email = ? OR cpf_cns = ?) AND id != ?";
             try (Connection conn = DB.getConnection();
                  PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
@@ -225,7 +280,6 @@ public class UsuarioController {
                 checkPs.setInt(3, id);
                 try (ResultSet rs = checkPs.executeQuery()) {
                     if (rs.next()) {
-                        // Se encontrou um usuário, verifica qual campo está duplicado
                         Map<String, String> userForCheck = new HashMap<>();
                         userForCheck.put("email", user.get("email"));
                         userForCheck.put("cpf_cns", user.get("cpf_cns"));
@@ -248,7 +302,7 @@ public class UsuarioController {
 
 
             String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
-            if (user.get("perfil") == null) { // Se for um usuário editando o próprio perfil
+            if (user.get("perfil") == null) { 
                 sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ? WHERE id = ?";
             }
 
@@ -278,7 +332,6 @@ public class UsuarioController {
                 ctx.json(Map.of("success", true));
             }
         } catch (SQLIntegrityConstraintViolationException e) {
-            // Este catch é um fallback, a verificação manual acima é mais específica
             String mensagemErro = e.getMessage().toLowerCase();
             String campo = "desconhecido";
             if (mensagemErro.contains("email")) {
@@ -337,16 +390,20 @@ public class UsuarioController {
                 return;
             }
 
-            String sql = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE id = ? AND senha = ? AND perfil = 'admin')";
+            String sql = "SELECT senha FROM usuarios WHERE id = ? AND perfil = 'admin'";
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, adminId);
-                ps.setString(2, password);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next() && rs.getBoolean(1)) {
-                        ctx.json(Map.of("success", true));
+                    if (rs.next()) {
+                        String senhaHash = rs.getString("senha");
+                        if (passwordEncoder.matches(password, senhaHash)) {
+                            ctx.json(Map.of("success", true));
+                        } else {
+                            ctx.status(401).json(Map.of("success", false, "message", "Senha de administrador incorreta."));
+                        }
                     } else {
-                        ctx.status(401).json(Map.of("success", false, "message", "Senha de administrador incorreta."));
+                        ctx.status(401).json(Map.of("success", false, "message", "Administrador não encontrado."));
                     }
                 }
             }
@@ -357,3 +414,4 @@ public class UsuarioController {
         }
     }
 }
+

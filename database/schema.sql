@@ -25,15 +25,18 @@ CREATE TABLE usuarios (
 -- --- DADOS INICIAIS (PARA TESTES) ---
 
 -- Inserir um administrador principal
+-- A senha é 'admin123' criptografada com Spring Security BCrypt.
 INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil, ativo) VALUES
-('Admin Principal', 'admin@medcontrol.com', '00000000000', '71000-000', '1990-01-01', 'admin123', 'admin', TRUE);
+('Admin Principal', 'admin@medcontrol.com', '00000000000', '71000-000', '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'admin', TRUE);
 
 
 -- Inserir um usuário comum
+-- A senha é 'usuario123' criptografada com Spring Security BCrypt.
 INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil, ativo) VALUES
-('Usuario de Teste', 'usuario@teste.com', '11122233344', '72000-000', '1995-05-15', 'usuario123', 'usuario', TRUE);
+('Usuario de Teste', 'usuario@teste.com', '11122233344', '72000-000', '1995-05-15', '$2a$10$lWCdpXkPNggpxo/9HJ5NxO/hiXllbNkA.A9gH1qPdtvjjcquKE4o2', 'usuario', TRUE);
 
 -- Inserir um usuário inativo para teste
+-- A senha é 'inativo123' criptografada com Spring Security BCrypt.
 INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil, ativo) VALUES
-('Usuario Inativo', 'inativo@teste.com', '55566677788', '73000-000', '1998-10-20', 'inativo123', 'usuario', FALSE);
+('Usuario Inativo', 'inativo@teste.com', '55566677788', '73000-000', '1998-10-20', '$2a$10$IA7JfO3cNAoIwRag9BqdqecaGtTkV/FyLbucE1pGd305IdjfwlxTa', 'usuario', FALSE);
 

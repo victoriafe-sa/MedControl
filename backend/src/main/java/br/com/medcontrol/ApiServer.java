@@ -23,9 +23,12 @@ public class ApiServer {
         app.post("/api/login", usuarioController::login);
         app.post("/api/register", usuarioController::registrar);
 
-        // --- ROTAS PARA RECUPERAÇÃO DE SENHA ---
+        // --- ROTAS PARA RECUPERAÇÃO DE SENHA (TELA DE LOGIN) ---
         app.post("/api/password-reset/check-email", usuarioController::verificarEmail);
         app.post("/api/password-reset/update", usuarioController::atualizarSenha);
+        
+        // --- ROTA PARA REDEFINIÇÃO DE SENHA (LOGADO) ---
+        app.post("/api/users/{id}/redefine-password", usuarioController::redefinirSenha);
 
         // --- ROTAS PARA GERENCIAMENTO DE USUÁRIOS (ADMIN) ---
         app.get("/api/users", usuarioController::listarTodos);
@@ -44,21 +47,23 @@ public class ApiServer {
                 return;
             }
             
-            List<Map<String, String>> ubsDisponiveis = new ArrayList<>();
-            if (nome.equalsIgnoreCase("paracetamol") || nome.equalsIgnoreCase("ibuprofeno")) {
-                 ubsDisponiveis.add(Map.of("nome", "UBS 01 - Asa Sul", "endereco", "Quadra 614 Sul, Brasília - DF"));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
+            List<Map<String, Object>> ubsDisponiveis = new ArrayList<>();
+            if (nome.equalsIgnoreCase("paracetamol")) {
+                 ubsDisponiveis.add(Map.of("nome", "UBS 01 - Asa Sul", "endereco", "Quadra 614 Sul, Brasília - DF", "estoque", 50));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
+            } else if (nome.equalsIgnoreCase("ibuprofeno")) {
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 85));
             } else if (nome.equalsIgnoreCase("losartana")) {
-                 ubsDisponiveis.add(Map.of("nome", "UBS 03 - Guará II", "endereco", "QE 23, Guará II - DF"));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 03 - Guará II", "endereco", "QE 23, Guará II - DF", "estoque", 0));
             }
             
             ctx.json(ubsDisponiveis);
         });
     }
 }
-

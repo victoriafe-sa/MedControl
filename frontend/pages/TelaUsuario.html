@@ -115,9 +115,44 @@
             </form>
         </div>
     </div>
+    
+    <div id="modalRedefinirSenha" class="modal">
+        <div class="bg-white w-full max-w-lg p-8 rounded-xl shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Redefinir Senha</h2>
+                <button class="btnFecharModal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            </div>
+            <form id="formularioRedefinirSenha" class="mt-6 space-y-4" novalidate>
+                <div id="passo1Redefinir">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nova Senha</label>
+                        <input type="password" id="redefinirNovaSenha" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                        <p id="erroRedefinirNovaSenha" class="error-message"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Confirmar Nova Senha</label>
+                        <input type="password" id="redefinirConfirmarNovaSenha" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                        <p id="erroRedefinirConfirmarNovaSenha" class="error-message"></p>
+                    </div>
+                </div>
+                 <div id="passo2Redefinir" style="display: none;">
+                    <p class="text-center text-gray-600 mb-4">Para confirmar, digite sua senha atual.</p>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Senha Atual</label>
+                        <input type="password" id="redefinirSenhaAtual" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                        <p id="erroRedefinirSenhaAtual" class="error-message"></p>
+                    </div>
+                </div>
+                <div class="pt-4 flex gap-4">
+                    <button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button>
+                    <button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Avançar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="modalConfirmacao" class="modal"><div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl m-4 text-center"><h3 id="tituloConfirmacao" class="text-xl font-bold"></h3><p id="mensagemConfirmacao" class="text-gray-600 mt-2"></p><div class="mt-6 flex gap-4"><button id="btnCancelarConfirmacao" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button><button id="btnConfirmarAcao" class="w-full btn-perigo py-2 px-4 rounded-lg"></button></div></div></div>
 
     <script src="../scripts/TelaUsuario.js"></script>
 </body>
 </html>
-

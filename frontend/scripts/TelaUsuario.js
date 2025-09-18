@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentPanels = document.querySelectorAll('.conteudo-principal');
     const modalEditarPerfil = document.getElementById('modalEditarPerfil');
     const modalConfirmacao = document.getElementById('modalConfirmacao');
+    const modalRedefinirSenha = document.getElementById('modalRedefinirSenha');
     
     // --- FUNÇÕES UTILITÁRIAS ---
     const abrirModal = (modal) => modal.classList.add('ativo');
@@ -29,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         usuarioAtual = JSON.parse(dadosUsuario);
         document.getElementById('userInfoSidebar').innerHTML = `<p class="font-semibold text-gray-800">${usuarioAtual.nome}</p><p class="text-gray-600">${usuarioAtual.email}</p>`;
         
-        // Carrega os dados da primeira aba visível
         renderizarPerfil();
         renderizarReservas();
         renderizarFavoritos();
@@ -97,14 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. MEU PERFIL
     const renderizarPerfil = () => {
         const container = document.getElementById('conteudo-perfil');
-        // Adiciona T00:00:00 para evitar problemas de fuso horário que podem mudar a data
         const dataFormatada = new Date(usuarioAtual.data_nascimento + 'T00:00:00-03:00').toLocaleDateString('pt-BR');
 
         container.innerHTML = `
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-8 border-b pb-4">
                     <h2 class="text-3xl font-bold text-gray-800">Meu Perfil</h2>
-                    <button id="btnEditarPerfil" class="btn-primario py-2 px-5 rounded-lg text-base font-semibold">Editar Perfil</button>
+                    <div>
+                        <button id="btnAbrirRedefinirSenha" class="btn-secundario py-2 px-5 rounded-lg text-base font-semibold mr-4">Redefinir Senha</button>
+                        <button id="btnEditarPerfil" class="btn-primario py-2 px-5 rounded-lg text-base font-semibold">Editar Perfil</button>
+                    </div>
                 </div>
                 <div class="space-y-5 text-lg">
                     <div><label class="font-semibold text-gray-600">Nome:</label><span class="ml-2 text-gray-800">${usuarioAtual.nome}</span></div>
@@ -116,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         document.getElementById('btnEditarPerfil').addEventListener('click', abrirModalEdicaoPerfil);
+        document.getElementById('btnAbrirRedefinirSenha').addEventListener('click', abrirModalRedefinirSenha);
     };
 
     const abrirModalEdicaoPerfil = () => {
@@ -203,23 +206,98 @@ document.addEventListener('DOMContentLoaded', () => {
                 exibirToast('Perfil atualizado com sucesso!');
             } else {
                  const erro = await response.json();
-                 if (erro.field) {
-                    const errorId = `erroEditar${erro.field.charAt(0).toUpperCase() + erro.field.slice(1).replace('_', '')}`;
-                    const inputId = `editar${erro.field.charAt(0).toUpperCase() + erro.field.slice(1).replace('_', '')}`;
-                    const errorEl = document.getElementById(errorId);
-                    const inputEl = document.getElementById(inputId);
-                    
-                    if(errorEl && inputEl){
-                        errorEl.textContent = `Este ${erro.field === 'cpf_cns' ? 'CPF/CNS' : 'e-mail'} já está em uso.`;
-                        inputEl.classList.add('input-error');
+                 if (response.status === 409 && erro.field) {
+                    if (erro.field === 'email') {
+                        document.getElementById('editarEmail').classList.add('input-error');
+                        document.getElementById('erroEditarEmail').textContent = 'Este e-mail já está cadastrado.';
+                    } else if (erro.field === 'cpf_cns') {
+                        document.getElementById('editarCpfCns').classList.add('input-error');
+                        document.getElementById('erroEditarCpfCns').textContent = 'Este CPF/CNS já está cadastrado.';
                     }
                  } else {
-                    alert(`Erro ao atualizar: ${erro.message}`);
+                    alert(`Erro ao atualizar: ${erro.message || 'Ocorreu um erro desconhecido.'}`);
                  }
             }
         } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
             alert('Erro de conexão ao tentar atualizar o perfil.');
+        }
+    });
+    
+    const abrirModalRedefinirSenha = () => {
+        const form = document.getElementById('formularioRedefinirSenha');
+        form.reset();
+        document.getElementById('passo1Redefinir').style.display = 'block';
+        document.getElementById('passo2Redefinir').style.display = 'none';
+        form.querySelector('button[type="submit"]').textContent = 'Avançar';
+        document.querySelectorAll('#formularioRedefinirSenha .error-message').forEach(el => el.textContent = '');
+        document.querySelectorAll('#formularioRedefinirSenha .input-error').forEach(el => el.classList.remove('input-error'));
+        abrirModal(modalRedefinirSenha);
+    };
+
+    document.getElementById('formularioRedefinirSenha').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const estaNoPasso1 = document.getElementById('passo1Redefinir').style.display !== 'none';
+
+        if (estaNoPasso1) {
+            const novaSenha = document.getElementById('redefinirNovaSenha');
+            const confirmarSenha = document.getElementById('redefinirConfirmarNovaSenha');
+            const erroNovaSenha = document.getElementById('erroRedefinirNovaSenha');
+            const erroConfirmarSenha = document.getElementById('erroRedefinirConfirmarNovaSenha');
+            let valido = true;
+
+            [novaSenha, confirmarSenha].forEach(el => el.classList.remove('input-error'));
+            [erroNovaSenha, erroConfirmarSenha].forEach(el => el.textContent = '');
+
+            if (novaSenha.value.length < 6) {
+                erroNovaSenha.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+                novaSenha.classList.add('input-error');
+                valido = false;
+            }
+            if (novaSenha.value !== confirmarSenha.value) {
+                erroConfirmarSenha.textContent = 'As senhas não coincidem.';
+                confirmarSenha.classList.add('input-error');
+                valido = false;
+            }
+            if (valido) {
+                document.getElementById('passo1Redefinir').style.display = 'none';
+                document.getElementById('passo2Redefinir').style.display = 'block';
+                form.querySelector('button[type="submit"]').textContent = 'Salvar Senha';
+            }
+        } else {
+            const senhaAtual = document.getElementById('redefinirSenhaAtual');
+            const erroSenhaAtual = document.getElementById('erroRedefinirSenhaAtual');
+            const novaSenha = document.getElementById('redefinirNovaSenha').value;
+
+            erroSenhaAtual.textContent = '';
+            senhaAtual.classList.remove('input-error');
+
+            if (!senhaAtual.value) {
+                erroSenhaAtual.textContent = 'A senha atual é obrigatória.';
+                senhaAtual.classList.add('input-error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}/redefine-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senhaAtual: senhaAtual.value, novaSenha: novaSenha })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    fecharModal(modalRedefinirSenha);
+                    exibirToast('Senha alterada com sucesso!');
+                } else {
+                    erroSenhaAtual.textContent = data.message;
+                    senhaAtual.classList.add('input-error');
+                }
+            } catch (error) {
+                console.error('Erro ao redefinir senha:', error);
+                erroSenhaAtual.textContent = 'Erro de conexão com o servidor.';
+            }
         }
     });
 
@@ -230,7 +308,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderizarNotificacoes = () => { document.getElementById('conteudo-notificacoes').innerHTML = '<div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-bold text-gray-800">Notificações</h2><p class="mt-4 text-lg">Alertas e lembretes importantes sobre suas reservas e medicamentos.</p></div>'; };
 
     // Fechar modais
-    document.querySelectorAll('.btnFecharModal').forEach(btn => btn.addEventListener('click', () => fecharModal(modalEditarPerfil)));
+    document.querySelectorAll('.btnFecharModal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const modal = e.target.closest('.modal');
+            if (modal) fecharModal(modal);
+        });
+    });
     document.getElementById('btnCancelarConfirmacao').addEventListener('click', () => fecharModal(modalConfirmacao));
 
     // --- INICIALIZAÇÃO ---
