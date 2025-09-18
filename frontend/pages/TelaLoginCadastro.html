@@ -8,6 +8,13 @@
 </head>
 <body>
 
+    <a href="Home.html" class="logo-container">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icone-logo">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 10.5H3.375c-.621 0-1.125.504-1.125 1.125v2.25c0 .621.504 1.125 1.125 1.125H3.75m14.25 0V21a2.25 2.25 0 01-2.25 2.25H8.25A2.25 2.25 0 016 21V15m12 0V3.375c0-.621-.504-1.125-1.125-1.125H9.375c-.621 0-1.125.504-1.125 1.125V15m12 0h-9" />
+        </svg>
+        <span class="texto-logo">MedControl</span>
+    </a>
+
     <div class="container" id="container">
         <!-- Formulário de Cadastro -->
         <div class="form-container container-cadastro">
@@ -15,7 +22,8 @@
                 <h1>Criar Conta</h1>
                 <span>Use seu e-mail para se cadastrar</span>
                 <input id="cadastroNome" type="text" placeholder="Nome completo" required />
-                
+                <p id="erroCadastroNome" class="error-message"></p>
+
                 <input id="cadastroEmail" type="email" placeholder="E-mail" required />
                 <p id="erroCadastroEmail" class="error-message"></p>
 
@@ -23,8 +31,14 @@
                 <p id="erroCadastroCpfCns" class="error-message"></p>
 
                 <input id="cadastroCep" type="text" placeholder="CEP" required />
+                <p id="erroCadastroCep" class="error-message"></p>
+
                 <input id="cadastroNascimento" type="date" title="Data de nascimento" />
+                <p id="erroCadastroNascimento" class="error-message"></p>
+                
                 <input id="cadastroSenha" type="password" placeholder="Senha" required />
+                <p id="erroCadastroSenha" class="error-message"></p>
+
                 <button type="submit">Cadastrar</button>
                 <div id="mensagemCadastro" class="mensagem" style="display: none;"></div>
             </form>

@@ -16,16 +16,32 @@ medcontrol-projeto-completo/
 │                                │          ├── 📄 MedicamentoController.java
 │                                │          ├── 📄 UBSController.java
 │                                │          └── 📄 UsuarioController.java
-│                                └── 📁 db/
-│                                        └── 📄 DB.java
-│
+│                                ├── 📁 db/
+│                                │        └── 📄 DB.java
+│                                │    
+│                                └── 📁 servicos/
+│                                           ├── 📄 EmailServico.java  (Para a API do Gmail)
+│                                           ├── 📄 CepServico.java    (Para a API ViaCEP)
+│                                           └── 📄 DocumentoServico.java (Para a API futura... de validar o CPF e CNS)
 ├── 📁 database/
-│   └── 📄 schema.sql
+│          └── 📄 schema.sql
 │
 ├── 📁 frontend/
-│   ├── 📁 pages/
-│   ├── 📁 scripts/
-│   └── 📁 styles/
+│    ├── 📁 pages/
+│    │         ├── 📄 TelaLoginCadastro.html
+│    │         ├── 📄 TelaUsuario.html
+│    │         ├── 📄 Admin.html
+│    │         └── 📄 Home.html
+│    ├── 📁 scripts/
+│    │         ├── 📄 TelaLoginCadastro.js
+│    │         ├── 📄 TelaUsuario.js
+│    │         ├── 📄 Admin.js
+│    │         └── 📄 Home.js
+│    └── 📁 styles/
+│              ├── 📄 TelaLoginCadastro.css
+│              ├── 📄 TelaUsuario.css
+│              ├── 📄 Admin.css
+│              └── 📄 Home.css
 │
 └── 📄 README.md
 

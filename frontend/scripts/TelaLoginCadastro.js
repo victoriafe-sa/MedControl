@@ -52,8 +52,12 @@ formularioLogin.addEventListener('submit', async (e) => {
 
 
 function limparErrosCadastro() {
-    document.querySelectorAll('input').forEach(input => input.classList.remove('input-error'));
-    document.querySelectorAll('.error-message').forEach(p => p.textContent = '');
+    document.querySelectorAll('#formularioCadastro input').forEach(input => {
+        input.classList.remove('input-error');
+    });
+    document.querySelectorAll('#formularioCadastro .error-message').forEach(p => {
+        p.textContent = '';
+    });
     const mensagemGeral = document.getElementById('mensagemCadastro');
     mensagemGeral.style.display = 'none';
 }
@@ -74,15 +78,74 @@ function destacarErroDeCampoDuplicado(campo) {
     }
 }
 
+function isMaisDe18(dataNasc) {
+    if (!dataNasc) return true; // Se não for obrigatório, não valida
+    const hoje = new Date();
+    const dezoitoAnosAtras = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
+    const dataNascimento = new Date(dataNasc);
+    const dataNascimentoUTC = new Date(dataNascimento.getUTCFullYear(), dataNascimento.getUTCMonth(), dataNascimento.getUTCDate());
+    return dataNascimentoUTC <= dezoitoAnosAtras;
+}
+
+
+function validarCadastro() {
+    limparErrosCadastro();
+    let isValid = true;
+    
+    const fieldsToValidate = [
+        { id: 'cadastroNome', errorId: 'erroCadastroNome', message: 'O nome completo é obrigatório.' },
+        { id: 'cadastroEmail', errorId: 'erroCadastroEmail', message: 'O e-mail é obrigatório.' },
+        { id: 'cadastroCpfCns', errorId: 'erroCadastroCpfCns', message: 'O CPF ou CNS é obrigatório.' },
+        { id: 'cadastroCep', errorId: 'erroCadastroCep', message: 'O CEP é obrigatório.' },
+        { id: 'cadastroSenha', errorId: 'erroCadastroSenha', message: 'A senha é obrigatória.' }
+    ];
+
+    fieldsToValidate.forEach(field => {
+        const input = document.getElementById(field.id);
+        const errorEl = document.getElementById(field.errorId);
+        if (!input.value.trim()) {
+            input.classList.add('input-error');
+            errorEl.textContent = field.message;
+            isValid = false;
+        }
+    });
+
+    const senhaInput = document.getElementById('cadastroSenha');
+    const erroSenhaEl = document.getElementById('erroCadastroSenha');
+    if (senhaInput.value.trim() && senhaInput.value.length < 6) {
+        senhaInput.classList.add('input-error');
+        erroSenhaEl.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+        isValid = false;
+    }
+
+    const nascimentoInput = document.getElementById('cadastroNascimento');
+    const erroNascimentoEl = document.getElementById('erroCadastroNascimento');
+    if (nascimentoInput.value && !isMaisDe18(nascimentoInput.value)) {
+        nascimentoInput.classList.add('input-error');
+        erroNascimentoEl.textContent = 'Você deve ter 18 anos ou mais para se cadastrar.';
+        isValid = false;
+    }
+
+
+    return isValid;
+}
+
+
 // Lógica de Cadastro
 formularioCadastro.addEventListener('submit', async (e) => {
     e.preventDefault();
-    limparErrosCadastro();
+    if (!validarCadastro()) {
+        return;
+    }
+    
     const elMensagem = document.getElementById('mensagemCadastro');
     const dadosUsuario = {
-        nome: document.getElementById('cadastroNome').value, email: document.getElementById('cadastroEmail').value,
-        cpf_cns: document.getElementById('cadastroCpfCns').value, cep: document.getElementById('cadastroCep').value,
-        data_nascimento: document.getElementById('cadastroNascimento').value, senha: document.getElementById('cadastroSenha').value
+        nome: document.getElementById('cadastroNome').value,
+        email: document.getElementById('cadastroEmail').value,
+        cpf_cns: document.getElementById('cadastroCpfCns').value,
+        cep: document.getElementById('cadastroCep').value,
+        data_nascimento: document.getElementById('cadastroNascimento').value,
+        senha: document.getElementById('cadastroSenha').value
     };
     exibirMensagem(elMensagem, 'Cadastrando...', false);
     
@@ -95,12 +158,13 @@ formularioCadastro.addEventListener('submit', async (e) => {
 
         if (resposta.ok) {
             exibirMensagem(elMensagem, dados.message + ' Faça o login para continuar.', false);
+            formularioCadastro.reset();
             setTimeout(() => container.classList.remove("painel-direito-ativo"), 2000);
         } else if (resposta.status === 409) {
             elMensagem.style.display = 'none'; // Oculta a mensagem geral
             destacarErroDeCampoDuplicado(dados.field);
         } else {
-            exibirMensagem(elMensagem, dados.message, true);
+            exibirMensagem(elMensagem, dados.message || 'Ocorreu um erro desconhecido.', true);
         }
     } catch (erro) {
          console.error("Erro no cadastro:", erro);
@@ -177,8 +241,8 @@ btnAtualizarSenha.addEventListener('click', async () => {
         exibirMensagem(elMensagem, 'As senhas não coincidem.', true);
         return;
     }
-    if (novaSenha.length < 1) { // Adicionar validação mais forte se necessário
-        exibirMensagem(elMensagem, 'A senha não pode ser vazia.', true);
+    if (novaSenha.length < 6) { 
+        exibirMensagem(elMensagem, 'A nova senha deve ter no mínimo 6 caracteres.', true);
         return;
     }
 

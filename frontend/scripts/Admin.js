@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCancelarConfirmacao').addEventListener('click', fecharTodosModais);
 
     const limparErrosFormulario = () => {
-        document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        document.querySelectorAll('#formularioUsuario .input-error').forEach(el => el.classList.remove('input-error'));
+        document.querySelectorAll('#formularioUsuario .error-message').forEach(el => el.textContent = '');
     };
 
     const abrirModalParaAdicionar = () => {
@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formatarData = (data) => {
         if (!data) return 'N/A';
-        const [ano, mes, dia] = data.split('-');
-        return `${dia}/${mes}/${ano}`;
+        // Adiciona T00:00:00 para evitar problemas de fuso horário
+        return new Date(data + 'T00:00:00-03:00').toLocaleDateString('pt-BR');
     }
 
     async function carregarUsuarios() {
@@ -139,11 +139,73 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         modalConfirmacao.classList.add('ativo');
     }
+    
+    function isMaisDe18(dataNasc) {
+        if (!dataNasc) return true; // Se não for obrigatório, não valida
+        const hoje = new Date();
+        const dezoitoAnosAtras = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
+        const dataNascimento = new Date(dataNasc);
+        const dataNascimentoUTC = new Date(dataNascimento.getUTCFullYear(), dataNascimento.getUTCMonth(), dataNascimento.getUTCDate());
+        return dataNascimentoUTC <= dezoitoAnosAtras;
+    }
+
+
+    function validarFormularioUsuario() {
+        limparErrosFormulario();
+        let isValid = true;
+        const estaEditando = !!document.getElementById('idUsuario').value;
+
+        const fieldsToValidate = [
+            { id: 'nomeUsuario', errorId: 'erroNomeUsuario', message: 'O nome é obrigatório.' },
+            { id: 'emailUsuario', errorId: 'erroEmailUsuario', message: 'O e-mail é obrigatório.' },
+            { id: 'cpfUsuario', errorId: 'erroCpfUsuario', message: 'O CPF/CNS é obrigatório.' },
+            { id: 'cepUsuario', errorId: 'erroCepUsuario', message: 'O CEP é obrigatório.' },
+        ];
+
+        fieldsToValidate.forEach(field => {
+            const input = document.getElementById(field.id);
+            const errorEl = document.getElementById(field.errorId);
+            if (!input.value.trim()) {
+                input.classList.add('input-error');
+                errorEl.textContent = field.message;
+                isValid = false;
+            }
+        });
+
+        if (!estaEditando) {
+            const senhaInput = document.getElementById('senhaUsuario');
+            const erroSenhaEl = document.getElementById('erroSenhaUsuario');
+            if (!senhaInput.value.trim()) {
+                senhaInput.classList.add('input-error');
+                erroSenhaEl.textContent = 'A senha é obrigatória para novos usuários.';
+                isValid = false;
+            } else if (senhaInput.value.length < 6) {
+                senhaInput.classList.add('input-error');
+                erroSenhaEl.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+                isValid = false;
+            }
+        }
+        
+        const nascimentoInput = document.getElementById('nascimentoUsuario');
+        const erroNascimentoEl = document.getElementById('erroNascimentoUsuario');
+        if (nascimentoInput.value && !isMaisDe18(nascimentoInput.value)) {
+            nascimentoInput.classList.add('input-error');
+            erroNascimentoEl.textContent = 'O usuário deve ter 18 anos ou mais.';
+            isValid = false;
+        }
+
+
+        return isValid;
+    }
 
     let dadosUsuarioAtualParaSalvar = null;
     formularioUsuario.addEventListener('submit', (e) => {
         e.preventDefault();
-        limparErrosFormulario();
+        
+        if (!validarFormularioUsuario()) {
+            return;
+        }
+
         const id = document.getElementById('idUsuario').value;
         const estaEditando = !!id;
 
@@ -171,6 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('formularioConfirmarSenha').addEventListener('submit', async (e) => {
         e.preventDefault();
         const senhaAdmin = document.getElementById('senhaAdmin').value;
+        if (!senhaAdmin) {
+            document.getElementById('erroSenha').textContent = 'Por favor, insira sua senha.';
+            return;
+        }
+
         const erroSenha = document.getElementById('erroSenha');
         erroSenha.textContent = '';
 

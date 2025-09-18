@@ -48,6 +48,11 @@ public class ApiServer {
             if (nome.equalsIgnoreCase("paracetamol") || nome.equalsIgnoreCase("ibuprofeno")) {
                  ubsDisponiveis.add(Map.of("nome", "UBS 01 - Asa Sul", "endereco", "Quadra 614 Sul, Brasília - DF"));
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
+                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF"));
             } else if (nome.equalsIgnoreCase("losartana")) {
                  ubsDisponiveis.add(Map.of("nome", "UBS 03 - Guará II", "endereco", "QE 23, Guará II - DF"));
             }

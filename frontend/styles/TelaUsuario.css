@@ -1,86 +1,112 @@
- body {
-     font-family: 'Inter', sans-serif;
-     scroll-behavior: smooth;
- }
+body {
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+    overflow: hidden; /* Evita a rolagem do body */
+}
 
- .icone-logo {
-     color: #10b981;
- }
+.icone-logo {
+    color: #10b981;
+}
 
- .texto-logo {
-     color: #1e3a8a;
- }
+.texto-logo {
+    color: #1e3a8a;
+}
 
- .btn-primario {
-     background-color: #1e3a8a;
-     color: white;
-     transition: background-color 0.2s;
- }
+.btn-primario {
+    background-color: #1e3a8a;
+    color: white;
+    transition: background-color 0.2s;
+}
 
- .btn-primario:hover {
-     background-color: #1c347d;
- }
+.btn-primario:hover {
+    background-color: #1c347d;
+}
 
- .btn-sucesso {
-     background-color: #10b981;
-     color: white;
-     transition: background-color 0.2s;
- }
+.btn-sucesso {
+    background-color: #10b981;
+    color: white;
+    transition: background-color 0.2s;
+}
 
- .btn-sucesso:hover {
-     background-color: #0f9a6f;
- }
+.btn-sucesso:hover {
+    background-color: #0f9a6f;
+}
 
- .btn-perigo {
-     background-color: #dc2626;
-     color: white;
-     transition: background-color 0.2s;
- }
+.btn-perigo {
+    background-color: #dc2626;
+    color: white;
+    transition: background-color 0.2s;
+}
 
- .btn-perigo:hover {
-     background-color: #c02222;
- }
+.btn-perigo:hover {
+    background-color: #c02222;
+}
 
- .btn-aba {
-     padding: 1rem 0.25rem;
-     border-bottom-width: 2px;
-     border-color: transparent;
-     color: #4b5563;
- }
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 50;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
 
- .btn-aba.ativo {
-     border-bottom-color: #1e3a8a;
-     color: #1e3a8a;
-     font-weight: 600;
- }
+.modal.ativo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
- .conteudo-aba {
-     display: none;
- }
+/* --- ESTILOS DO NOVO LAYOUT --- */
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    color: #4b5563; /* text-gray-600 */
+    font-weight: 500;
+    font-size: 1.125rem; /* text-lg */
+    transition: background-color 0.2s, color 0.2s;
+}
 
- .conteudo-aba.ativo {
-     display: block;
- }
+.sidebar-link:hover {
+    background-color: #f3f4f6; /* bg-gray-100 */
+    color: #1e3a8a;
+}
 
- .modal {
-     display: none;
-     position: fixed;
-     z-index: 50;
-     left: 0;
-     top: 0;
-     width: 100%;
-     height: 100%;
-     overflow: auto;
-     background-color: rgba(0, 0, 0, 0.5);
- }
+.sidebar-link.ativo {
+    background-color: #eef2ff; /* bg-indigo-100 */
+    color: #1e3a8a;
+    font-weight: 600;
+}
 
- .modal.ativo {
-     display: flex;
-     align-items: center;
-     justify-content: center;
- }
+.sidebar-link svg {
+    margin-right: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
+}
 
- .btn-favorito.favoritado svg {
-     fill: #ca8a04;
-     color: #ca8a04;
- }
+.conteudo-principal.hidden {
+    display: none;
+}
+
+.btn-favorito.favoritado svg {
+    fill: #ca8a04;
+    color: #ca8a04;
+}
+
+.input-error {
+   border-color: #dc2626;
+   background-color: #fee2e2;
+}
+
+.error-message {
+   color: #dc2626;
+   font-size: 12px;
+   margin-top: 4px;
+   height: 14px;
+}
+

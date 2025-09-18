@@ -54,3 +54,43 @@ body {
     color: #aaa;
     cursor: pointer;
 }
+
+/* --- NOVOS ESTILOS --- */
+
+.ubs-list {
+    max-height: 240px; /* Altura para ~3 itens */
+    overflow-y: auto;
+    padding-right: 8px; 
+}
+
+.ubs-list::-webkit-scrollbar {
+    width: 6px;
+}
+.ubs-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.ubs-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+.ubs-list::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.btn-detalhes {
+    background-color: #6b7280; 
+    color: white;
+    padding: 6px 12px;
+    border-radius: 0.375rem; 
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    transition: background-color 0.2s;
+    white-space: nowrap;
+    margin-left: 1rem;
+    cursor: pointer;
+}
+
+.btn-detalhes:hover {
+    background-color: #4b5563;
+}

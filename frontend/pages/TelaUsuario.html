@@ -9,75 +9,115 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/TelaUsuario.css">
-   
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-100 text-gray-800">
 
-    <!-- Cabeçalho -->
-    <header class="bg-white shadow-md sticky top-0 z-40">
-        <nav class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <a href="Home.html" class="flex items-center space-x-2">
+    <div class="flex h-screen bg-gray-100 font-sans">
+        <!-- Barra Lateral -->
+        <aside class="w-96 bg-white shadow-lg flex flex-col">
+            <a href="Home.html" class="p-4 border-b flex items-center space-x-2 hover:bg-gray-50 transition">
                 <svg class="icone-logo h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 10.5H3.375c-.621 0-1.125.504-1.125 1.125v2.25c0 .621.504 1.125 1.125 1.125H3.75m14.25 0V21a2.25 2.25 0 01-2.25 2.25H8.25A2.25 2.25 0 016 21V15m12 0V3.375c0-.621-.504-1.125-1.125-1.125H9.375c-.621 0-1.125.504-1.125 1.125V15m12 0h-9" /></svg>
-                <h1 class="text-3xl font-bold texto-logo">MedControl</h1>
+                <h1 class="text-2xl font-bold texto-logo">MedControl</h1>
             </a>
-            <div id="nav-logado" class="flex items-center space-x-2 sm:space-x-4">
-                 <span id="mensagemBoasVindas" class="text-gray-600 hidden lg:inline">Bem-vindo(a)!</span>
-                 <a href="#area-usuario" class="link-aba-nav font-semibold text-gray-600 hover:text-blue-800 text-sm sm:text-base" data-aba="reservas">Minhas Reservas</a>
-                 <a href="#area-usuario" class="link-aba-nav font-semibold text-gray-600 hover:text-blue-800 text-sm sm:text-base" data-aba="favoritos">Favoritos</a>
-                 <a href="#area-usuario" class="link-aba-nav font-semibold text-gray-600 hover:text-blue-800 text-sm sm:text-base" data-aba="perfil">Meu Perfil</a>
-                 <a href="#area-usuario" class="link-aba-nav relative text-gray-600 hover:text-blue-800 p-2" data-aba="notificacoes">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                    <span id="badge-notificacao" class="absolute top-1 right-1 h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>
-                 </a>
-                 <button id="btnSair" class="text-sm text-gray-500 hover:text-blue-800 pl-2">Sair</button>
+
+            <nav class="flex-1 px-4 py-4 space-y-2">
+                <a href="#" class="sidebar-link ativo" data-aba="buscar">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <span>Buscar</span>
+                </a>
+                <a href="#" class="sidebar-link" data-aba="perfil">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    <span>Meu Perfil</span>
+                </a>
+                <a href="#" class="sidebar-link" data-aba="reservas">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <span>Minhas Reservas</span>
+                </a>
+                <a href="#" class="sidebar-link" data-aba="favoritos">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                    <span>Favoritos</span>
+                </a>
+                <a href="#" class="sidebar-link" data-aba="historico">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Histórico</span>
+                </a>
+                <a href="#" class="sidebar-link" data-aba="notificacoes">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    <span>Notificações</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t">
+                <div id="userInfoSidebar" class="text-lg"></div>
+                <button id="btnSair" class="w-full mt-2 text-left text-lg text-gray-500 hover:text-red-600">Sair</button>
             </div>
-        </nav>
-    </header>
+        </aside>
 
-    <!-- Conteúdo Principal -->
-    <main class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div class="bg-white p-8 rounded-xl shadow-md max-w-3xl mx-auto">
-            <h2 class="text-2xl font-bold text-gray-800">Consulte um medicamento</h2>
-            <p class="mt-2 text-gray-600">Digite o nome do medicamento para verificar a disponibilidade nas UBS do DF.</p>
-            <form id="formularioBusca" class="mt-6 flex flex-col sm:flex-row gap-4">
-                <input type="text" id="nomeMedicamento" placeholder="Ex: Paracetamol" class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500">
-                <button type="submit" class="btn-primario py-3 px-6 rounded-lg font-semibold whitespace-nowrap">Buscar</button>
-            </form>
-        </div>
-
-        <div id="resultados" class="mt-12 max-w-3xl mx-auto"><div id="mensagemStatus" class="text-center text-gray-600"></div><div id="containerResultados" class="space-y-4"></div></div>
-        
-        <section id="area-usuario" class="mt-16 max-w-3xl mx-auto">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Área do Usuário</h2>
-            <div class="bg-white p-8 rounded-xl shadow-md">
-                <div id="view-logado">
-                    <div class="border-b border-gray-300"><nav class="flex flex-wrap -mx-2 sm:-mx-4" id="nav-abas-usuario">
-                        <button data-aba="reservas" class="btn-aba ativo mx-2 sm:mx-4">Minhas Reservas</button>
-                        <button data-aba="favoritos" class="btn-aba mx-2 sm:mx-4">Favoritos</button>
-                        <button data-aba="historico" class="btn-aba mx-2 sm:mx-4">Histórico</button>
-                        <button data-aba="notificacoes" class="btn-aba mx-2 sm:mx-4">Notificações</button>
-                        <button data-aba="perfil" class="btn-aba mx-2 sm:mx-4">Meu Perfil</button>
-                    </nav></div>
-                    <div class="mt-8">
-                        <div id="conteudo-reservas" class="conteudo-aba ativo space-y-4"></div>
-                        <div id="conteudo-favoritos" class="conteudo-aba space-y-4"></div>
-                        <div id="conteudo-historico" class="conteudo-aba space-y-4"></div>
-                        <div id="conteudo-notificacoes" class="conteudo-aba space-y-4"></div>
-                        <div id="conteudo-perfil" class="conteudo-aba space-y-4">
-                            <!-- Os dados do perfil serão preenchidos aqui -->
-                        </div>
-                    </div>
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-6 sm:p-8 lg:p-12 overflow-y-auto">
+            <div id="conteudo-buscar" class="conteudo-principal">
+                <div class="bg-white p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold text-gray-800">Consulte um medicamento</h2>
+                    <p class="mt-2 text-gray-600 text-lg">Digite o nome do medicamento para verificar a disponibilidade nas UBS do DF.</p>
+                    <form id="formularioBusca" class="mt-6 flex flex-col sm:flex-row gap-4">
+                        <input type="text" id="nomeMedicamento" placeholder="Ex: Paracetamol" class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 text-lg">
+                        <button type="submit" class="btn-primario py-3 px-8 rounded-lg font-semibold whitespace-nowrap text-base">Buscar</button>
+                    </form>
                 </div>
+                <div id="resultados" class="mt-12 max-w-5xl mx-auto"><div id="mensagemStatus" class="text-center text-gray-600 text-lg"></div><div id="containerResultados" class="space-y-4"></div></div>
             </div>
-        </section>
-    </main>
+
+            <div id="conteudo-perfil" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
+            <div id="conteudo-reservas" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
+            <div id="conteudo-favoritos" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
+            <div id="conteudo-historico" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
+            <div id="conteudo-notificacoes" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
+        </main>
+    </div>
 
     <!-- Modals -->
-    <div id="modalEditarPerfil" class="modal"><div class="bg-white w-full max-w-md p-8 rounded-xl shadow-2xl m-4"><h2 class="text-2xl font-bold text-gray-800">Editar Perfil</h2><form id="formularioEditarPerfil" class="mt-6 space-y-4"><label class="block"><span class="text-gray-700">Nome Completo</span><input type="text" id="editarNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md"></label><label class="block"><span class="text-gray-700">Email</span><input type="email" id="editarEmail" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md"></label><div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg">Salvar Alterações</button></div></form></div></div>
+    <div id="modalEditarPerfil" class="modal">
+        <div class="bg-white w-full max-w-lg p-8 rounded-xl shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Editar Perfil</h2>
+                <button class="btnFecharModal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            </div>
+            <form id="formularioEditarPerfil" class="mt-6 space-y-4" novalidate>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                    <input type="text" id="editarNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                    <p id="erroEditarNome" class="error-message"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="editarEmail" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                    <p id="erroEditarEmail" class="error-message"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CPF/CNS</label>
+                    <input type="text" id="editarCpfCns" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                    <p id="erroEditarCpfCns" class="error-message"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CEP</label>
+                    <input type="text" id="editarCep" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                    <p id="erroEditarCep" class="error-message"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data de Nascimento</label>
+                    <input type="date" id="editarNascimento" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md">
+                    <p id="erroEditarNascimento" class="error-message"></p>
+                </div>
+                <div class="pt-4 flex gap-4">
+                    <button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button>
+                    <button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="modalConfirmacao" class="modal"><div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl m-4 text-center"><h3 id="tituloConfirmacao" class="text-xl font-bold"></h3><p id="mensagemConfirmacao" class="text-gray-600 mt-2"></p><div class="mt-6 flex gap-4"><button id="btnCancelarConfirmacao" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button><button id="btnConfirmarAcao" class="w-full btn-perigo py-2 px-4 rounded-lg"></button></div></div></div>
 
     <script src="../scripts/TelaUsuario.js"></script>
-
-  
 </body>
 </html>
+

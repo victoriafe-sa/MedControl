@@ -116,6 +116,7 @@
     width: 100%;
     margin-top: -5px;
     margin-bottom: 8px;
+    height: 14px; /* Garante espaço para não quebrar o layout */
  }
 
  .container {
@@ -317,3 +318,26 @@
  .conteudo-modal button.secundario:hover {
      background-color: #d1d5db;
  }
+
+ .logo-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    gap: 8px;
+    z-index: 200;
+}
+
+.logo-container .icone-logo {
+    width: 32px;
+    height: 32px;
+    color: #10b981;
+}
+
+.logo-container .texto-logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e3a8a;
+}
