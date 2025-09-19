@@ -44,6 +44,59 @@ public class AutenticacaoController {
         this.emailServico = emailServico;
     }
 
+    public void verificarExistencia(Context ctx) {
+        try {
+            Map<String, Object> req = mapper.readValue(ctx.body(), Map.class);
+            String email = (String) req.get("email");
+            String cpfCns = (String) req.get("cpf_cns");
+            Object idObject = req.get("id");
+            String idUsuario = (idObject != null) ? String.valueOf(idObject) : null;
+
+
+            Map<String, Boolean> existencia = new HashMap<>();
+            existencia.put("email", false);
+            existencia.put("cpf_cns", false);
+
+            // Constrói a query base
+            String sqlEmail = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE email = ? AND (? IS NULL OR id != ?))";
+            String sqlCpfCns = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE cpf_cns = ? AND (? IS NULL OR id != ?))";
+
+            try (Connection conn = DB.getConnection()) {
+                // Verifica Email
+                if (email != null && !email.isEmpty()) {
+                    try (PreparedStatement ps = conn.prepareStatement(sqlEmail)) {
+                        ps.setString(1, email);
+                        ps.setString(2, idUsuario);
+                        ps.setString(3, idUsuario);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next() && rs.getBoolean(1)) {
+                                existencia.put("email", true);
+                            }
+                        }
+                    }
+                }
+                // Verifica CPF/CNS
+                if (cpfCns != null && !cpfCns.isEmpty()) {
+                    try (PreparedStatement ps = conn.prepareStatement(sqlCpfCns)) {
+                        ps.setString(1, cpfCns);
+                        ps.setString(2, idUsuario);
+                        ps.setString(3, idUsuario);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next() && rs.getBoolean(1)) {
+                                existencia.put("cpf_cns", true);
+                            }
+                        }
+                    }
+                }
+            }
+            ctx.json(existencia);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500).json(Map.of("error", "Erro interno ao verificar dados."));
+        }
+    }
+
     public void enviarCodigoVerificacao(Context ctx) {
         try {
             Map<String, String> req = mapper.readValue(ctx.body(), Map.class);

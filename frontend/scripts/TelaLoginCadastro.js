@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'cadastroCpfCns', errorId: 'erroCadastroCpfCns', message: 'O CPF/CNS é obrigatório.' },
             { id: 'cadastroCep', errorId: 'erroCadastroCep', message: 'O CEP é obrigatório.' },
             { id: 'cadastroSenha', errorId: 'erroCadastroSenha', message: 'A senha é obrigatória.' },
-            { id: 'cadastroNascimento', errorId: 'erroCadastroNascimento', message: 'A data de nascimento é obrigatória e você deve ter mais de 18 anos.' }
+            { id: 'cadastroNascimento', errorId: 'erroCadastroNascimento', message: 'A data de nascimento é obrigatória.' }
         ];
 
         fields.forEach(f => {
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nascInput = document.getElementById('cadastroNascimento');
         if (nascInput.value && !isMaisDe18(nascInput.value)) {
             nascInput.classList.add('input-error');
-            document.getElementById('erroCadastroNascimento').textContent = 'A data de nascimento é obrigatória e você deve ter mais de 18 anos.';
+            document.getElementById('erroCadastroNascimento').textContent = 'Você deve ter 18 anos ou mais.';
             isValid = false;
         }
         
@@ -136,21 +136,32 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         try {
-            const res = await fetch('http://localhost:7071/api/password-reset/check-email', {
+            const res = await fetch('http://localhost:7071/api/usuarios/verificar-existencia', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: dadosUsuarioTemporario.email })
+                body: JSON.stringify({ 
+                    email: dadosUsuarioTemporario.email,
+                    cpf_cns: dadosUsuarioTemporario.cpf_cns
+                })
             });
             const data = await res.json();
-            if (data.exists) {
+            let hasError = false;
+            if (data.email) {
                 document.getElementById('cadastroEmail').classList.add('input-error');
                 document.getElementById('erroCadastroEmail').textContent = 'Este e-mail já está cadastrado.';
-                return;
+                hasError = true;
             }
+            if (data.cpf_cns) {
+                document.getElementById('cadastroCpfCns').classList.add('input-error');
+                document.getElementById('erroCadastroCpfCns').textContent = 'Este CPF/CNS já está cadastrado.';
+                hasError = true;
+            }
+            if(hasError) return;
+
             fluxoAtual = 'cadastro';
             iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
         } catch (err) {
-            alert('Erro de conexão ao verificar e-mail.');
+            alert('Erro de conexão ao verificar dados.');
         }
     });
 
@@ -341,4 +352,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-

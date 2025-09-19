@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalEditarPerfilAdmin = document.getElementById('modalEditarPerfilAdmin');
     const modalMeuPerfilAdmin = document.getElementById('modalMeuPerfilAdmin');
     const modalRedefinirSenhaAdmin = document.getElementById('modalRedefinirSenhaAdmin');
+    const modalConfirmarSenhaAdmin = document.getElementById('modalConfirmarSenha');
     const formularioUsuario = document.getElementById('formularioUsuario');
     
     // --- Variáveis de Estado ---
@@ -20,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval = null;
     let fluxoVerificacao = 'adicionar'; // 'adicionar', 'editarTabela', 'editarMeuPerfil'
     let usuarioEditadoOriginal = null;
+    let novaSenhaTemporaria = null;
+    let acaoAposConfirmarSenha = null;
 
     // --- Funções Utilitárias ---
     const fecharTodosModais = () => {
@@ -28,8 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const limparErrosFormulario = (formId) => {
-        document.querySelectorAll(`#${formId} .input-error`).forEach(el => el.classList.remove('input-error'));
-        document.querySelectorAll(`#${formId} .error-message`).forEach(el => el.textContent = '');
+        const form = document.getElementById(formId);
+        if(!form) return;
+        form.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+        form.querySelectorAll('.error-message').forEach(el => el.textContent = '');
     };
     
     const exibirToast = (mensagem) => {
@@ -88,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const abrirModalParaEditar = (usuario) => {
         fluxoVerificacao = 'editarTabela';
-        usuarioEditadoOriginal = usuario; 
+        usuarioEditadoOriginal = { ...usuario }; 
         formularioUsuario.reset();
         limparErrosFormulario('formularioUsuario');
         document.getElementById('idUsuario').value = usuario.id;
@@ -97,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('emailUsuario').value = usuario.email;
         document.getElementById('cpfUsuario').value = usuario.cpf_cns;
         document.getElementById('cepUsuario').value = usuario.cep;
-        document.getElementById('nascimentoUsuario').value = usuario.data_nascimento ? new Date(usuario.data_nascimento).toISOString().split('T')[0] : '';
+        document.getElementById('nascimentoUsuario').value = usuario.data_nascimento;
         document.getElementById('perfilUsuario').value = usuario.perfil;
         document.getElementById('tituloModalUsuario').textContent = 'Editar Usuário';
         document.getElementById('containerCampoSenha').style.display = 'none';
@@ -145,7 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
             abrirModalParaEditar(JSON.parse(target.dataset.usuario));
         } else if (target.classList.contains('btn-excluir')) {
             const id = target.dataset.id;
-            abrirConfirmacao('Excluir Usuário', 'Tem certeza que deseja excluir este usuário?', () => excluirUsuario(id));
+            acaoAposConfirmarSenha = () => excluirUsuario(id);
+            document.getElementById('formularioConfirmarSenha').reset();
+            limparErrosFormulario('formularioConfirmarSenha');
+            modalConfirmarSenhaAdmin.classList.add('ativo');
         } else if (target.classList.contains('btn-status')) {
             const id = target.dataset.id;
             const statusAtual = target.dataset.statusAtual === 'true';
@@ -169,56 +177,76 @@ document.addEventListener('DOMContentLoaded', () => {
         modalConfirmacao.classList.add('ativo');
     }
 
-    function validarFormularioUsuario(formId, isEditing) {
-        limparErrosFormulario(formId);
+    function validarFormulario(formPrefix, isEditing) {
+        const formElementId = (formPrefix === 'usuario') ? 'formularioUsuario' : 'formularioEditarPerfilAdmin';
+        limparErrosFormulario(formElementId);
+        
         let isValid = true;
-        const fields = [
-            { id: 'nomeUsuario', errorId: 'erroNomeUsuario', message: 'O nome é obrigatório.' },
-            { id: 'emailUsuario', errorId: 'erroEmailUsuario', message: 'O e-mail é obrigatório.' },
-            { id: 'cpfUsuario', errorId: 'erroCpfUsuario', message: 'O CPF/CNS é obrigatório.' },
-            { id: 'cepUsuario', errorId: 'erroCepUsuario', message: 'O CEP é obrigatório.' },
-        ];
-        fields.forEach(f => {
-            const input = document.getElementById(f.id);
-            if (!input.value.trim()) {
+        
+        const fieldMappings = {
+            'usuario': {
+                'Nome': { input: 'nomeUsuario', error: 'erroNomeUsuario' },
+                'Email': { input: 'emailUsuario', error: 'erroEmailUsuario' },
+                'Cpf/Cns': { input: 'cpfUsuario', error: 'erroCpfUsuario' },
+                'Cep': { input: 'cepUsuario', error: 'erroCepUsuario' },
+                'Nascimento': { input: 'nascimentoUsuario', error: 'erroNascimentoUsuario' },
+                'Senha': { input: 'senhaUsuario', error: 'erroSenhaUsuario' }
+            },
+            'adminEdit': {
+                'Nome': { input: 'adminEditNome', error: 'erroadminEditNome' },
+                'Email': { input: 'adminEditEmail', error: 'erroadminEditEmail' },
+                'Cpf/Cns': { input: 'adminEditCpfCns', error: 'erroadminEditCpfCns' },
+                'Cep': { input: 'adminEditCep', error: 'erroadminEditCep' },
+                'Nascimento': { input: 'adminEditNascimento', error: 'erroadminEditNascimento' }
+            }
+        };
+
+        const currentFields = fieldMappings[formPrefix];
+
+        for (const fieldName in currentFields) {
+            if (isEditing && fieldName === 'Senha') continue;
+
+            const ids = currentFields[fieldName];
+            const input = document.getElementById(ids.input);
+            const errorEl = document.getElementById(ids.error);
+            
+            if (input && !input.value.trim()) {
                 input.classList.add('input-error');
-                document.getElementById(f.errorId).textContent = f.message;
+                errorEl.textContent = `O campo ${fieldName.toLowerCase()} é obrigatório.`;
                 isValid = false;
             }
-        });
+        }
         
-        const emailInput = document.getElementById('emailUsuario');
-        if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+        const emailInput = document.getElementById(currentFields.Email.input);
+        if (emailInput && emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
             emailInput.classList.add('input-error');
-            document.getElementById('erroEmailUsuario').textContent = 'Formato de e-mail inválido.';
+            document.getElementById(currentFields.Email.error).textContent = 'Formato de e-mail inválido.';
+            isValid = false;
+        }
+
+        const nascInput = document.getElementById(currentFields.Nascimento.input);
+        if (nascInput && nascInput.value && !isMaisDe18(nascInput.value)) {
+            nascInput.classList.add('input-error');
+            document.getElementById(currentFields.Nascimento.error).textContent = 'O usuário deve ter 18 anos ou mais.';
             isValid = false;
         }
 
         if (!isEditing) {
-            const senhaInput = document.getElementById('senhaUsuario');
-            if (!senhaInput.value.trim()) {
+            const senhaInput = document.getElementById(currentFields.Senha.input);
+            if (senhaInput && senhaInput.value.trim().length < 6) {
                 senhaInput.classList.add('input-error');
-                document.getElementById('erroSenhaUsuario').textContent = 'A senha é obrigatória.';
-                isValid = false;
-            } else if (senhaInput.value.length < 6) {
-                senhaInput.classList.add('input-error');
-                document.getElementById('erroSenhaUsuario').textContent = 'A senha deve ter no mínimo 6 caracteres.';
+                document.getElementById(currentFields.Senha.error).textContent = 'A senha deve ter no mínimo 6 caracteres.';
                 isValid = false;
             }
         }
-        const nascInput = document.getElementById('nascimentoUsuario');
-        if (!nascInput.value || !isMaisDe18(nascInput.value)) {
-            nascInput.classList.add('input-error');
-            document.getElementById('erroNascimentoUsuario').textContent = 'A data de nascimento é obrigatória e o usuário deve ter mais de 18 anos.';
-            isValid = false;
-        }
+        
         return isValid;
     }
 
     formularioUsuario.addEventListener('submit', async (e) => {
         e.preventDefault();
         const estaEditando = !!document.getElementById('idUsuario').value;
-        if (!validarFormularioUsuario('formularioUsuario', estaEditando)) return;
+        if (!validarFormulario('usuario', estaEditando)) return;
 
         dadosUsuarioAtualParaSalvar = {
             nome: document.getElementById('nomeUsuario').value,
@@ -229,35 +257,81 @@ document.addEventListener('DOMContentLoaded', () => {
             perfil: document.getElementById('perfilUsuario').value
         };
 
-        const emailOriginal = document.getElementById('emailOriginal').value;
-        const emailAlterado = estaEditando && dadosUsuarioAtualParaSalvar.email.toLowerCase() !== emailOriginal.toLowerCase();
-
-        if (estaEditando && !emailAlterado) {
-            salvarUsuario(true, document.getElementById('idUsuario').value);
-        } else {
-            try {
-                const res = await fetch('http://localhost:7071/api/password-reset/check-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: dadosUsuarioAtualParaSalvar.email })
-                });
-                const data = await res.json();
-                if (data.exists) {
-                    document.getElementById('emailUsuario').classList.add('input-error');
-                    document.getElementById('erroEmailUsuario').textContent = 'Este e-mail já está cadastrado.';
-                    return;
-                }
-                
-                if (!estaEditando) {
-                    dadosUsuarioAtualParaSalvar.senha = document.getElementById('senhaUsuario').value;
-                }
-
-                iniciarFluxoVerificacao();
-            } catch (err) {
-                alert('Erro de conexão ao verificar e-mail.');
-            }
+        if (!estaEditando) {
+            dadosUsuarioAtualParaSalvar.senha = document.getElementById('senhaUsuario').value;
         }
+        
+        verificarEContinuarSalvar(estaEditando, document.getElementById('idUsuario').value);
     });
+    
+    async function verificarEContinuarSalvar(estaEditando, idUsuario) {
+        try {
+            const res = await fetch('http://localhost:7071/api/usuarios/verificar-existencia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: dadosUsuarioAtualParaSalvar.email,
+                    cpf_cns: dadosUsuarioAtualParaSalvar.cpf_cns,
+                    id: idUsuario || null
+                })
+            });
+            const data = await res.json();
+            let hasError = false;
+            const formPrefix = fluxoVerificacao === 'editarMeuPerfil' ? 'adminEdit' : 'usuario';
+            
+            const fieldMappings = {
+                email: {
+                    input: formPrefix === 'usuario' ? 'emailUsuario' : 'adminEditEmail',
+                    error: formPrefix === 'usuario' ? 'erroEmailUsuario' : 'erroadminEditEmail'
+                },
+                cpf_cns: {
+                    input: formPrefix === 'usuario' ? 'cpfUsuario' : 'adminEditCpfCns',
+                    error: formPrefix === 'usuario' ? 'erroCpfUsuario' : 'erroadminEditCpfCns'
+                }
+            }
+
+            // Limpa erros antigos de duplicidade
+            document.getElementById(fieldMappings.email.input).classList.remove('input-error');
+            document.getElementById(fieldMappings.email.error).textContent = '';
+            document.getElementById(fieldMappings.cpf_cns.input).classList.remove('input-error');
+            document.getElementById(fieldMappings.cpf_cns.error).textContent = '';
+
+
+            if (data.email) {
+                document.getElementById(fieldMappings.email.input).classList.add('input-error');
+                document.getElementById(fieldMappings.email.error).textContent = 'Este e-mail já está cadastrado.';
+                hasError = true;
+            }
+            if (data.cpf_cns) {
+                document.getElementById(fieldMappings.cpf_cns.input).classList.add('input-error');
+                document.getElementById(fieldMappings.cpf_cns.error).textContent = 'Este CPF/CNS já está cadastrado.';
+                hasError = true;
+            }
+            if (hasError) return;
+
+            const emailOriginal = (fluxoVerificacao === 'editarMeuPerfil') 
+                ? document.getElementById('adminEditEmailOriginal').value
+                : document.getElementById('emailOriginal').value;
+
+            const emailAlterado = estaEditando && dadosUsuarioAtualParaSalvar.email.toLowerCase() !== emailOriginal.toLowerCase();
+
+            if (!estaEditando || emailAlterado) {
+                iniciarFluxoVerificacao();
+            } else {
+                acaoAposConfirmarSenha = () => salvarUsuario(true, idUsuario, false);
+                document.getElementById('formularioConfirmarSenha').reset();
+                limparErrosFormulario('formularioConfirmarSenha');
+                modalConfirmarSenhaAdmin.classList.add('ativo');
+            }
+        } catch (err) {
+            console.error("Erro ao verificar dados:", err);
+            // Em vez de alert, pode-se mostrar um erro genérico no modal
+            const formPrefix = fluxoVerificacao === 'editarMeuPerfil' ? 'adminEdit' : 'usuario';
+            const errorElementId = (formPrefix === 'usuario') ? 'erroNomeUsuario' : 'erroadminEditNome';
+            document.getElementById(errorElementId).textContent = "Erro de conexão ao verificar dados.";
+        }
+    }
+
 
     async function iniciarFluxoVerificacao() {
         fecharTodosModais();
@@ -266,11 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const msgEl = document.getElementById('mensagemVerificacao');
         exibirMensagemNoModal(msgEl, 'Enviando código...', false);
         
+        const motivo = fluxoVerificacao === 'adicionar' ? 'cadastro' : 'alteracao';
+
         try {
             const res = await fetch('http://localhost:7071/api/usuarios/enviar-codigo-verificacao', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: dadosUsuarioAtualParaSalvar.email, motivo: 'alteracao' })
+                body: JSON.stringify({ email: dadosUsuarioAtualParaSalvar.email, motivo: motivo })
             });
             if (res.ok) {
                 msgEl.style.display = 'none';
@@ -310,20 +386,54 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('formularioVerificacao').addEventListener('submit', (e) => {
         e.preventDefault();
         const codigo = document.getElementById('codigoVerificacao').value;
+        if (!codigo || codigo.length < 6) {
+            exibirMensagemNoModal(document.getElementById('mensagemVerificacao'), 'Código inválido.', true);
+            return;
+        }
         dadosUsuarioAtualParaSalvar.codigoVerificacao = codigo;
         
-        if (fluxoVerificacao === 'adicionar') {
-            const modalConfirmarSenha = document.getElementById('modalConfirmarSenha');
-            fecharTodosModais();
-            modalConfirmarSenha.classList.add('ativo');
-            document.getElementById('formularioConfirmarSenha').reset();
-        } else { 
-            const id = (fluxoVerificacao === 'editarTabela') ? usuarioEditadoOriginal.id : usuarioAtual.id;
-            salvarUsuario(true, id, true);
+        const id = (fluxoVerificacao === 'editarTabela') 
+            ? usuarioEditadoOriginal.id 
+            : (fluxoVerificacao === 'editarMeuPerfil' ? usuarioAtual.id : null);
+        
+        const estaEditando = fluxoVerificacao !== 'adicionar';
+
+        acaoAposConfirmarSenha = () => salvarUsuario(estaEditando, id, true);
+        fecharTodosModais();
+        document.getElementById('formularioConfirmarSenha').reset();
+        limparErrosFormulario('formularioConfirmarSenha');
+        modalConfirmarSenhaAdmin.classList.add('ativo');
+    });
+
+    document.getElementById('formularioConfirmarSenha').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const senhaAdminInput = document.getElementById('senhaAdmin');
+        const erroSenhaEl = document.getElementById('erroSenha');
+        erroSenhaEl.textContent = '';
+
+        try {
+            const res = await fetch('http://localhost:7071/api/admin/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminId: usuarioAtual.id, password: senhaAdminInput.value })
+            });
+
+            if (res.ok) {
+                if (typeof acaoAposConfirmarSenha === 'function') {
+                    acaoAposConfirmarSenha();
+                    acaoAposConfirmarSenha = null; // Reseta a ação
+                }
+            } else {
+                const data = await res.json();
+                erroSenhaEl.textContent = data.message || 'Senha incorreta.';
+            }
+        } catch(err) {
+            erroSenhaEl.textContent = 'Erro de conexão.';
         }
     });
 
-    async function salvarUsuario(estaEditando, id, comVerificacao = false) {
+
+    async function salvarUsuario(estaEditando, id, comVerificacao) {
         let url, metodo;
         let body = { ...dadosUsuarioAtualParaSalvar };
 
@@ -357,19 +467,11 @@ document.addEventListener('DOMContentLoaded', () => {
                      document.getElementById('boasVindasAdmin').textContent = `Olá, ${usuarioAtual.nome.split(' ')[0]}!`;
                 }
             } else {
-                 if (resposta.status === 400) {
+                 if (resposta.status === 400 && comVerificacao) { // Código de verificação errado
                     fecharTodosModais();
                     modalVerificacaoEmail.classList.add('ativo');
                     exibirMensagemNoModal(document.getElementById('mensagemVerificacao'), data.message, true);
-                 } else if (resposta.status === 409) {
-                    fecharTodosModais();
-                    const modal = (fluxoVerificacao === 'editarMeuPerfil') ? modalEditarPerfilAdmin : modalFormularioUsuario;
-                    modal.classList.add('ativo');
-                    const campoId = data.field === 'email' ? 'emailUsuario' : 'cpfUsuario';
-                    const erroId = `erro${campoId.charAt(0).toUpperCase() + campoId.slice(1)}`;
-                    document.getElementById(campoId).classList.add('input-error');
-                    document.getElementById(erroId).textContent = `Este ${data.field} já está cadastrado.`;
-                 } else {
+                 } else { // Outros erros (ex: duplicidade no backend)
                      alert('Erro ao salvar usuário: ' + (data.message || 'Erro desconhecido'));
                  }
             }
@@ -382,10 +484,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const resp = await fetch(`http://localhost:7071/api/users/${id}`, { method: 'DELETE' });
             if (resp.ok) {
+                fecharTodosModais();
                 carregarUsuarios();
                 exibirToast('Usuário excluído com sucesso!');
-            } else { alert('Erro ao excluir usuário.'); }
-        } catch (e) { alert('Erro de conexão.'); }
+            } else { 
+                alert('Erro ao excluir usuário.'); 
+            }
+        } catch (e) { 
+            alert('Erro de conexão.'); 
+        }
     }
 
     async function alterarStatusUsuario(id, novoStatus) {
@@ -425,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         document.getElementById('btnAbrirModalEditarAdmin').addEventListener('click', abrirModalEdicaoAdmin);
-        document.getElementById('btnAbrirModalRedefinirSenhaAdmin').addEventListener('click', () => modalRedefinirSenhaAdmin.classList.add('ativo'));
+        document.getElementById('btnAbrirModalRedefinirSenhaAdmin').addEventListener('click', abrirModalRedefinirSenhaAdmin);
     };
 
     const abrirModalEdicaoAdmin = () => {
@@ -435,22 +542,21 @@ document.addEventListener('DOMContentLoaded', () => {
         limparErrosFormulario('formularioEditarPerfilAdmin');
         form.innerHTML = `
             <input type="hidden" id="adminEditEmailOriginal" value="${usuarioAtual.email}">
-            <div><label class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="adminEditNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.nome}"><p id="erroAdminEditNome" class="error-message"></p></div>
-            <div><label class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="adminEditEmail" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.email}"><p id="erroAdminEditEmail" class="error-message"></p></div>
-            <div><label class="block text-sm font-medium text-gray-700">CPF/CNS</label><input type="text" id="adminEditCpfCns" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cpf_cns}"><p id="erroAdminEditCpfCns" class="error-message"></p></div>
-            <div><label class="block text-sm font-medium text-gray-700">CEP</label><input type="text" id="adminEditCep" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cep}"><p id="erroAdminEditCep" class="error-message"></p></div>
-            <div><label class="block text-sm font-medium text-gray-700">Data de Nascimento</label><input type="date" id="adminEditNascimento" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.data_nascimento || ''}"><p id="erroAdminEditNascimento" class="error-message"></p></div>
-            <div class="pt-4 flex gap-4"><button type="button" class="fechar-modal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button></div>
+            <div><label class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="adminEditNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.nome}"><p id="erroadminEditNome" class="error-message"></p></div>
+            <div><label class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="adminEditEmail" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.email}"><p id="erroadminEditEmail" class="error-message"></p></div>
+            <div><label class="block text-sm font-medium text-gray-700">CPF/CNS</label><input type="text" id="adminEditCpfCns" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cpf_cns}"><p id="erroadminEditCpfCns" class="error-message"></p></div>
+            <div><label class="block text-sm font-medium text-gray-700">CEP</label><input type="text" id="adminEditCep" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cep}"><p id="erroadminEditCep" class="error-message"></p></div>
+            <div><label class="block text-sm font-medium text-gray-700">Data de Nascimento</label><input type="date" id="adminEditNascimento" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.data_nascimento || ''}"><p id="erroadminEditNascimento" class="error-message"></p></div>
+            <div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button></div>
         `;
         form.onsubmit = submeterFormularioAdmin; 
-        form.querySelector('.fechar-modal').addEventListener('click', fecharTodosModais);
+        form.querySelector('.btnFecharModal').addEventListener('click', fecharTodosModais);
         modalEditarPerfilAdmin.classList.add('ativo');
     };
     
     const submeterFormularioAdmin = async (e) => {
         e.preventDefault();
-        
-        // (validação do formulário aqui)
+        if (!validarFormulario('adminEdit', true)) return;
 
         dadosUsuarioAtualParaSalvar = {
             nome: document.getElementById('adminEditNome').value,
@@ -460,34 +566,91 @@ document.addEventListener('DOMContentLoaded', () => {
             data_nascimento: document.getElementById('adminEditNascimento').value,
             perfil: usuarioAtual.perfil 
         };
+        
+        verificarEContinuarSalvar(true, usuarioAtual.id);
+    };
 
-        const emailOriginal = document.getElementById('adminEditEmailOriginal').value;
-        const emailAlterado = dadosUsuarioAtualParaSalvar.email.toLowerCase() !== emailOriginal.toLowerCase();
+    // --- Lógica de Redefinir Senha do Admin ---
+    const abrirModalRedefinirSenhaAdmin = () => {
+        fecharTodosModais();
+        const form = document.getElementById('formularioRedefinirSenhaAdmin');
+        limparErrosFormulario('formularioRedefinirSenhaAdmin');
+        form.innerHTML = `
+            <div id="adminPasso1">
+                <div><label class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="adminNovaSenha" class="mt-1 block w-full"><p id="erroAdminNovaSenha" class="error-message"></p></div>
+                <div><label class="block text-sm font-medium text-gray-700">Confirmar Nova Senha</label><input type="password" id="adminConfirmarSenha" class="mt-1 block w-full"><p id="erroAdminConfirmarSenha" class="error-message"></p></div>
+            </div>
+            <div id="adminPasso2" style="display: none;">
+                <p class="text-center text-gray-600 mb-4">Para confirmar, digite sua senha atual.</p>
+                <div><label class="block text-sm font-medium text-gray-700">Senha Atual</label><input type="password" id="adminSenhaAtual" class="mt-1 block w-full"><p id="erroAdminSenhaAtual" class="error-message"></p></div>
+            </div>
+            <div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Avançar</button></div>
+        `;
+        form.onsubmit = submeterRedefinicaoSenhaAdmin;
+        form.querySelector('.btnFecharModal').addEventListener('click', fecharTodosModais);
+        modalRedefinirSenhaAdmin.classList.add('ativo');
+    };
+    
+    const submeterRedefinicaoSenhaAdmin = async (e) => {
+        e.preventDefault();
+        const passo1Visivel = document.getElementById('adminPasso1').style.display !== 'none';
+        
+        if (passo1Visivel) {
+            let isValid = true;
+            const novaSenhaInput = document.getElementById('adminNovaSenha');
+            const confirmarSenhaInput = document.getElementById('adminConfirmarSenha');
+            [novaSenhaInput, confirmarSenhaInput].forEach(i => i.classList.remove('input-error'));
+            [document.getElementById('erroAdminNovaSenha'), document.getElementById('erroAdminConfirmarSenha')].forEach(e => e.textContent = '');
 
-        if (emailAlterado) {
-             try {
-                const res = await fetch('http://localhost:7071/api/password-reset/check-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: dadosUsuarioAtualParaSalvar.email })
-                });
-                const data = await res.json();
-                if (data.exists) {
-                    document.getElementById('adminEditEmail').classList.add('input-error');
-                    document.getElementById('erroAdminEditEmail').textContent = 'Este e-mail já está cadastrado.';
-                    return;
-                }
-                iniciarFluxoVerificacao();
-            } catch (err) {
-                alert('Erro de conexão ao verificar e-mail.');
+            if (!novaSenhaInput.value || novaSenhaInput.value.length < 6) {
+                novaSenhaInput.classList.add('input-error');
+                document.getElementById('erroAdminNovaSenha').textContent = 'A senha é obrigatória e deve ter no mínimo 6 caracteres.';
+                isValid = false;
+            }
+            if (novaSenhaInput.value !== confirmarSenhaInput.value) {
+                confirmarSenhaInput.classList.add('input-error');
+                document.getElementById('erroAdminConfirmarSenha').textContent = 'As senhas não coincidem.';
+                isValid = false;
+            }
+
+            if (isValid) {
+                novaSenhaTemporaria = novaSenhaInput.value;
+                document.getElementById('adminPasso1').style.display = 'none';
+                document.getElementById('adminPasso2').style.display = 'block';
+                e.target.querySelector('button[type="submit"]').textContent = 'Redefinir Senha';
             }
         } else {
-            salvarUsuario(true, usuarioAtual.id);
+            const senhaAtualInput = document.getElementById('adminSenhaAtual');
+            const erroSenhaAtual = document.getElementById('erroAdminSenhaAtual');
+            if (!senhaAtualInput.value) {
+                senhaAtualInput.classList.add('input-error');
+                erroSenhaAtual.textContent = 'A senha atual é obrigatória.';
+                return;
+            }
+            try {
+                const res = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}/redefine-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senhaAtual: senhaAtualInput.value, novaSenha: novaSenhaTemporaria })
+                });
+
+                if (res.ok) {
+                    fecharTodosModais();
+                    exibirToast('Senha alterada com sucesso!');
+                } else {
+                    const data = await res.json();
+                    senhaAtualInput.classList.add('input-error');
+                    erroSenhaAtual.textContent = data.message || 'Erro ao redefinir senha.';
+                }
+            } catch(err) {
+                 document.getElementById('erroAdminSenhaAtual').textContent = 'Erro de conexão com o servidor.';
+            }
         }
     };
     
     // Inicialização
     carregarUsuarios();
     document.querySelectorAll('.fechar-modal').forEach(btn => btn.addEventListener('click', fecharTodosModais));
+    document.getElementById('btnCancelarConfirmacao').addEventListener('click', fecharTodosModais);
 });
 

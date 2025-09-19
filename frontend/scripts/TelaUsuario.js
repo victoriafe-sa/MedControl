@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let usuarioAtual = null;
     let dadosParaSalvar = null;
     let timerInterval = null;
+    let novaSenhaTemporaria = null;
 
     // --- ELEMENTOS DOM ---
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
@@ -10,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConfirmacao = document.getElementById('modalConfirmacao');
     const modalRedefinirSenha = document.getElementById('modalRedefinirSenha');
     const modalVerificacaoEmailEdicao = document.getElementById('modalVerificacaoEmailEdicao');
+    const formRedefinirSenha = document.getElementById('formularioRedefinirSenha');
     
     // --- FUNÇÕES UTILITÁRIAS ---
     const abrirModal = (modal) => modal.classList.add('ativo');
@@ -45,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('userInfoSidebar').innerHTML = `<p class="font-semibold text-gray-800">${usuarioAtual.nome}</p><p class="text-gray-600">${usuarioAtual.email}</p>`;
         
         renderizarPerfil();
-        // Chamadas para outras renderizações
     }
 
     document.getElementById('btnSair').addEventListener('click', () => {
@@ -89,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         document.getElementById('btnEditarPerfil').addEventListener('click', abrirModalEdicaoPerfil);
-        document.getElementById('btnAbrirRedefinirSenha').addEventListener('click', () => abrirModal(modalRedefinirSenha));
+        document.getElementById('btnAbrirRedefinirSenha').addEventListener('click', abrirModalRedefinirSenha);
     };
 
     const abrirModalEdicaoPerfil = () => {
@@ -170,30 +171,53 @@ document.addEventListener('DOMContentLoaded', () => {
             data_nascimento: document.getElementById('editarNascimento').value,
         };
         
-        const emailAlterado = dadosParaSalvar.email.toLowerCase() !== usuarioAtual.email.toLowerCase();
-
-        if (emailAlterado) {
-            try {
-                const res = await fetch('http://localhost:7071/api/password-reset/check-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: dadosParaSalvar.email })
-                });
-                const data = await res.json();
-                if (data.exists) {
-                    const emailInput = document.getElementById('editarEmail');
-                    emailInput.classList.add('input-error');
-                    document.getElementById('erroEditarEmail').textContent = 'Este e-mail já está cadastrado.';
-                    return;
-                }
-                iniciarFluxoVerificacaoEdicao();
-            } catch (err) {
-                alert('Erro de conexão ao verificar e-mail.');
-            }
-        } else {
-            salvarPerfil(false);
-        }
+        verificarEContinuarSalvar();
     });
+
+    async function verificarEContinuarSalvar() {
+         try {
+            const res = await fetch('http://localhost:7071/api/usuarios/verificar-existencia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: dadosParaSalvar.email,
+                    cpf_cns: dadosParaSalvar.cpf_cns,
+                    id: usuarioAtual.id 
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const data = await res.json();
+            let hasError = false;
+
+            if (data.email) {
+                document.getElementById('editarEmail').classList.add('input-error');
+                document.getElementById('erroEditarEmail').textContent = 'Este e-mail já está cadastrado.';
+                hasError = true;
+            }
+            if (data.cpf_cns) {
+                document.getElementById('editarCpfCns').classList.add('input-error');
+                document.getElementById('erroEditarCpfCns').textContent = 'Este CPF/CNS já está cadastrado.';
+                hasError = true;
+            }
+            if(hasError) return;
+
+            const emailAlterado = dadosParaSalvar.email.toLowerCase() !== usuarioAtual.email.toLowerCase();
+            if (emailAlterado) {
+                iniciarFluxoVerificacaoEdicao();
+            } else {
+                salvarPerfil(false);
+            }
+
+        } catch (err) {
+            console.error("Erro ao verificar dados:", err);
+            document.getElementById('erroEditarNome').textContent = "Erro de conexão ao verificar dados.";
+        }
+    }
+
 
     async function salvarPerfil(comVerificacao, codigo = null) {
         const id = usuarioAtual.id;
@@ -232,12 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
                  } else if (response.status === 400 && comVerificacao) { 
                     exibirMensagemNoModal(document.getElementById('mensagemVerificacaoEdicao'), data.message, true);
                  } else {
-                    alert(`Erro ao atualizar: ${data.message || 'Ocorreu um erro desconhecido.'}`);
+                    document.getElementById('erroEditarNome').textContent = `Erro: ${data.message || 'Ocorreu um erro.'}`;
                  }
             }
         } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
-            alert('Erro de conexão ao tentar atualizar o perfil.');
+            document.getElementById('erroEditarNome').textContent = "Erro de conexão ao tentar atualizar.";
         }
     }
 
@@ -298,6 +322,101 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         salvarPerfil(true, codigo);
+    });
+    
+    // --- REDEFINIÇÃO DE SENHA ---
+    const abrirModalRedefinirSenha = () => {
+        formRedefinirSenha.reset();
+        document.querySelectorAll('#formularioRedefinirSenha .error-message').forEach(el => el.textContent = '');
+        document.querySelectorAll('#formularioRedefinirSenha .input-error').forEach(el => el.classList.remove('input-error'));
+        document.getElementById('passo1Redefinir').style.display = 'block';
+        document.getElementById('passo2Redefinir').style.display = 'none';
+        formRedefinirSenha.querySelector('button[type="submit"]').textContent = 'Avançar';
+        abrirModal(modalRedefinirSenha);
+    };
+
+    const validarPrimeiroPassoSenha = () => {
+        let isValid = true;
+        const novaSenhaInput = document.getElementById('redefinirNovaSenha');
+        const confirmarSenhaInput = document.getElementById('redefinirConfirmarNovaSenha');
+        const erroNovaSenha = document.getElementById('erroRedefinirNovaSenha');
+        const erroConfirmarSenha = document.getElementById('erroRedefinirConfirmarNovaSenha');
+
+        // Limpa erros anteriores
+        [novaSenhaInput, confirmarSenhaInput].forEach(i => i.classList.remove('input-error'));
+        [erroNovaSenha, erroConfirmarSenha].forEach(e => e.textContent = '');
+
+        if (!novaSenhaInput.value) {
+            novaSenhaInput.classList.add('input-error');
+            erroNovaSenha.textContent = 'O campo nova senha é obrigatório.';
+            isValid = false;
+        } else if (novaSenhaInput.value.length < 6) {
+            novaSenhaInput.classList.add('input-error');
+            erroNovaSenha.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+            isValid = false;
+        }
+
+        if (!confirmarSenhaInput.value) {
+             confirmarSenhaInput.classList.add('input-error');
+             erroConfirmarSenha.textContent = 'A confirmação de senha é obrigatória.';
+             isValid = false;
+        }
+
+        if (isValid && novaSenhaInput.value !== confirmarSenhaInput.value) {
+            confirmarSenhaInput.classList.add('input-error');
+            erroConfirmarSenha.textContent = 'As senhas não coincidem.';
+            isValid = false;
+        }
+
+        return isValid;
+    };
+
+    formRedefinirSenha.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const passo1Visivel = document.getElementById('passo1Redefinir').style.display !== 'none';
+        
+        if (passo1Visivel) {
+            if (validarPrimeiroPassoSenha()) {
+                novaSenhaTemporaria = document.getElementById('redefinirNovaSenha').value;
+                document.getElementById('passo1Redefinir').style.display = 'none';
+                document.getElementById('passo2Redefinir').style.display = 'block';
+                formRedefinirSenha.querySelector('button[type="submit"]').textContent = 'Redefinir Senha';
+            }
+        } else {
+            const senhaAtualInput = document.getElementById('redefinirSenhaAtual');
+            const erroSenhaAtual = document.getElementById('erroRedefinirSenhaAtual');
+            senhaAtualInput.classList.remove('input-error');
+            erroSenhaAtual.textContent = '';
+            
+            if (!senhaAtualInput.value) {
+                 senhaAtualInput.classList.add('input-error');
+                 erroSenhaAtual.textContent = 'Por favor, informe sua senha atual.';
+                 return;
+            }
+
+            try {
+                const res = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}/redefine-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        senhaAtual: senhaAtualInput.value,
+                        novaSenha: novaSenhaTemporaria
+                    })
+                });
+
+                if (res.ok) {
+                    fecharTodosModais();
+                    exibirToast('Senha alterada com sucesso!');
+                } else {
+                    const data = await res.json();
+                    senhaAtualInput.classList.add('input-error');
+                    erroSenhaAtual.textContent = data.message || 'Erro ao redefinir senha.';
+                }
+
+            } catch(err) {
+                erroSenhaAtual.textContent = 'Erro de conexão com o servidor.';
+            }
+        }
     });
 
     // --- PLACEHOLDERS ---

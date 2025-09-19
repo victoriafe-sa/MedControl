@@ -29,6 +29,7 @@ public class ApiServer {
         app.post("/api/register", autenticacaoController::registrar);
         app.post("/api/usuarios/enviar-codigo-verificacao", autenticacaoController::enviarCodigoVerificacao);
         app.post("/api/usuarios/verificar-codigo", autenticacaoController::verificarCodigo);
+        app.post("/api/usuarios/verificar-existencia", autenticacaoController::verificarExistencia); // <-- ROTA ADICIONADA
 
 
         // --- ROTAS PARA RECUPERAÇÃO DE SENHA ---
@@ -73,4 +74,3 @@ public class ApiServer {
         });
     }
 }
-
