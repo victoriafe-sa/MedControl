@@ -49,6 +49,13 @@
             <artifactId>spring-security-core</artifactId>
             <version>6.1.4</version> 
         </dependency>
+
+        <!-- JavaMail API para envio de e-mails -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -66,4 +73,3 @@
         </plugins>
     </build>
 </project>
-

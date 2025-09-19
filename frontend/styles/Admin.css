@@ -114,3 +114,86 @@ select:focus {
     margin-top: 4px;
  }
 
+ /* --- ESTILOS PARA O MODAL DE VERIFICAÇÃO DE E-MAIL --- */
+ .conteudo-modal-verificacao {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.conteudo-modal-verificacao h2 {
+    color: #1e3a8a;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.conteudo-modal-verificacao p {
+    color: #4b5563;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.form-verificacao input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: #f9fafb;
+}
+
+.timer-container {
+    margin: 1rem 0;
+    color: #6b7280;
+}
+
+.form-verificacao .mensagem {
+    margin-top: 1rem;
+    font-weight: 500;
+    min-height: 20px;
+}
+.form-verificacao .mensagem.erro { color: #dc2626; }
+.form-verificacao .mensagem.sucesso { color: #16a34a; }
+
+.form-verificacao button.principal {
+    width: 100%;
+    background-color: #1e3a8a;
+    color: white;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0.5rem;
+}
+.form-verificacao button.principal:hover { background-color: #1c347d; }
+
+.form-verificacao button.secundario, button.secundario {
+    width: 100%;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    padding: 0.8rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0.75rem;
+}
+.form-verificacao button.secundario:hover, button.secundario:hover { background-color: #e5e7eb; }
+.form-verificacao button.secundario:disabled {
+    background-color: #e5e7eb;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+

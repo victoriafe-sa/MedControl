@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/Admin.css">
-  
 </head>
 <body class="bg-gray-50 text-gray-800">
 
@@ -79,6 +78,7 @@
             </div>
             <form id="formularioUsuario" novalidate>
                 <input type="hidden" id="idUsuario">
+                <input type="hidden" id="emailOriginal">
                 <div class="space-y-4 corpo-modal">
                     <div><label for="nomeUsuario" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="nomeUsuario" class="mt-1 block w-full" required><p id="erroNomeUsuario" class="error-message"></p></div>
                     <div><label for="emailUsuario" class="block text-sm font-medium text-gray-700">E-mail</label><input type="email" id="emailUsuario" class="mt-1 block w-full" required><p id="erroEmailUsuario" class="error-message"></p></div>
@@ -100,6 +100,26 @@
             </form>
         </div>
     </div>
+    
+    <!-- Modal de Verificação de E-mail (Genérico para Admin) -->
+    <div id="modalVerificacaoEmail" class="modal">
+        <div class="conteudo-modal-verificacao">
+            <h2 id="tituloModalVerificacao">Verifique o E-mail</h2>
+            <p>Enviamos um código de 6 dígitos para <strong id="emailParaVerificar"></strong>. Por favor, insira-o abaixo.</p>
+            <form id="formularioVerificacao" class="form-verificacao">
+                <input type="text" id="codigoVerificacao" placeholder="_ _ _ _ _ _" maxlength="6" required />
+                <div class="timer-container">
+                    <span>O código expira em: </span>
+                    <span id="timer" class="font-semibold">02:00</span>
+                </div>
+                <p id="mensagemVerificacao" class="mensagem"></p>
+                <button type="submit" id="btnVerificarCodigoAdmin" class="principal">Verificar</button>
+                <button type="button" id="btnReenviarCodigoAdmin" class="secundario">Reenviar Código</button>
+            </form>
+            <button class="fechar-modal secundario" style="margin-top: 10px;">Cancelar</button>
+        </div>
+    </div>
+
 
     <!-- Modal "Meu Perfil" do Admin -->
     <div id="modalMeuPerfilAdmin" class="modal">
@@ -120,7 +140,7 @@
                 <button class="fechar-modal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
             <form id="formularioEditarPerfilAdmin" class="mt-6 space-y-4" novalidate>
-                <!-- Campos do formulário serão preenchidos via JS -->
+                 <input type="hidden" id="adminEditEmailOriginal">
             </form>
         </div>
     </div>
@@ -133,7 +153,6 @@
                 <button class="fechar-modal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
             <form id="formularioRedefinirSenhaAdmin" class="mt-6 space-y-4" novalidate>
-                 <!-- Conteúdo do formulário será preenchido via JS -->
             </form>
         </div>
     </div>
@@ -173,3 +192,4 @@
 
 </body>
 </html>
+

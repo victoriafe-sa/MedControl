@@ -151,8 +151,28 @@
         </div>
     </div>
 
+    <!-- Modal de Verificação de E-mail para Edição de Perfil -->
+    <div id="modalVerificacaoEmailEdicao" class="modal">
+        <div class="conteudo-modal-verificacao">
+            <h2 id="tituloModalVerificacaoEdicao">Verifique seu novo E-mail</h2>
+            <p>Enviamos um código de 6 dígitos para <strong id="emailParaVerificarEdicao"></strong>. Por favor, insira-o abaixo para confirmar a alteração.</p>
+            <form id="formularioVerificacaoEdicao" class="form-verificacao">
+                <input type="text" id="codigoVerificacaoEdicao" placeholder="_ _ _ _ _ _" maxlength="6" required />
+                <div class="timer-container">
+                    <span>O código expira em: </span>
+                    <span id="timerEdicao" class="font-semibold">02:00</span>
+                </div>
+                <p id="mensagemVerificacaoEdicao" class="mensagem"></p>
+                <button type="submit" id="btnVerificarCodigoEdicao" class="principal">Verificar e Salvar</button>
+                <button type="button" id="btnReenviarCodigoEdicao" class="secundario">Reenviar Código</button>
+                <button type="button" class="btnFecharModal secundario" style="margin-top: 10px;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
     <div id="modalConfirmacao" class="modal"><div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl m-4 text-center"><h3 id="tituloConfirmacao" class="text-xl font-bold"></h3><p id="mensagemConfirmacao" class="text-gray-600 mt-2"></p><div class="mt-6 flex gap-4"><button id="btnCancelarConfirmacao" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button><button id="btnConfirmarAcao" class="w-full btn-perigo py-2 px-4 rounded-lg"></button></div></div></div>
 
     <script src="../scripts/TelaUsuario.js"></script>
 </body>
 </html>
+

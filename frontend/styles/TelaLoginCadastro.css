@@ -341,3 +341,31 @@
     font-weight: 700;
     color: #1e3a8a;
 }
+
+.form-verificacao {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#codigoVerificacao {
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 0.5rem;
+    padding: 12px 5px;
+}
+
+.timer-container {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+#timer {
+    font-weight: 600;
+}
+
+#btnReenviarCodigo:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

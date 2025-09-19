@@ -1,7 +1,6 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -10,6 +9,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -21,142 +21,39 @@ public class UsuarioController {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    public void login(Context ctx) {
-        String body = ctx.body();
-        // System.out.println("Recebido no /api/login: " + body);
-        if (body == null || body.isEmpty()) {
-            ctx.status(400).json(Map.of("success", false, "message", "Requisição inválida. Corpo vazio."));
-            return;
-        }
-        try {
-            Map<String, String> loginRequest = mapper.readValue(body, Map.class);
-            String emailOuCpf = loginRequest.get("emailOuCpf");
-            String senha = loginRequest.get("senha");
-
-            String sql = "SELECT * FROM usuarios WHERE (email = ? OR cpf_cns = ?) AND ativo = TRUE";
-            try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, emailOuCpf);
-                ps.setString(2, emailOuCpf);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        String senhaHash = rs.getString("senha");
-                        // DEBUG: System.out.println("DEBUG: Senha recuperada do BD para '" + emailOuCpf + "': " + senhaHash);
-                        
-                        if (passwordEncoder.matches(senha, senhaHash)) {
-                            Map<String, Object> user = new HashMap<>();
-                            user.put("id", rs.getInt("id"));
-                            user.put("nome", rs.getString("nome"));
-                            user.put("email", rs.getString("email"));
-                            user.put("perfil", rs.getString("perfil"));
-                            user.put("cpf_cns", rs.getString("cpf_cns"));
-                            user.put("cep", rs.getString("cep"));
-                            user.put("data_nascimento", rs.getString("data_nascimento"));
-                            user.put("ativo", rs.getBoolean("ativo"));
-                            ctx.json(Map.of("success", true, "user", user));
-                        } else {
-                            ctx.status(401).json(Map.of("success", false, "message", "Credenciais inválidas ou usuário inativo."));
-                        }
-                    } else {
-                        ctx.status(401).json(Map.of("success", false, "message", "Credenciais inválidas ou usuário inativo."));
-                    }
-                }
-            }
-        } catch (JsonProcessingException e) {
-             ctx.status(400).json(Map.of("success", false, "message", "Formato de requisição inválido (JSON malformado)."));
-        } catch (Exception e) {
-            System.err.println("Erro no endpoint /api/login: " + e.getMessage());
-            e.printStackTrace();
-            ctx.status(500).json(Map.of("success", false, "message", "Erro interno no servidor."));
-        }
-    }
-
-
-    public void registrar(Context ctx) {
-        try {
-            Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
-            String senhaPlana = user.get("senha");
-            String senhaHash = passwordEncoder.encode(senhaPlana);
-
-            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, user.get("nome"));
-                ps.setString(2, user.get("email"));
-                ps.setString(3, user.get("cpf_cns"));
-                ps.setString(4, user.get("cep"));
-                
-                String dataNascimento = user.get("data_nascimento");
-                if (dataNascimento == null || dataNascimento.trim().isEmpty()) {
-                    ps.setNull(5, Types.DATE);
-                } else {
-                    ps.setDate(5, Date.valueOf(dataNascimento));
-                }
-
-                ps.setString(6, senhaHash);
-                ps.setString(7, "usuario");
-                ps.executeUpdate();
-                ctx.status(201).json(Map.of("success", true, "message", "Cadastro realizado com sucesso!"));
-            }
-        } catch (SQLIntegrityConstraintViolationException e) {
-            String mensagemErro = e.getMessage().toLowerCase();
-            String campo = "desconhecido";
-            if (mensagemErro.contains("email")) {
-                campo = "email";
-            } else if (mensagemErro.contains("cpf_cns")) {
-                campo = "cpf_cns";
-            }
-            ctx.status(409).json(Map.of("success", false, "message", "Valor já cadastrado.", "field", campo));
-        } catch(Exception e) {
-             System.err.println("Erro no endpoint /api/register: " + e.getMessage());
-             e.printStackTrace();
-             ctx.status(500).json(Map.of("success", false, "message", "Erro interno ao processar o cadastro."));
-        }
-    }
-        public void verificarEmail(Context ctx) {
-        try (Connection conn = DB.getConnection()) {
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
-            String email = req.get("email");
-            String sql = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE email = ?)";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, email);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next() && rs.getBoolean(1)) {
-                        ctx.json(Map.of("exists", true));
-                    } else {
-                        ctx.json(Map.of("exists", false));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            ctx.status(500).json(Map.of("error", "Erro no servidor"));
-        }
-    }
-
-    public void atualizarSenha(Context ctx) {
-        try (Connection conn = DB.getConnection()) {
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
-            String email = req.get("email");
-            String newPassword = req.get("newPassword");
-            String hashedNewPassword = passwordEncoder.encode(newPassword);
-
-            String sql = "UPDATE usuarios SET senha = ? WHERE email = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, hashedNewPassword);
-                ps.setString(2, email);
-                int updatedRows = ps.executeUpdate();
-                if (updatedRows > 0) {
-                    ctx.json(Map.of("success", true));
-                } else {
-                    ctx.status(404).json(Map.of("success", false, "message", "Email não encontrado."));
-                }
-            }
-        } catch (Exception e) {
-            ctx.status(500).json(Map.of("success", false, "message", "Erro ao atualizar a senha."));
-        }
-    }
     
+    // Método estático para ser chamado por outros controladores
+    public static void internalUpdate(int id, Map<String, String> user) throws SQLException, SQLIntegrityConstraintViolationException {
+        String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
+        if (user.get("perfil") == null) {
+            sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ? WHERE id = ?";
+        }
+
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.get("nome"));
+            ps.setString(2, user.get("email"));
+            ps.setString(3, user.get("cpf_cns"));
+            ps.setString(4, user.get("cep"));
+
+            String dataNascimento = user.get("data_nascimento");
+            if (dataNascimento == null || dataNascimento.trim().isEmpty() || dataNascimento.equals("null")) {
+                ps.setNull(5, Types.DATE);
+            } else {
+                ps.setDate(5, Date.valueOf(dataNascimento));
+            }
+
+            if (user.get("perfil") != null) {
+                ps.setString(6, user.get("perfil"));
+                ps.setInt(7, id);
+            } else {
+                ps.setInt(6, id);
+            }
+            ps.executeUpdate();
+        }
+    }
+
+
     public void redefinirSenha(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
@@ -173,7 +70,6 @@ public class UsuarioController {
                     if (rs.next()) {
                         String senhaHash = rs.getString("senha");
                         if (passwordEncoder.matches(senhaAtual, senhaHash)) {
-                            // Senha atual correta, prosseguir com a atualização
                             String novaSenhaHash = passwordEncoder.encode(novaSenha);
                             String sqlUpdate = "UPDATE usuarios SET senha = ? WHERE id = ?";
                             try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
@@ -183,7 +79,6 @@ public class UsuarioController {
                                 ctx.json(Map.of("success", true));
                             }
                         } else {
-                            // Senha atual incorreta
                             ctx.status(401).json(Map.of("success", false, "message", "A senha atual está incorreta."));
                         }
                     } else {
@@ -225,120 +120,14 @@ public class UsuarioController {
         }
     }
 
-    public void criar(Context ctx) {
-        try {
-            Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
-            String senhaPlana = user.get("senha");
-            String senhaHash = passwordEncoder.encode(senhaPlana);
-            
-            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, user.get("nome"));
-                ps.setString(2, user.get("email"));
-                ps.setString(3, user.get("cpf_cns"));
-                ps.setString(4, user.get("cep"));
-                
-                String dataNascimento = user.get("data_nascimento");
-                if (dataNascimento == null || dataNascimento.trim().isEmpty()) {
-                    ps.setNull(5, Types.DATE);
-                } else {
-                    ps.setDate(5, Date.valueOf(dataNascimento));
-                }
-                
-                ps.setString(6, senhaHash);
-                ps.setString(7, user.get("perfil"));
-                ps.executeUpdate();
-                ctx.status(201).json(Map.of("success", true));
-            }
-        } catch (SQLIntegrityConstraintViolationException e) {
-            String mensagemErro = e.getMessage().toLowerCase();
-            String campo = "desconhecido";
-            if (mensagemErro.contains("email")) {
-                campo = "email";
-            } else if (mensagemErro.contains("cpf_cns")) {
-                campo = "cpf_cns";
-            }
-            ctx.status(409).json(Map.of("success", false, "message", "Valor já cadastrado.", "field", campo));
-        } catch (Exception e) {
-            System.err.println("Erro no endpoint /api/users (criar): " + e.getMessage());
-            e.printStackTrace();
-            ctx.status(500).json(Map.of("success", false, "message", "Erro ao adicionar usuário."));
-        }
-    }
-
     public void atualizar(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
             Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
-            
-            String checkSql = "SELECT id FROM usuarios WHERE (email = ? OR cpf_cns = ?) AND id != ?";
-            try (Connection conn = DB.getConnection();
-                 PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
-                checkPs.setString(1, user.get("email"));
-                checkPs.setString(2, user.get("cpf_cns"));
-                checkPs.setInt(3, id);
-                try (ResultSet rs = checkPs.executeQuery()) {
-                    if (rs.next()) {
-                        Map<String, String> userForCheck = new HashMap<>();
-                        userForCheck.put("email", user.get("email"));
-                        userForCheck.put("cpf_cns", user.get("cpf_cns"));
-                        for(Map.Entry<String, String> entry : userForCheck.entrySet()){
-                            String checkFieldSql = "SELECT id FROM usuarios WHERE " + entry.getKey() + " = ? AND id != ?";
-                             try (PreparedStatement ps = conn.prepareStatement(checkFieldSql)) {
-                                ps.setString(1, entry.getValue());
-                                ps.setInt(2, id);
-                                try (ResultSet rsField = ps.executeQuery()) {
-                                    if (rsField.next()) {
-                                        ctx.status(409).json(Map.of("success", false, "message", "Valor já cadastrado.", "field", entry.getKey()));
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
-            if (user.get("perfil") == null) { 
-                sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ? WHERE id = ?";
-            }
-
-
-            try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, user.get("nome"));
-                ps.setString(2, user.get("email"));
-                ps.setString(3, user.get("cpf_cns"));
-                ps.setString(4, user.get("cep"));
-                
-                String dataNascimento = user.get("data_nascimento");
-                if (dataNascimento == null || dataNascimento.trim().isEmpty() || dataNascimento.equals("null")) {
-                    ps.setNull(5, Types.DATE);
-                } else {
-                    ps.setDate(5, Date.valueOf(dataNascimento));
-                }
-                
-                if (user.get("perfil") != null) {
-                    ps.setString(6, user.get("perfil"));
-                    ps.setInt(7, id);
-                } else {
-                    ps.setInt(6, id);
-                }
-
-                ps.executeUpdate();
-                ctx.json(Map.of("success", true));
-            }
+            internalUpdate(id, user);
+            ctx.json(Map.of("success", true));
         } catch (SQLIntegrityConstraintViolationException e) {
-            String mensagemErro = e.getMessage().toLowerCase();
-            String campo = "desconhecido";
-            if (mensagemErro.contains("email")) {
-                campo = "email";
-            } else if (mensagemErro.contains("cpf_cns")) {
-                campo = "cpf_cns";
-            }
+            String campo = e.getMessage().toLowerCase().contains("email") ? "email" : "cpf_cns";
             ctx.status(409).json(Map.of("success", false, "message", "Valor já cadastrado.", "field", campo));
         } catch (Exception e) {
             e.printStackTrace();

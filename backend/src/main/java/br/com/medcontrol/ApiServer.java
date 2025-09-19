@@ -1,6 +1,8 @@
 package br.com.medcontrol;
 
+import br.com.medcontrol.controlador.AutenticacaoController;
 import br.com.medcontrol.controlador.UsuarioController;
+import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,30 +18,36 @@ public class ApiServer {
         }).start(7071);
 
         System.out.println("Servidor MedControl iniciado na porta 7071.");
-
+        
+        EmailServico emailServico = new EmailServico();
+        AutenticacaoController autenticacaoController = new AutenticacaoController(emailServico);
         UsuarioController usuarioController = new UsuarioController();
 
-        // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
-        app.post("/api/login", usuarioController::login);
-        app.post("/api/register", usuarioController::registrar);
 
-        // --- ROTAS PARA RECUPERAÇÃO DE SENHA (TELA DE LOGIN) ---
-        app.post("/api/password-reset/check-email", usuarioController::verificarEmail);
-        app.post("/api/password-reset/update", usuarioController::atualizarSenha);
+        // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
+        app.post("/api/login", autenticacaoController::login);
+        app.post("/api/register", autenticacaoController::registrar);
+        app.post("/api/usuarios/enviar-codigo-verificacao", autenticacaoController::enviarCodigoVerificacao);
+        app.post("/api/usuarios/verificar-codigo", autenticacaoController::verificarCodigo);
+
+
+        // --- ROTAS PARA RECUPERAÇÃO DE SENHA ---
+        app.post("/api/password-reset/check-email", autenticacaoController::verificarEmail);
+        app.post("/api/password-reset/update", autenticacaoController::atualizarSenha);
         
         // --- ROTA PARA REDEFINIÇÃO DE SENHA (LOGADO) ---
         app.post("/api/users/{id}/redefine-password", usuarioController::redefinirSenha);
 
         // --- ROTAS PARA GERENCIAMENTO DE USUÁRIOS (ADMIN) ---
         app.get("/api/users", usuarioController::listarTodos);
-        app.post("/api/users", usuarioController::criar);
-        app.put("/api/users/{id}", usuarioController::atualizar);
+        app.post("/api/users", autenticacaoController::registrarAdmin);
+        app.put("/api/users/{id}", usuarioController::atualizar); // Atualização sem verificação
+        app.put("/api/users/{id}/update-verified", autenticacaoController::atualizarComVerificacao); // Atualização COM verificação
         app.put("/api/users/{id}/status", usuarioController::alterarStatus);
         app.delete("/api/users/{id}", usuarioController::excluir);
         app.post("/api/admin/verify-password", usuarioController::verificarSenhaAdmin);
 
         // --- ROTAS PÚBLICAS (MOCK) ---
-        // TODO: Mover para seus próprios controladores (MedicamentoController, UBSController)
         app.get("/api/medicamentos/search", ctx -> {
             String nome = ctx.queryParam("nome");
             if (nome == null || nome.trim().isEmpty()) {
@@ -55,8 +63,6 @@ public class ApiServer {
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
             } else if (nome.equalsIgnoreCase("ibuprofeno")) {
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 85));
             } else if (nome.equalsIgnoreCase("losartana")) {
@@ -67,3 +73,4 @@ public class ApiServer {
         });
     }
 }
+

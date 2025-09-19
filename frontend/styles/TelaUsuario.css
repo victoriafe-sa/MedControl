@@ -110,3 +110,86 @@ body {
    height: 14px;
 }
 
+/* Estilos para o Modal de Verificação de E-mail */
+.conteudo-modal-verificacao {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.conteudo-modal-verificacao h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 1rem;
+}
+
+.conteudo-modal-verificacao p {
+    color: #4b5563;
+    margin-bottom: 1.5rem;
+}
+
+.form-verificacao input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-verificacao .timer-container {
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.form-verificacao .mensagem {
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    min-height: 20px;
+}
+
+.form-verificacao .mensagem.erro {
+    color: #dc2626;
+}
+
+.form-verificacao .mensagem.sucesso {
+    color: #16a34a;
+}
+
+.form-verificacao button {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.form-verificacao button.principal {
+    background-color: #1e3a8a;
+    color: white;
+}
+.form-verificacao button.principal:hover {
+    background-color: #1c347d;
+}
+
+.form-verificacao button.secundario {
+    background-color: #e5e7eb;
+    color: #374151;
+    margin-top: 0.5rem;
+}
+.form-verificacao button.secundario:hover {
+    background-color: #d1d5db;
+}
+.form-verificacao button:disabled {
+    background-color: #d1d5db;
+    cursor: not-allowed;
+}

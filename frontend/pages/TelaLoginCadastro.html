@@ -23,24 +23,17 @@
                 <span>Use seu e-mail para se cadastrar</span>
                 <input id="cadastroNome" type="text" placeholder="Nome completo" required />
                 <p id="erroCadastroNome" class="error-message"></p>
-
                 <input id="cadastroEmail" type="email" placeholder="E-mail" required />
                 <p id="erroCadastroEmail" class="error-message"></p>
-
                 <input id="cadastroCpfCns" type="text" placeholder="CPF ou CNS" required />
                 <p id="erroCadastroCpfCns" class="error-message"></p>
-
                 <input id="cadastroCep" type="text" placeholder="CEP" required />
                 <p id="erroCadastroCep" class="error-message"></p>
-
                 <input id="cadastroNascimento" type="date" title="Data de nascimento" />
                 <p id="erroCadastroNascimento" class="error-message"></p>
-                
                 <input id="cadastroSenha" type="password" placeholder="Senha" required />
                 <p id="erroCadastroSenha" class="error-message"></p>
-
                 <button type="submit">Cadastrar</button>
-                <div id="mensagemCadastro" class="mensagem" style="display: none;"></div>
             </form>
         </div>
 
@@ -77,26 +70,47 @@
     <!-- Modal para Recuperação de Senha -->
     <div id="modalEsqueceuSenha" class="modal">
         <div class="conteudo-modal">
-            <h2>Recuperar Senha</h2>
             <!-- Passo 1: Verificar Email -->
             <div id="passo1Recuperacao">
-                <p>Digite seu e-mail para verificar sua conta.</p>
+                <h2>Recuperar Senha</h2>
+                <p>Digite seu e-mail para enviarmos um código de verificação.</p>
                 <input type="email" id="emailRecuperacao" placeholder="seu-email@exemplo.com">
+                <p id="erroEmailRecuperacao" class="error-message" style="text-align: left;"></p>
                 <button id="btnVerificarEmail">Verificar</button>
-                <p id="mensagemPasso1" class="mensagem" style="display: none;"></p>
             </div>
             <!-- Passo 2: Nova Senha -->
             <div id="passo2Recuperacao" style="display: none;">
-                <p>E-mail verificado! Digite sua nova senha.</p>
+                <h2>Crie uma Nova Senha</h2>
+                <p>Sua identidade foi verificada. Agora crie uma nova senha.</p>
                 <input type="password" id="novaSenha" placeholder="Nova senha">
+                <p id="erroNovaSenha" class="error-message"></p>
                 <input type="password" id="confirmarNovaSenha" placeholder="Confirme a nova senha">
+                <p id="erroConfirmarNovaSenha" class="error-message"></p>
                 <button id="btnAtualizarSenha">Atualizar Senha</button>
-                <p id="mensagemPasso2" class="mensagem" style="display: none;"></p>
             </div>
-            <button id="btnFecharModal" class="secundario">Cancelar</button>
+            <button class="fechar-modal secundario">Cancelar</button>
         </div>
     </div>
 
+    <!-- Modal de Verificação de E-mail (Unificado) -->
+    <div id="modalVerificacaoEmail" class="modal">
+        <div class="conteudo-modal">
+            <h2 id="tituloModalVerificacao">Verifique seu E-mail</h2>
+            <p>Enviamos um código de 6 dígitos para <strong id="emailParaVerificar"></strong>. Por favor, insira-o abaixo.</p>
+            <form id="formularioVerificacao" class="form-verificacao">
+                <input type="text" id="codigoVerificacao" placeholder="_ _ _ _ _ _" maxlength="6" required />
+                <div class="timer-container">
+                    <span>O código expira em: </span>
+                    <span id="timer" class="font-semibold">02:00</span>
+                </div>
+                <p id="mensagemVerificacao" class="mensagem"></p>
+                <button type="submit" id="btnVerificarCodigo" class="principal">Verificar e Cadastrar</button>
+                <button type="button" id="btnReenviarCodigo" class="secundario">Reenviar Código</button>
+            </form>
+             <button class="fechar-modal secundario" style="margin-top: 10px;">Cancelar</button>
+        </div>
+    </div>
+    
     <!-- Modal de Confirmação de Senha Atualizada -->
     <div id="modalConfirmacaoSenha" class="modal">
         <div class="conteudo-modal">

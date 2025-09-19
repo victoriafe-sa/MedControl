@@ -15,7 +15,8 @@ medcontrol-projeto-completo/
 │                                ├── 📁 controlador/
 │                                │          ├── 📄 MedicamentoController.java
 │                                │          ├── 📄 UBSController.java
-│                                │          └── 📄 UsuarioController.java
+│                                │          ├── 📄 UsuarioController.java
+│                                           └── 📄 AutenticacaoControler.java
 │                                ├── 📁 db/
 │                                │        └── 📄 DB.java
 │                                │    
