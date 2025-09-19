@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class HunterServico {
     // ATENÇÃO: Armazene esta chave de forma segura (variáveis de ambiente, etc.)
-    private static final String HUNTER_API_KEY = "dffe8b74a3fe4b181e278235476a4a0fb6fc957d"; // <-- COLOQUE SUA CHAVE AQUI
+    private static final String HUNTER_API_KEY = "Chave API aqui"; // <-- COLOQUE SUA CHAVE AQUI
     private static final String HUNTER_API_URL = "https://api.hunter.io/v2/email-verifier?email=%s&api_key=%s";
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
