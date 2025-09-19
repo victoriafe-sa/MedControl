@@ -14,11 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const formRedefinirSenha = document.getElementById('formularioRedefinirSenha');
     
     // --- FUNÇÕES UTILITÁRIAS ---
-    const abrirModal = (modal) => modal.classList.add('ativo');
-    const fecharModal = (modal) => modal.classList.remove('ativo');
+    const abrirModal = (modal) => modal.style.display = 'flex';
     
     const fecharTodosModais = () => {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('ativo'));
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
         clearInterval(timerInterval);
     };
 
@@ -76,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex justify-between items-center mb-8 border-b pb-4">
                     <h2 class="text-3xl font-bold text-gray-800">Meu Perfil</h2>
                     <div>
-                        <button id="btnAbrirRedefinirSenha" class="btn-secundario py-2 px-5 rounded-lg text-base font-semibold mr-4">Redefinir Senha</button>
+                        <button id="btnAbrirRedefinirSenha" class="btn-secundario py-2 px-5 rounded-lg text-base font-semibold mr-4" style="background-color: #ca8a04; color: white;">Redefinir Senha</button>
                         <button id="btnEditarPerfil" class="btn-primario py-2 px-5 rounded-lg text-base font-semibold">Editar Perfil</button>
                     </div>
                 </div>
@@ -283,10 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgEl.style.display = 'none';
                 iniciarTimerEdicao();
             } else {
-                exibirMensagemNoModal(msgEl, 'Falha ao enviar e-mail.', true);
+                const dataErro = await res.json();
+                const mensagem = dataErro.message || 'Falha ao enviar o código de verificação.';
+                exibirMensagemNoModal(msgEl, mensagem, true);
             }
         } catch (e) {
-            exibirMensagemNoModal(msgEl, 'Falha de conexão.', true);
+            exibirMensagemNoModal(msgEl, 'Falha de conexão com o servidor.', true);
         }
     }
 
@@ -435,4 +436,3 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarHistorico();
     renderizarNotificacoes();
 });
-

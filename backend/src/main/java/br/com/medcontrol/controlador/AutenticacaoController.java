@@ -2,6 +2,7 @@ package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
 import br.com.medcontrol.servicos.EmailServico;
+import br.com.medcontrol.servicos.HunterServico; // <-- Importar
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,10 +39,12 @@ public class AutenticacaoController {
     private final ObjectMapper mapper = new ObjectMapper();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final EmailServico emailServico;
+    private final HunterServico hunterServico; // <-- Adicionar
     private final Map<String, CodigoInfo> codigosVerificacao = new ConcurrentHashMap<>();
 
     public AutenticacaoController(EmailServico emailServico) {
         this.emailServico = emailServico;
+        this.hunterServico = new HunterServico(); // <-- Instanciar
     }
 
     public void verificarExistencia(Context ctx) {
@@ -101,8 +104,15 @@ public class AutenticacaoController {
         try {
             Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
             String email = req.get("email");
-            String motivo = req.getOrDefault("motivo", "cadastro");
+            
+            // ETAPA DE PRÉ-VALIDAÇÃO
+            if (!hunterServico.isEmailValido(email)) {
+                ctx.status(400).json(Map.of("success", false, "message", "O endereço de e-mail é inválido ou não pode receber mensagens."));
+                return;
+            }
 
+            // Continua o fluxo normal se o e-mail for válido
+            String motivo = req.getOrDefault("motivo", "cadastro");
             String codigo = emailServico.gerarCodigoVerificacao();
             emailServico.enviarCodigoVerificacao(email, codigo, motivo);
 
@@ -364,4 +374,3 @@ public class AutenticacaoController {
         }
     }
 }
-

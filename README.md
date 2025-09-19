@@ -9,21 +9,29 @@ A estrutura abaixo reflete o padrão Maven/Java, onde a organização dos diret�
 medcontrol-projeto-completo/
 │
 ├── 📁 backend/
+│   ├── 📄 .gitignore
 │   ├── 📄 pom.xml
-│   └── 📁 src/main/java/br/com/medcontrol/
-│                                ├── 📄 ApiServer.java  <-- Arquivo principal
-│                                ├── 📁 controlador/
-│                                │          ├── 📄 MedicamentoController.java
-│                                │          ├── 📄 UBSController.java
-│                                │          ├── 📄 UsuarioController.java
-│                                           └── 📄 AutenticacaoControler.java
-│                                ├── 📁 db/
-│                                │        └── 📄 DB.java
-│                                │    
-│                                └── 📁 servicos/
-│                                           ├── 📄 EmailServico.java  (Para a API do Gmail)
-│                                           ├── 📄 CepServico.java    (Para a API ViaCEP)
-│                                           └── 📄 DocumentoServico.java (Para a API futura... de validar o CPF e CNS)
+│   ├── 📁 src/main/resources/java/br/com/medcontrol/
+│   │                   │                    ├── 📄 ApiServer.java  <-- Arquivo principal
+│   │                   │                    ├── 📁 controlador/
+│   │                   │                    │          ├── 📄 MedicamentoController.java
+│   │                   │                    │          ├── 📄 UBSController.java
+│   │                   │                    │          ├── 📄 UsuarioController.java
+│   │                   │                    │          └── 📄 AutenticacaoControler.java
+│   │                   │                    ├── 📁 db/
+│   │                   │                    │        └── 📄 DB.java
+│   │                   │                    │    
+│   │                   │                    └── 📁 servicos/
+│   │                   │                              ├── 📄 EmailServico.java  (Para a API do Gmail)
+│   │                   │                              ├── 📄 HunterServico.java  (Para API Hunter, verificar se email é TRUE)
+│   │                   │                              ├── 📄 CepServico.java    (Para a API ViaCEP)
+│   │                   │                              └── 📄 DocumentoServico.java (Para a API futura validar o CPF e CNS)
+│   │                   │ 
+│   │                   └──📄 credentials.json
+│   │
+│   └── 📁 tokens/ 
+│            └── 📄 StoredCredential
+│
 ├── 📁 database/
 │          └── 📄 schema.sql
 │
@@ -49,10 +57,10 @@ medcontrol-projeto-completo/
 
 ## Passo a Passo para Executar
 1. Configure o Banco de Dados: Use o schema.sql.
-
-2. Certifique-se de estar com Extension pack for JAVA e Maven for JAVA no VSCODE
-3. Execute o Back-end:
+2. Adcionar a pasta tokens no MedControl e o arquivo credentials.json em resources
+3. Certifique-se de estar com Extension pack for JAVA e Maven for JAVA no VSCODE
+4. Execute o Back-end:
         .No VS Code, vá em Arquivo > Abrir Pasta... e selecione apenas a pasta backend.
         .Aguarde a extensão Java sincronizar o projeto (pode levar alguns segundos).
         .Execute(Run) o arquivo ApiServer.java.
-4. Execute o Front-end: Abra o frontend/pages/home.html com a extensão "Live Server".
+5. Execute o Front-end: Abra o frontend/pages/home.html com a extensão "Live Server".

@@ -352,10 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgEl.style.display = 'none';
                 iniciarTimer();
             } else {
-                exibirMensagemNoModal(msgEl, 'Falha ao enviar e-mail.', true);
+                const dataErro = await res.json();
+                const mensagem = dataErro.message || 'Falha ao enviar o código de verificação.';
+                exibirMensagemNoModal(msgEl, mensagem, true);
             }
         } catch (e) {
-            exibirMensagemNoModal(msgEl, 'Falha de conexão.', true);
+            exibirMensagemNoModal(msgEl, 'Erro de conexão com o servidor.', true);
         }
     }
     
@@ -653,4 +655,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.fechar-modal').forEach(btn => btn.addEventListener('click', fecharTodosModais));
     document.getElementById('btnCancelarConfirmacao').addEventListener('click', fecharTodosModais);
 });
-

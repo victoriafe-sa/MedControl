@@ -191,10 +191,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgEl.style.display = 'none';
                 iniciarTimer();
             } else {
-                exibirMensagem(msgEl, 'Falha ao enviar e-mail.', true);
+                const dataErro = await res.json();
+                const mensagem = dataErro.message || 'Falha ao enviar o código de verificação.';
+                exibirMensagem(msgEl, mensagem, true);
             }
         } catch (e) {
-            exibirMensagem(msgEl, 'Falha de conexão.', true);
+            exibirMensagem(msgEl, 'Erro de conexão com o servidor.', true);
         }
     }
     
