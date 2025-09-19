@@ -10,8 +10,8 @@ public class EmailServico {
 
     // IMPORTANTE: Substitua com suas credenciais reais do Gmail.
     // Recomenda-se usar uma "Senha de App" para segurança.
-    private final String username = "luis986689@gmail.com";
-    private final String password = "tjlw itzm uyxw toqa";
+    private final String username = "@gmail.com";
+    private final String password = "Senha APP";
 
     private final Properties props;
 
