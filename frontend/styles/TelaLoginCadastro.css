@@ -150,9 +150,9 @@
      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.1);
      position: relative;
      overflow: hidden;
-     width: 768px;
+     width: 788px;
      max-width: 100%;
-     min-height: 520px;
+     min-height: 590px;
  }
 
  .form-container {

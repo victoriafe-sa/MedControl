@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(hasError) return;
 
             fluxoAtual = 'cadastro';
-            iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
+            await iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
         } catch (err) {
             alert('Erro de conexão ao verificar dados.');
         }
@@ -406,4 +406,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
