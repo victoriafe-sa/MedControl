@@ -105,12 +105,12 @@
  }
 
  .input-error {
-    border-color: #dc2626;
-    background-color: #fee2e2;
+    border-color: #dc2626; /* red-600 */
+    background-color: #fee2e2; /* red-100 */
  }
 
  .error-message {
-    color: #dc2626;
+    color: #dc2626; /* red-600 */
     font-size: 12px;
     text-align: left;
     width: 100%;
@@ -118,6 +118,31 @@
     margin-bottom: 8px;
     height: 14px; /* Garante espaço para não quebrar o layout */
  }
+
+ /* --- ESTILOS PARA VALIDAÇÃO DE CEP --- */
+ .input-success {
+    border-color: #16a34a; /* green-600 */
+    background-color: #dcfce7; /* green-100 */
+ }
+
+ .validation-message {
+    font-size: 12px;
+    text-align: left;
+    width: 100%;
+    margin-top: -5px;
+    margin-bottom: 8px;
+    height: 14px;
+ }
+ 
+ .validation-message.success {
+    color: #16a34a; /* green-600 */
+ }
+
+ .validation-message.error {
+    color: #dc2626; /* red-600 */
+ }
+ /* --- FIM DOS ESTILOS DE VALIDAÇÃO --- */
+
 
  .container {
      background-color: #fff;

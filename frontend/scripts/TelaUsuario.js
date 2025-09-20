@@ -35,6 +35,45 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.display = 'block';
     };
 
+    // --- FUNÇÕES DE FORMATAÇÃO E VALIDAÇÃO DE CEP ---
+    const formatarCep = (inputElement) => {
+        let cep = inputElement.value.replace(/\D/g, '');
+        cep = cep.substring(0, 8);
+        if (cep.length > 5) {
+            cep = cep.slice(0, 5) + '-' + cep.slice(5);
+        }
+        inputElement.value = cep;
+    };
+
+    const validarCep = async (inputElement, validationElementId) => {
+        const cep = inputElement.value.replace(/\D/g, ''); 
+        const validationElement = document.getElementById(validationElementId);
+
+        inputElement.classList.remove('input-success', 'input-error');
+        validationElement.textContent = '';
+        validationElement.className = 'validation-message';
+
+        if (cep.length === 8) {
+            try {
+                const response = await fetch(`http://localhost:7071/api/cep/${cep}`);
+                if (response.ok) {
+                    inputElement.classList.add('input-success');
+                    validationElement.textContent = 'CEP válido';
+                    validationElement.classList.add('success');
+                } else {
+                    inputElement.classList.add('input-error');
+                    validationElement.textContent = 'CEP inválido';
+                    validationElement.classList.add('error');
+                }
+            } catch (error) {
+                inputElement.classList.add('input-error');
+                validationElement.textContent = 'Erro ao consultar CEP';
+                validationElement.classList.add('error');
+            }
+        }
+    };
+
+
     // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
     function verificarAutenticacao() {
         const dadosUsuario = sessionStorage.getItem('medControlUser');
@@ -99,9 +138,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('editarCpfCns').value = usuarioAtual.cpf_cns;
         document.getElementById('editarCep').value = usuarioAtual.cep;
         document.getElementById('editarNascimento').value = usuarioAtual.data_nascimento;
+
+        // Limpa validação de CEP ao abrir o modal
+        const cepInput = document.getElementById('editarCep');
+        cepInput.classList.remove('input-success', 'input-error');
+        document.getElementById('validacaoEditarCep').textContent = '';
+        document.getElementById('validacaoEditarCep').className = 'validation-message';
+
+
         abrirModal(modalEditarPerfil);
     };
     
+    const cepEditarInput = document.getElementById('editarCep');
+    cepEditarInput.addEventListener('input', () => formatarCep(cepEditarInput));
+    cepEditarInput.addEventListener('blur', () => validarCep(cepEditarInput, 'validacaoEditarCep'));
+
     const isValidEmail = (email) => {
         const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return re.test(String(email).toLowerCase());
@@ -152,6 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nascimentoInput.value && !isMaisDe18(nascimentoInput.value)) {
             nascimentoInput.classList.add('input-error');
             document.getElementById('erroEditarNascimento').textContent = 'Você deve ter 18 anos ou mais.';
+            isValid = false;
+        }
+
+        // MODIFICADO: Verifica se o CEP foi validado com sucesso
+        const cepInput = document.getElementById('editarCep');
+        if (cepInput.value.trim() && !cepInput.classList.contains('input-success')) {
+            cepInput.classList.add('input-error');
+            document.getElementById('erroEditarCep').textContent = 'Por favor, insira um CEP válido para continuar.';
             isValid = false;
         }
 
@@ -436,3 +495,4 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarHistorico();
     renderizarNotificacoes();
 });
+

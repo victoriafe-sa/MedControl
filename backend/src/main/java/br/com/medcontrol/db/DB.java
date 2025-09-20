@@ -8,7 +8,7 @@ public class DB {
 
     private static final String URL = "jdbc:mysql://localhost:3306/medcontrol_db";
     private static final String USER = "root"; // Altere se o seu usuário for diferente
-    private static final String PASSWORD = "samyi23s11"; // Altere para a sua senha do MySQL
+    private static final String PASSWORD = "Senha"; // Altere para a sua senha do MySQL
 
     private static Connection conn = null;
 

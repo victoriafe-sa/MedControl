@@ -64,6 +64,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return dataNascimentoUTC <= dezoitoAnosAtras;
     };
 
+    // --- FUNÇÕES DE FORMATAÇÃO E VALIDAÇÃO DE CEP ---
+    const formatarCep = (inputElement) => {
+        let cep = inputElement.value.replace(/\D/g, '');
+        cep = cep.substring(0, 8);
+        if (cep.length > 5) {
+            cep = cep.slice(0, 5) + '-' + cep.slice(5);
+        }
+        inputElement.value = cep;
+    };
+
+    const validarCep = async (inputElement, validationElement) => {
+        const cep = inputElement.value.replace(/\D/g, ''); 
+
+        inputElement.classList.remove('input-success', 'input-error');
+        validationElement.textContent = '';
+        validationElement.className = 'validation-message';
+
+        if (cep.length === 8) {
+            try {
+                const response = await fetch(`http://localhost:7071/api/cep/${cep}`);
+                if (response.ok) {
+                    inputElement.classList.add('input-success');
+                    validationElement.textContent = 'CEP válido';
+                    validationElement.classList.add('success');
+                } else {
+                    inputElement.classList.add('input-error');
+                    validationElement.textContent = 'CEP inválido';
+                    validationElement.classList.add('error');
+                }
+            } catch (error) {
+                inputElement.classList.add('input-error');
+                validationElement.textContent = 'Erro ao consultar CEP';
+                validationElement.classList.add('error');
+            }
+        }
+    };
+
+
     // --- Navegação ---
     document.getElementById('btnSair').addEventListener('click', () => {
         sessionStorage.removeItem('medControlUser');
@@ -85,6 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fluxoVerificacao = 'adicionar';
         formularioUsuario.reset();
         limparErrosFormulario('formularioUsuario');
+        // Limpa validação de CEP ao abrir o modal
+        const cepInput = document.getElementById('cepUsuario');
+        cepInput.classList.remove('input-success', 'input-error');
+        document.getElementById('validacaoCepUsuario').textContent = '';
+
         document.getElementById('idUsuario').value = '';
         document.getElementById('tituloModalUsuario').textContent = 'Adicionar Novo Usuário';
         document.getElementById('containerCampoSenha').style.display = 'block';
@@ -96,6 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
         usuarioEditadoOriginal = { ...usuario }; 
         formularioUsuario.reset();
         limparErrosFormulario('formularioUsuario');
+        
+        // Limpa validação de CEP ao abrir o modal
+        const cepInput = document.getElementById('cepUsuario');
+        cepInput.classList.remove('input-success', 'input-error');
+        document.getElementById('validacaoCepUsuario').textContent = '';
+
         document.getElementById('idUsuario').value = usuario.id;
         document.getElementById('emailOriginal').value = usuario.email;
         document.getElementById('nomeUsuario').value = usuario.nome;
@@ -110,6 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('abrirModalAdicionarUsuario').addEventListener('click', abrirModalParaAdicionar);
+    
+    const cepUsuarioInput = document.getElementById('cepUsuario');
+    cepUsuarioInput.addEventListener('input', () => formatarCep(cepUsuarioInput));
+    cepUsuarioInput.addEventListener('blur', () => validarCep(cepUsuarioInput, document.getElementById('validacaoCepUsuario')));
 
     async function carregarUsuarios() {
         try {
@@ -240,6 +293,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // MODIFICADO: Verifica se o CEP foi validado com sucesso
+        const cepInputId = currentFields.Cep.input;
+        const cepErrorId = currentFields.Cep.error;
+        const cepInput = document.getElementById(cepInputId);
+
+        if (cepInput && cepInput.value.trim() && !cepInput.classList.contains('input-success')) {
+            cepInput.classList.add('input-error');
+            document.getElementById(cepErrorId).textContent = 'Por favor, insira um CEP válido para continuar.';
+            isValid = false;
+        }
+
         return isValid;
     }
 
@@ -547,12 +611,23 @@ document.addEventListener('DOMContentLoaded', () => {
             <div><label class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="adminEditNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.nome}"><p id="erroadminEditNome" class="error-message"></p></div>
             <div><label class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="adminEditEmail" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.email}"><p id="erroadminEditEmail" class="error-message"></p></div>
             <div><label class="block text-sm font-medium text-gray-700">CPF/CNS</label><input type="text" id="adminEditCpfCns" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cpf_cns}"><p id="erroadminEditCpfCns" class="error-message"></p></div>
-            <div><label class="block text-sm font-medium text-gray-700">CEP</label><input type="text" id="adminEditCep" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cep}"><p id="erroadminEditCep" class="error-message"></p></div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">CEP</label>
+                <input type="text" id="adminEditCep" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.cep}" maxlength="9">
+                <p id="validacaoAdminEditCep" class="validation-message"></p>
+                <p id="erroadminEditCep" class="error-message"></p>
+            </div>
             <div><label class="block text-sm font-medium text-gray-700">Data de Nascimento</label><input type="date" id="adminEditNascimento" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.data_nascimento || ''}"><p id="erroadminEditNascimento" class="error-message"></p></div>
             <div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button></div>
         `;
         form.onsubmit = submeterFormularioAdmin; 
         form.querySelector('.btnFecharModal').addEventListener('click', fecharTodosModais);
+        
+        const cepInput = form.querySelector('#adminEditCep');
+        const validationElement = form.querySelector('#validacaoAdminEditCep');
+        cepInput.addEventListener('input', () => formatarCep(cepInput));
+        cepInput.addEventListener('blur', () => validarCep(cepInput, validationElement));
+        
         modalEditarPerfilAdmin.classList.add('ativo');
     };
     
@@ -655,3 +730,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.fechar-modal').forEach(btn => btn.addEventListener('click', fecharTodosModais));
     document.getElementById('btnCancelarConfirmacao').addEventListener('click', fecharTodosModais);
 });
+

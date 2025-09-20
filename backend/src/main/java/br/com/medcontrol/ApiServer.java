@@ -2,6 +2,7 @@ package br.com.medcontrol;
 
 import br.com.medcontrol.controlador.AutenticacaoController;
 import br.com.medcontrol.controlador.UsuarioController;
+import br.com.medcontrol.servicos.CepServico; // <-- IMPORTADO
 import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
 import java.util.ArrayList;
@@ -19,7 +20,11 @@ public class ApiServer {
 
         System.out.println("Servidor MedControl iniciado na porta 7071.");
         
+        // --- INSTÂNCIA DE SERVIÇOS ---
         EmailServico emailServico = new EmailServico();
+        CepServico cepServico = new CepServico(); // <-- INSTANCIADO
+        
+        // --- INSTÂNCIA DE CONTROLADORES ---
         AutenticacaoController autenticacaoController = new AutenticacaoController(emailServico);
         UsuarioController usuarioController = new UsuarioController();
 
@@ -29,7 +34,7 @@ public class ApiServer {
         app.post("/api/register", autenticacaoController::registrar);
         app.post("/api/usuarios/enviar-codigo-verificacao", autenticacaoController::enviarCodigoVerificacao);
         app.post("/api/usuarios/verificar-codigo", autenticacaoController::verificarCodigo);
-        app.post("/api/usuarios/verificar-existencia", autenticacaoController::verificarExistencia); // <-- ROTA ADICIONADA
+        app.post("/api/usuarios/verificar-existencia", autenticacaoController::verificarExistencia);
 
 
         // --- ROTAS PARA RECUPERAÇÃO DE SENHA ---
@@ -47,6 +52,17 @@ public class ApiServer {
         app.put("/api/users/{id}/status", usuarioController::alterarStatus);
         app.delete("/api/users/{id}", usuarioController::excluir);
         app.post("/api/admin/verify-password", usuarioController::verificarSenhaAdmin);
+
+        // --- ROTA DA API VIACEP ---
+        app.get("/api/cep/{cep}", ctx -> {
+            String cep = ctx.pathParam("cep");
+            Map<String, Object> resultado = cepServico.buscarCep(cep);
+            if (resultado.containsKey("erro") && (Boolean) resultado.get("erro")) {
+                ctx.status(404).json(resultado);
+            } else {
+                ctx.status(200).json(resultado);
+            }
+        });
 
         // --- ROTAS PÚBLICAS (MOCK) ---
         app.get("/api/medicamentos/search", ctx -> {

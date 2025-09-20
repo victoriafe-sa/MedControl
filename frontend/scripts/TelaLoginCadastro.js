@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalEsqueceuSenha = document.getElementById('modalEsqueceuSenha');
     const modalVerificacaoEmail = document.getElementById('modalVerificacaoEmail');
     const modalConfirmacaoSenha = document.getElementById('modalConfirmacaoSenha');
+    const inputCepCadastro = document.getElementById('cadastroCep'); 
 
     // --- VARIÁVEIS DE ESTADO ---
     let dadosUsuarioTemporario = null;
@@ -119,6 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
             isValid = false;
         }
 
+        // MODIFICADO: Verifica se o CEP foi validado com sucesso
+        const cepInput = document.getElementById('cadastroCep');
+        if (cepInput.value.trim() && !cepInput.classList.contains('input-success')) {
+            cepInput.classList.add('input-error');
+            document.getElementById('erroCadastroCep').textContent = 'Por favor, insira um CEP válido para continuar.';
+            isValid = false;
+        }
+
         return isValid;
     }
 
@@ -164,6 +173,49 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Erro de conexão ao verificar dados.');
         }
     });
+
+    // --- FUNÇÕES DE FORMATAÇÃO E VALIDAÇÃO DE CEP ---
+    const formatarCep = (inputElement) => {
+        let cep = inputElement.value.replace(/\D/g, '');
+        cep = cep.substring(0, 8);
+        if (cep.length > 5) {
+            cep = cep.slice(0, 5) + '-' + cep.slice(5);
+        }
+        inputElement.value = cep;
+    };
+
+    const validarCep = async (inputElement, validationElementId) => {
+        const cep = inputElement.value.replace(/\D/g, ''); 
+        const validationElement = document.getElementById(validationElementId);
+
+        inputElement.classList.remove('input-success', 'input-error');
+        validationElement.textContent = '';
+        validationElement.className = 'validation-message';
+
+        if (cep.length === 8) {
+            try {
+                const response = await fetch(`http://localhost:7071/api/cep/${cep}`);
+                if (response.ok) {
+                    inputElement.classList.add('input-success');
+                    validationElement.textContent = 'CEP válido';
+                    validationElement.classList.add('success');
+                } else {
+                    inputElement.classList.add('input-error');
+                    validationElement.textContent = 'CEP inválido';
+                    validationElement.classList.add('error');
+                }
+            } catch (error) {
+                inputElement.classList.add('input-error');
+                validationElement.textContent = 'Erro ao consultar CEP';
+                validationElement.classList.add('error');
+            }
+        }
+    };
+
+    // Adiciona os listeners ao campo de CEP do cadastro
+    inputCepCadastro.addEventListener('input', () => formatarCep(inputCepCadastro));
+    inputCepCadastro.addEventListener('blur', () => validarCep(inputCepCadastro, 'validacaoCadastroCep'));
+
 
     // --- FLUXO DE VERIFICAÇÃO DE E-MAIL (UNIFICADO) ---
     async function iniciarFluxoVerificacao(email, motivo) {
@@ -354,3 +406,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+

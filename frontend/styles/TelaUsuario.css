@@ -110,6 +110,28 @@ body {
    height: 14px;
 }
 
+ /* --- ESTILOS PARA VALIDAÇÃO DE CEP --- */
+ .input-success {
+    border-color: #16a34a; /* green-600 */
+    background-color: #dcfce7; /* green-100 */
+ }
+
+ .validation-message {
+    font-size: 12px;
+    margin-top: 4px;
+    height: 14px;
+ }
+ 
+ .validation-message.success {
+    color: #16a34a; /* green-600 */
+ }
+
+ .validation-message.error {
+    color: #dc2626; /* red-600 */
+ }
+ /* --- FIM DOS ESTILOS DE VALIDAÇÃO --- */
+
+
 /* Estilos para o Modal de Verificação de E-mail */
 .conteudo-modal-verificacao {
     background-color: #fff;
