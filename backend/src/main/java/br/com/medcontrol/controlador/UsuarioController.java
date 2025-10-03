@@ -1,6 +1,7 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
+import com.fasterxml.jackson.core.type.TypeReference; // IMPORT ADICIONADO
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -57,7 +58,8 @@ public class UsuarioController {
     public void redefinirSenha(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String senhaAtual = req.get("senhaAtual");
             String novaSenha = req.get("novaSenha");
 
@@ -123,7 +125,8 @@ public class UsuarioController {
     public void atualizar(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             internalUpdate(id, user);
             ctx.json(Map.of("success", true));
         } catch (SQLIntegrityConstraintViolationException e) {
@@ -139,7 +142,8 @@ public class UsuarioController {
     public void alterarStatus(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Map<String, Boolean> status = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, Boolean> status = mapper.readValue(ctx.body(), new TypeReference<Map<String, Boolean>>() {});
             String sql = "UPDATE usuarios SET ativo = ? WHERE id = ?";
              try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -170,7 +174,8 @@ public class UsuarioController {
 
     public void verificarSenhaAdmin(Context ctx) {
         try {
-            Map<String, Object> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, Object> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
             Integer adminId = (Integer) req.get("adminId");
             String password = (String) req.get("password");
 
@@ -203,4 +208,3 @@ public class UsuarioController {
         }
     }
 }
-

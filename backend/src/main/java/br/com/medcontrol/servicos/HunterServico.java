@@ -1,6 +1,7 @@
 /* Codigo original para integração com Hunter API (desativado para testes):
 package br.com.medcontrol.servicos;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -23,7 +24,8 @@ public class HunterServico {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                Map<String, Object> responseMap = mapper.readValue(response.body(), Map.class);
+                Map<String, Object> responseMap = mapper.readValue(response.body(), new TypeReference<>() {});
+                @SuppressWarnings("unchecked") // A conversão é segura com base na estrutura da API Hunter
                 Map<String, Object> data = (Map<String, Object>) responseMap.get("data");
                 String result = (String) data.get("result");
                 
@@ -38,6 +40,7 @@ public class HunterServico {
         return false;
     }
 }
+
 */
 package br.com.medcontrol.servicos;
 

@@ -5,6 +5,7 @@ import br.com.medcontrol.servicos.EmailServico;
 import br.com.medcontrol.servicos.HunterServico; // <-- Importar
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference; // IMPORT ADICIONADO
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -49,7 +50,8 @@ public class AutenticacaoController {
 
     public void verificarExistencia(Context ctx) {
         try {
-            Map<String, Object> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, Object> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
             String email = (String) req.get("email");
             String cpfCns = (String) req.get("cpf_cns");
             Object idObject = req.get("id");
@@ -102,7 +104,8 @@ public class AutenticacaoController {
 
     public void enviarCodigoVerificacao(Context ctx) {
         try {
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             
             // ETAPA DE PRÉ-VALIDAÇÃO
@@ -128,7 +131,8 @@ public class AutenticacaoController {
     
     public void verificarCodigo(Context ctx) {
         try {
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             String codigo = req.get("codigo");
             CodigoInfo codigoInfo = codigosVerificacao.get(email);
@@ -150,7 +154,8 @@ public class AutenticacaoController {
             return;
         }
         try {
-            Map<String, String> loginRequest = mapper.readValue(body, Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> loginRequest = mapper.readValue(body, new TypeReference<Map<String, String>>() {});
             String emailOuCpf = loginRequest.get("emailOuCpf");
             String senha = loginRequest.get("senha");
 
@@ -194,7 +199,8 @@ public class AutenticacaoController {
 
     public void registrar(Context ctx) {
         try {
-            Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
 
             String email = user.get("email");
             String codigoRecebido = user.get("codigoVerificacao");
@@ -249,7 +255,8 @@ public class AutenticacaoController {
 
     public void registrarAdmin(Context ctx) {
          try {
-            Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
 
             String email = user.get("email");
             String codigoRecebido = user.get("codigoVerificacao");
@@ -305,7 +312,8 @@ public class AutenticacaoController {
     public void atualizarComVerificacao(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Map<String, String> user = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
 
             String email = user.get("email");
             String codigoRecebido = user.get("codigoVerificacao");
@@ -331,7 +339,8 @@ public class AutenticacaoController {
 
     public void verificarEmail(Context ctx) {
         try (Connection conn = DB.getConnection()) {
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             String sql = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE email = ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -351,7 +360,8 @@ public class AutenticacaoController {
 
     public void atualizarSenha(Context ctx) {
         try (Connection conn = DB.getConnection()) {
-            Map<String, String> req = mapper.readValue(ctx.body(), Map.class);
+            // MODIFICADO: Uso de TypeReference para segurança de tipos.
+            Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             String newPassword = req.get("newPassword");
             
