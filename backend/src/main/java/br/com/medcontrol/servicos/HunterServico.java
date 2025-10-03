@@ -1,3 +1,4 @@
+/* Codigo original para integração com Hunter API (desativado para testes):
 package br.com.medcontrol.servicos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +10,7 @@ import java.util.Map;
 
 public class HunterServico {
     // ATENÇÃO: Armazene esta chave de forma segura (variáveis de ambiente, etc.)
-    private static final String HUNTER_API_KEY = "SUA_CHAVE_API_DO_HUNTER_AQUI"; // <-- COLOQUE SUA CHAVE AQUI
+    private static final String HUNTER_API_KEY = "Sua-Chave-Api-Aqui"; // <-- COLOQUE SUA CHAVE AQUI
     private static final String HUNTER_API_URL = "https://api.hunter.io/v2/email-verifier?email=%s&api_key=%s";
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -35,5 +36,16 @@ public class HunterServico {
             return false;
         }
         return false;
+    }
+}
+*/
+package br.com.medcontrol.servicos;
+
+public class HunterServico {
+    
+    public boolean isEmailValido(String email) {
+        System.out.println("--- MODO DE TESTE: Validação de E-mail (Hunter API) desativada. Retornando 'true' para: " + email + " ---");
+        return true; // Sempre retorna true para facilitar os testes.
+        
     }
 }

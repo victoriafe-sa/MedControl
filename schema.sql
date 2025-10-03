@@ -7,13 +7,8 @@ CREATE DATABASE medcontrol;
 USE medcontrol;
 
 -- ============================================
--- 1. PERFIS E USUÁRIOS
+-- RF01 E RF02: GESTÃO LOGIN/CADASTRO USUÁRIOS E PERFIS
 -- ============================================
-CREATE TABLE perfis (
-    id_perfil INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL
-);
-
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
@@ -24,21 +19,11 @@ CREATE TABLE usuarios (
     senha VARCHAR(255) NOT NULL,
     perfil ENUM('usuario', 'farmaceutico', 'admin', 'gestor_ubs') NOT NULL DEFAULT 'usuario',
     ativo BOOLEAN DEFAULT TRUE,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_perfil) REFERENCES perfis(id_perfil)
-);
-
-CREATE TABLE validacao_email (
-    id_validacao INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    codigo VARCHAR(10) NOT NULL,
-    data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
-    validado BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
--- 2. UBS (Unidades Básicas de Saúde)
+-- RF03: Manter Cadastro UBS
 -- ============================================
 CREATE TABLE ubs (
     id_ubs INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,7 +34,7 @@ CREATE TABLE ubs (
 );
 
 -- ============================================
--- 3. MEDICAMENTOS E ESTOQUE
+-- RF04 – Manter Cadastro de Medicamentos
 -- ============================================
 CREATE TABLE medicamentos (
     id_medicamento INT AUTO_INCREMENT PRIMARY KEY,

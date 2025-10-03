@@ -1,3 +1,4 @@
+/* Código original para integração com a API do Gmail (desativado para testes):
 package br.com.medcontrol.servicos;
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -117,5 +118,34 @@ public class EmailServico {
 
     public String gerarCodigoVerificacao() {
         return String.format("%06d", new Random().nextInt(999999));
+    }
+}
+*/
+
+package br.com.medcontrol.servicos;
+
+public class EmailServico {
+    
+    public EmailServico() {
+        // A inicialização do serviço do Gmail foi removida para os testes.
+        System.out.println("--- MODO DE TESTE: EmailServico inicializado sem a API do Gmail. ---");
+        
+    }
+
+   
+    public void enviarCodigoVerificacao(String destinatario, String codigo, String motivo) {
+        System.out.println("--- MODO DE TESTE: Simulação de envio de e-mail (API Gmail desativada) ---");
+        System.out.println("Destinatário: " + destinatario);
+        System.out.println("Código: " + codigo);
+        System.out.println("Motivo: " + motivo);
+        System.out.println("---------------------------------------------------------------------");
+
+      
+    }
+
+   
+    public String gerarCodigoVerificacao() {
+        return "000000"; // Código fixo para facilitar os testes.
+        
     }
 }
