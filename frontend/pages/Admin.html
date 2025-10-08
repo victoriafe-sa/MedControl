@@ -191,6 +191,35 @@
         </div>
     </div>
 
+    <!-- NOVO: Modal de Escolha Excluir/Desativar Conta -->
+    <div id="modalEscolhaAcaoConta" class="modal">
+        <div class="bg-white w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
+            <h3 class="text-xl font-bold">Gerenciar Conta</h3>
+            <p class="text-gray-600 mt-2 mb-6">O que você gostaria de fazer com a sua conta?</p>
+            <div class="space-y-4 text-left">
+                <label for="acaoDesativar" class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" id="acaoDesativar" name="acaoConta" value="desativar" class="h-5 w-5 text-blue-800 focus:ring-blue-700" checked>
+                    <span class="ml-4 flex flex-col">
+                        <span class="font-semibold">Desativar Conta</span>
+                        <span class="text-sm text-gray-500">Sua conta ficará inativa, mas seus dados serão mantidos.</span>
+                    </span>
+                </label>
+                <label for="acaoExcluir" class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" id="acaoExcluir" name="acaoConta" value="excluir" class="h-5 w-5 text-red-600 focus:ring-red-500">
+                    <span class="ml-4 flex flex-col">
+                        <span class="font-semibold">Excluir Conta</span>
+                        <span class="text-sm text-gray-500">Esta ação é permanente e todos os seus dados serão apagados.</span>
+                    </span>
+                </label>
+            </div>
+            <div class="mt-6 flex justify-center space-x-4">
+               <button type="button" class="btnCancelarAcaoConta bg-gray-200 text-gray-800 py-2 px-6 rounded-lg font-semibold">Cancelar</button>
+               <button type="button" id="btnConfirmarEscolhaAcao" class="btn-primario py-2 px-6 rounded-lg font-semibold">Sim, continuar</button>
+            </div>
+        </div>
+    </div>
+
+
     <script src="../scripts/Admin.js"></script>
 
 </body>

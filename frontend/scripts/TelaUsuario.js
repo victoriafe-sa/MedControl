@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dadosParaSalvar = null;
     let timerInterval = null;
     let novaSenhaTemporaria = null;
+    let acaoGerenciarContaSelecionada = null; // NOVO
 
     // --- ELEMENTOS DOM ---
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
@@ -12,12 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalRedefinirSenha = document.getElementById('modalRedefinirSenha');
     const modalVerificacaoEmailEdicao = document.getElementById('modalVerificacaoEmailEdicao');
     const formRedefinirSenha = document.getElementById('formularioRedefinirSenha');
+    const modalEscolhaAcaoConta = document.getElementById('modalEscolhaAcaoConta'); // NOVO
+    const modalConfirmarSenhaUsuario = document.getElementById('modalConfirmarSenhaUsuario'); // NOVO
     
     // --- FUNÇÕES UTILITÁRIAS ---
-    const abrirModal = (modal) => modal.style.display = 'flex';
+    const abrirModal = (modal) => modal.classList.add('ativo'); // CORRIGIDO
     
     const fecharTodosModais = () => {
-        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('ativo')); // CORRIGIDO
         clearInterval(timerInterval);
     };
 
@@ -125,10 +128,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div><label class="font-semibold text-gray-600">CEP:</label><span class="ml-2 text-gray-800">${usuarioAtual.cep}</span></div>
                     <div><label class="font-semibold text-gray-600">Data de Nascimento:</label><span class="ml-2 text-gray-800">${dataFormatada}</span></div>
                 </div>
+                 <!-- NOVO: Seção para gerenciar conta -->
+                <div class="mt-12 pt-8 border-t border-red-200">
+                    <h3 class="text-xl font-bold text-red-700">Gerenciar Conta</h3>
+                    <p class="mt-2 text-gray-600">Cuidado, as ações abaixo não podem ser desfeitas.</p>
+                    <div class="mt-4">
+                        <button id="btnExcluirDesativarUsuario" class="btn-perigo py-2 px-5 rounded-lg text-base font-semibold">Excluir ou Desativar Conta</button>
+                    </div>
+                </div>
             </div>
         `;
         document.getElementById('btnEditarPerfil').addEventListener('click', abrirModalEdicaoPerfil);
         document.getElementById('btnAbrirRedefinirSenha').addEventListener('click', abrirModalRedefinirSenha);
+        document.getElementById('btnExcluirDesativarUsuario').addEventListener('click', () => {
+            abrirModal(modalEscolhaAcaoConta);
+        });
     };
 
     const abrirModalEdicaoPerfil = () => {
@@ -479,6 +493,87 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- NOVO: Lógica para Excluir/Desativar Conta do Usuário ---
+    document.querySelector('#modalEscolhaAcaoConta .btnCancelarAcaoConta').addEventListener('click', fecharTodosModais);
+
+    document.getElementById('btnConfirmarEscolhaAcaoUsuario').addEventListener('click', () => {
+        acaoGerenciarContaSelecionada = document.querySelector('input[name="usuarioAcaoConta"]:checked').value;
+        fecharTodosModais();
+        document.getElementById('formularioConfirmarSenhaUsuario').reset();
+        const erroSenhaEl = document.getElementById('erroSenhaConfirm');
+        erroSenhaEl.textContent = '';
+        abrirModal(modalConfirmarSenhaUsuario);
+    });
+    
+    document.getElementById('formularioConfirmarSenhaUsuario').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const senhaInput = document.getElementById('senhaUsuarioConfirm');
+        const erroSenhaEl = document.getElementById('erroSenhaConfirm');
+        erroSenhaEl.textContent = '';
+    
+        try {
+            const res = await fetch('http://localhost:7071/api/admin/verify-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminId: usuarioAtual.id, password: senhaInput.value })
+            });
+    
+            if (res.ok) {
+                if (acaoGerenciarContaSelecionada === 'desativar') {
+                    desativarPropriaConta();
+                } else if (acaoGerenciarContaSelecionada === 'excluir') {
+                    excluirPropriaConta();
+                }
+            } else {
+                const data = await res.json();
+                erroSenhaEl.textContent = data.message || 'Senha incorreta.';
+            }
+        } catch(err) {
+            erroSenhaEl.textContent = 'Erro de conexão.';
+        }
+    });
+    
+    async function desativarPropriaConta() {
+        try {
+            const resp = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ativo: false })
+            });
+            if (resp.ok) {
+                fecharTodosModais();
+                exibirToast('Conta desativada. Você será desconectado.');
+                setTimeout(() => {
+                    sessionStorage.removeItem('medControlUser');
+                    window.location.href = 'Home.html';
+                }, 500);
+            } else { 
+                alert('Erro ao desativar a conta.'); 
+            }
+        } catch (e) { 
+            alert('Erro de conexão.'); 
+        }
+    }
+    
+    async function excluirPropriaConta() {
+        try {
+            const resp = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}`, { method: 'DELETE' });
+            if (resp.ok) {
+                fecharTodosModais();
+                exibirToast('Conta excluída com sucesso. Você será desconectado.');
+                setTimeout(() => {
+                    sessionStorage.removeItem('medControlUser');
+                    window.location.href = 'Home.html';
+                }, 500);
+            } else { 
+                alert('Erro ao excluir a conta.'); 
+            }
+        } catch (e) { 
+            alert('Erro de conexão.'); 
+        }
+    }
+
+
     // --- PLACEHOLDERS ---
     const renderizarReservas = () => { document.getElementById('conteudo-reservas').innerHTML = '<div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-bold text-gray-800">Minhas Reservas</h2><p class="mt-4 text-lg">Suas reservas de medicamentos aparecerão aqui.</p></div>'; };
     const renderizarFavoritos = () => { document.getElementById('conteudo-favoritos').innerHTML = '<div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-bold text-gray-800">Favoritos</h2><p class="mt-4 text-lg">Seus medicamentos favoritados aparecerão aqui para fácil acesso.</p></div>'; };
@@ -495,4 +590,3 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarHistorico();
     renderizarNotificacoes();
 });
-

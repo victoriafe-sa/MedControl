@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalMeuPerfilAdmin = document.getElementById('modalMeuPerfilAdmin');
     const modalRedefinirSenhaAdmin = document.getElementById('modalRedefinirSenhaAdmin');
     const modalConfirmarSenhaAdmin = document.getElementById('modalConfirmarSenha');
+    const modalEscolhaAcaoConta = document.getElementById('modalEscolhaAcaoConta'); // NOVO
     const formularioUsuario = document.getElementById('formularioUsuario');
     
     // --- Variáveis de Estado ---
@@ -645,13 +646,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><label class="font-semibold text-gray-600">CEP:</label><span class="ml-2 text-gray-800">${usuarioAtual.cep}</span></div>
                 <div><label class="font-semibold text-gray-600">Data de Nascimento:</label><span class="ml-2 text-gray-800">${dataFormatada}</span></div>
             </div>
-            <div class="mt-8 pt-6 border-t flex justify-end gap-4">
-                 <button id="btnAbrirModalRedefinirSenhaAdmin" class="btn-secundario py-2 px-5 rounded-lg font-semibold">Redefinir Senha</button>
-                 <button id="btnAbrirModalEditarAdmin" class="btn-primario py-2 px-5 rounded-lg font-semibold">Editar Perfil</button>
+            <div class="mt-8 pt-6 border-t flex justify-between items-center gap-4">
+                 <div>
+                    <button id="btnExcluirDesativarAdmin" class="btn-perigo py-2 px-5 rounded-lg font-semibold">Excluir/Desativar Conta</button>
+                 </div>
+                 <div class="flex gap-4">
+                    <button id="btnAbrirModalRedefinirSenhaAdmin" class="btn-secundario py-2 px-5 rounded-lg font-semibold">Redefinir Senha</button>
+                    <button id="btnAbrirModalEditarAdmin" class="btn-primario py-2 px-5 rounded-lg font-semibold">Editar Perfil</button>
+                 </div>
             </div>
         `;
         document.getElementById('btnAbrirModalEditarAdmin').addEventListener('click', abrirModalEdicaoAdmin);
         document.getElementById('btnAbrirModalRedefinirSenhaAdmin').addEventListener('click', abrirModalRedefinirSenhaAdmin);
+        // NOVO
+        document.getElementById('btnExcluirDesativarAdmin').addEventListener('click', () => {
+            fecharTodosModais();
+            modalEscolhaAcaoConta.classList.add('ativo');
+        });
     };
 
     const abrirModalEdicaoAdmin = () => {
@@ -671,10 +682,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p id="erroadminEditCep" class="error-message"></p>
             </div>
             <div><label class="block text-sm font-medium text-gray-700">Data de Nascimento</label><input type="date" id="adminEditNascimento" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAtual.data_nascimento || ''}"><p id="erroadminEditNascimento" class="error-message"></p></div>
-            <div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button></div>
+            <div class="pt-4 flex gap-4"><button type="button" class="fechar-modal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button></div>
         `;
         form.onsubmit = submeterFormularioAdmin; 
-        form.querySelector('.btnFecharModal').addEventListener('click', fecharTodosModais);
+        form.querySelector('.fechar-modal').addEventListener('click', fecharTodosModais);
         
         const cepInput = form.querySelector('#adminEditCep');
         const validationElement = form.querySelector('#validacaoAdminEditCep');
@@ -714,10 +725,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-center text-gray-600 mb-4">Para confirmar, digite sua senha atual.</p>
                 <div><label class="block text-sm font-medium text-gray-700">Senha Atual</label><input type="password" id="adminSenhaAtual" class="mt-1 block w-full"><p id="erroAdminSenhaAtual" class="error-message"></p></div>
             </div>
-            <div class="pt-4 flex gap-4"><button type="button" class="btnFecharModal w-full bg-gray-200 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Avançar</button></div>
+            <div class="pt-4 flex gap-4"><button type="button" class="fechar-modal w-full bg-gray-200 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Avançar</button></div>
         `;
         form.onsubmit = submeterRedefinicaoSenhaAdmin;
-        form.querySelector('.btnFecharModal').addEventListener('click', fecharTodosModais);
+        form.querySelector('.fechar-modal').addEventListener('click', fecharTodosModais);
         modalRedefinirSenhaAdmin.classList.add('ativo');
     };
     
@@ -777,6 +788,65 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+
+    // --- NOVO: Lógica para Excluir/Desativar a Própria Conta ---
+    document.querySelector('#modalEscolhaAcaoConta .btnCancelarAcaoConta').addEventListener('click', fecharTodosModais);
+
+    document.getElementById('btnConfirmarEscolhaAcao').addEventListener('click', () => {
+        const acaoSelecionada = document.querySelector('input[name="acaoConta"]:checked').value;
+        
+        if (acaoSelecionada === 'desativar') {
+            acaoAposConfirmarSenha = desativarPropriaConta;
+        } else {
+            acaoAposConfirmarSenha = excluirPropriaConta;
+        }
+        
+        fecharTodosModais();
+        document.getElementById('formularioConfirmarSenha').reset();
+        limparErrosFormulario('formularioConfirmarSenha');
+        modalConfirmarSenhaAdmin.classList.add('ativo');
+    });
+
+    async function desativarPropriaConta() {
+        try {
+            const resp = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ativo: false })
+            });
+            if (resp.ok) {
+                fecharTodosModais();
+                exibirToast('Conta desativada. Você será desconectado.');
+                setTimeout(() => {
+                    sessionStorage.removeItem('medControlUser');
+                    window.location.href = 'Home.html';
+                }, 500);
+            } else { 
+                alert('Erro ao desativar a conta.'); 
+            }
+        } catch (e) { 
+            alert('Erro de conexão.'); 
+        }
+    }
+
+    async function excluirPropriaConta() {
+        try {
+            const resp = await fetch(`http://localhost:7071/api/users/${usuarioAtual.id}`, { method: 'DELETE' });
+            if (resp.ok) {
+                fecharTodosModais();
+                exibirToast('Conta excluída com sucesso. Você será desconectado.');
+                setTimeout(() => {
+                    sessionStorage.removeItem('medControlUser');
+                    window.location.href = 'Home.html';
+                }, 500);
+            } else { 
+                alert('Erro ao excluir a conta.'); 
+            }
+        } catch (e) { 
+            alert('Erro de conexão.'); 
+        }
+    }
+    
     
     // Inicialização
     configurarVisibilidadeAbas(usuarioAtual.perfil);

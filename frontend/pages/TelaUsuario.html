@@ -171,9 +171,55 @@
         </div>
     </div>
 
+    <!-- NOVO: Modal de Escolha Excluir/Desativar Conta -->
+    <div id="modalEscolhaAcaoConta" class="modal">
+        <div class="bg-white w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
+            <h3 class="text-xl font-bold">Gerenciar Conta</h3>
+            <p class="text-gray-600 mt-2 mb-6">O que você gostaria de fazer com a sua conta?</p>
+            <div class="space-y-4 text-left">
+                <label for="usuarioAcaoDesativar" class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" id="usuarioAcaoDesativar" name="usuarioAcaoConta" value="desativar" class="h-5 w-5 text-blue-800 focus:ring-blue-700" checked>
+                    <span class="ml-4 flex flex-col">
+                        <span class="font-semibold">Desativar Conta</span>
+                        <span class="text-sm text-gray-500">Sua conta ficará inativa, mas seus dados serão mantidos.</span>
+                    </span>
+                </label>
+                <label for="usuarioAcaoExcluir" class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" id="usuarioAcaoExcluir" name="usuarioAcaoConta" value="excluir" class="h-5 w-5 text-red-600 focus:ring-red-500">
+                    <span class="ml-4 flex flex-col">
+                        <span class="font-semibold">Excluir Conta</span>
+                        <span class="text-sm text-gray-500">Esta ação é permanente e todos os seus dados serão apagados.</span>
+                    </span>
+                </label>
+            </div>
+            <div class="mt-6 flex justify-center space-x-4">
+               <button type="button" class="btnCancelarAcaoConta bg-gray-200 text-gray-800 py-2 px-6 rounded-lg font-semibold">Cancelar</button>
+               <button type="button" id="btnConfirmarEscolhaAcaoUsuario" class="btn-primario py-2 px-6 rounded-lg font-semibold">Sim, continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal de Confirmação de Senha do Usuário -->
+    <div id="modalConfirmarSenhaUsuario" class="modal">
+        <div class="bg-white w-full max-w-sm p-6 sm:p-8 rounded-xl shadow-2xl m-4">
+             <h3 class="text-xl font-bold text-center">Confirmação de Segurança</h3>
+             <p class="text-center text-gray-600 mt-2">Digite sua senha para confirmar a ação.</p>
+             <form id="formularioConfirmarSenhaUsuario" class="mt-6">
+                <div>
+                    <label for="senhaUsuarioConfirm" class="sr-only">Sua Senha</label>
+                    <input type="password" id="senhaUsuarioConfirm" class="block w-full text-center" placeholder="Sua senha atual" required>
+                </div>
+                <div id="erroSenhaConfirm" class="text-red-500 text-sm text-center mt-2 h-4"></div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" class="btnFecharModal bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-semibold">Cancelar</button>
+                    <button type="submit" class="btn-primario py-2 px-4 rounded-lg font-semibold">Confirmar</button>
+                </div>
+             </form>
+        </div>
+    </div>
+
     <div id="modalConfirmacao" class="modal"><div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl m-4 text-center"><h3 id="tituloConfirmacao" class="text-xl font-bold"></h3><p id="mensagemConfirmacao" class="text-gray-600 mt-2"></p><div class="mt-6 flex gap-4"><button id="btnCancelarConfirmacao" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button><button id="btnConfirmarAcao" class="w-full btn-perigo py-2 px-4 rounded-lg"></button></div></div></div>
 
     <script src="../scripts/TelaUsuario.js"></script>
 </body>
 </html>
-
