@@ -6,7 +6,7 @@ Este é o guia para o projeto MedControl, um sistema de monitoramento de medicam
 
 A estrutura abaixo reflete o padrão Maven/Java, onde a organização dos diretórios corresponde à declaração de package nos arquivos .java.
 
-medcontrol-projeto-completo/
+medcontrol-projeto-completo/  
 │
 ├── 📁 backend/  
 │   ├── 📄 .gitignore  
@@ -64,4 +64,5 @@ medcontrol-projeto-completo/
         .Aguarde a extensão Java sincronizar o projeto (pode levar alguns segundos).
         .Execute(Run) o arquivo ApiServer.java.
 5. Execute o Front-end: Abra o frontend/pages/home.html com a extensão "Live Server".
+
 
