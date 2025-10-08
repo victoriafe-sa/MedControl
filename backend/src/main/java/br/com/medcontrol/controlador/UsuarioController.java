@@ -174,35 +174,37 @@ public class UsuarioController {
 
     public void verificarSenhaAdmin(Context ctx) {
         try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, Object> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
-            Integer adminId = (Integer) req.get("adminId");
+            Integer userId = (Integer) req.get("adminId"); // O nome da chave é 'adminId', mas representa o id do usuário logado
             String password = (String) req.get("password");
 
-            if (adminId == null || password == null) {
-                ctx.status(400).json(Map.of("success", false, "message", "ID do admin e senha são obrigatórios."));
+            if (userId == null || password == null) {
+                ctx.status(400).json(Map.of("success", false, "message", "ID do usuário e senha são obrigatórios."));
                 return;
             }
 
-            String sql = "SELECT senha FROM usuarios WHERE id = ? AND perfil = 'admin'";
+            // CORREÇÃO: Remove a cláusula "AND perfil = 'admin'" para permitir que qualquer usuário
+            // do painel de gerenciamento confirme sua própria senha.
+            String sql = "SELECT senha FROM usuarios WHERE id = ?";
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, adminId);
+                ps.setInt(1, userId);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         String senhaHash = rs.getString("senha");
                         if (passwordEncoder.matches(password, senhaHash)) {
                             ctx.json(Map.of("success", true));
                         } else {
-                            ctx.status(401).json(Map.of("success", false, "message", "Senha de administrador incorreta."));
+                            ctx.status(401).json(Map.of("success", false, "message", "Senha incorreta."));
                         }
                     } else {
-                        ctx.status(401).json(Map.of("success", false, "message", "Administrador não encontrado."));
+                        // A mensagem de erro foi generalizada para "Usuário não encontrado".
+                        ctx.status(404).json(Map.of("success", false, "message", "Usuário não encontrado."));
                     }
                 }
             }
         } catch (Exception e) {
-             System.err.println("Erro na verificação de senha do admin: " + e.getMessage());
+             System.err.println("Erro na verificação de senha: " + e.getMessage());
              e.printStackTrace();
              ctx.status(500).json(Map.of("success", false, "message", "Erro interno no servidor."));
         }

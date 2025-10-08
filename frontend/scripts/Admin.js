@@ -3,7 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dadosUsuario = sessionStorage.getItem('medControlUser');
     if (!dadosUsuario) { window.location.href = 'TelaLoginCadastro.html'; return; }
     let usuarioAtual = JSON.parse(dadosUsuario);
-    if (usuarioAtual.perfil !== 'admin') { window.location.href = 'TelaUsuario.html'; return; }
+
+    const perfisGerenciamento = ['admin', 'farmaceutico', 'gestor_ubs', 'gestor_estoque'];
+    if (!perfisGerenciamento.includes(usuarioAtual.perfil)) { 
+        window.location.href = 'TelaUsuario.html'; 
+        return; 
+    }
+
     document.getElementById('boasVindasAdmin').textContent = `Olá, ${usuarioAtual.nome.split(' ')[0]}!`;
 
     // --- Seletores de Modais e Formulários ---
@@ -23,6 +29,51 @@ document.addEventListener('DOMContentLoaded', () => {
     let usuarioEditadoOriginal = null;
     let novaSenhaTemporaria = null;
     let acaoAposConfirmarSenha = null;
+
+    // --- Lógica de Visibilidade das Abas ---
+    const configurarVisibilidadeAbas = (perfil) => {
+        const abas = {
+            'usuarios': document.querySelector('[data-aba="usuarios"]'),
+            'medicamentos': document.querySelector('[data-aba="medicamentos"]'),
+            'ubs': document.querySelector('[data-aba="ubs"]'),
+            'validacao': document.querySelector('[data-aba="validacao"]'),
+            'relatorios': document.querySelector('[data-aba="relatorios"]'),
+            'auditoria': document.querySelector('[data-aba="auditoria"]')
+        };
+
+        const permissoes = {
+            'admin': ['usuarios', 'medicamentos', 'ubs', 'validacao', 'relatorios', 'auditoria'],
+            'farmaceutico': ['validacao'],
+            'gestor_estoque': ['medicamentos'],
+            'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios']
+        };
+
+        // Esconde todas as abas e conteúdos primeiro
+        Object.values(abas).forEach(aba => {
+            if (aba) aba.style.display = 'none';
+        });
+        document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
+
+        const abasVisiveis = permissoes[perfil] || [];
+        
+        // Mostra as abas permitidas
+        abasVisiveis.forEach(nomeAba => {
+            if (abas[nomeAba]) {
+                abas[nomeAba].style.display = ''; // Reseta para o padrão (flex item)
+            }
+        });
+
+        // Ativa a primeira aba visível
+        if (abasVisiveis.length > 0) {
+            const primeiraAba = abasVisiveis[0];
+            const primeiraAbaBtn = abas[primeiraAba];
+            const primeiroConteudo = document.getElementById(`conteudo-${primeiraAba}`);
+
+            document.querySelectorAll('.btn-aba').forEach(a => a.classList.remove('ativo'));
+            if (primeiraAbaBtn) primeiraAbaBtn.classList.add('ativo');
+            if (primeiroConteudo) primeiroConteudo.classList.add('ativo');
+        }
+    };
 
     // --- Funções Utilitárias ---
     const fecharTodosModais = () => {
@@ -524,7 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (resposta.ok) {
                 fecharTodosModais();
-                carregarUsuarios();
+                if (document.getElementById('conteudo-usuarios').classList.contains('ativo')) {
+                    carregarUsuarios();
+                }
                 exibirToast(estaEditando ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
 
                 if (fluxoVerificacao === 'editarMeuPerfil' && id === usuarioAtual.id) {
@@ -726,8 +779,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // Inicialização
-    carregarUsuarios();
+    configurarVisibilidadeAbas(usuarioAtual.perfil);
+    if(usuarioAtual.perfil === 'admin') {
+      carregarUsuarios();
+    }
     document.querySelectorAll('.fechar-modal').forEach(btn => btn.addEventListener('click', fecharTodosModais));
     document.getElementById('btnCancelarConfirmacao').addEventListener('click', fecharTodosModais);
 });
-

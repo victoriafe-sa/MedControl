@@ -17,7 +17,7 @@ CREATE TABLE usuarios (
     cep VARCHAR(10),
     data_nascimento DATE,
     senha VARCHAR(255) NOT NULL,
-    perfil ENUM('usuario', 'farmaceutico', 'admin', 'gestor_ubs') NOT NULL DEFAULT 'usuario',
+    perfil ENUM('usuario', 'farmaceutico', 'admin', 'gestor_ubs', 'gestor_estoque') NOT NULL DEFAULT 'usuario',
     ativo BOOLEAN DEFAULT TRUE,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedControl - Painel do Administrador</title>
+    <title>MedControl - Painel de Gerenciamento</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,8 +88,11 @@
                     <div id="containerCampoSenha"><label for="senhaUsuario" class="block text-sm font-medium text-gray-700">Senha</label><input type="password" id="senhaUsuario" class="mt-1 block w-full" required><p id="erroSenhaUsuario" class="error-message"></p></div>
                     <div><label for="perfilUsuario" class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
                         <select id="perfilUsuario" class="mt-1 block w-full" required>
-                            <option value="usuario">Usuário</option><option value="farmaceutico">Farmacêutico</option>
-                            <option value="gestor_ubs">Gestor UBS</option><option value="admin">Administrador</option>
+                            <option value="usuario">Usuário</option>
+                            <option value="farmaceutico">Farmacêutico</option>
+                            <option value="gestor_ubs">Gestor UBS</option>
+                            <option value="gestor_estoque">Gestor de Estoque</option>
+                            <option value="admin">Administrador</option>
                         </select>
                     </div>
                 </div>
@@ -192,4 +195,3 @@
 
 </body>
 </html>
-
