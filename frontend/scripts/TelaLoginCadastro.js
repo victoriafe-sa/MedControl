@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Se os dados forem únicos, inicia o processo de envio do código de verificação.
             fluxoAtual = 'cadastro';
-            await iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
+            iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
         } catch (err) {
             alert('Erro de conexão ao verificar dados.');
         }
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         fecharModais();
                         container.classList.remove("painel-direito-ativo"); // Volta para a tela de login
                         formularioCadastro.reset();
-                    }, 3000);
+                    }, 500);
                 } else { // Falha (código errado, etc.)
                     exibirMensagem(msgEl, data.message, true);
                 }

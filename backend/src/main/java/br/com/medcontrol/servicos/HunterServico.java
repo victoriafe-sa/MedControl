@@ -1,4 +1,4 @@
-/* Codigo original para integração com Hunter API (desativado para testes):
+/*Codigo original para integração com Hunter API (desativado para testes):
 package br.com.medcontrol.servicos;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,7 +12,7 @@ import java.util.Map;
 // Esta classe é responsável por interagir com a API do Hunter.io para verificar se um e-mail é válido.
 public class HunterServico {
     // ATENÇÃO: A chave da API deve ser armazenada de forma segura, como em variáveis de ambiente, e não diretamente no código.
-    private static final String HUNTER_API_KEY = "Sua-Chave-Api-Aqui"; // <-- COLOQUE SUA CHAVE AQUI
+    private static final String HUNTER_API_KEY = "sua-chave-api-aqui"; // <-- COLOQUE SUA CHAVE AQUI
     // URL base da API do Hunter para verificação de e-mail.
     private static final String HUNTER_API_URL = "https://api.hunter.io/v2/email-verifier?email=%s&api_key=%s";
 
@@ -53,8 +53,8 @@ public class HunterServico {
         return false;
     }
 }
-
 */
+//
 package br.com.medcontrol.servicos;
 
 // --- VERSÃO DE TESTE (MODO MOCK) ---
@@ -71,3 +71,4 @@ public class HunterServico {
         
     }
 }
+//
