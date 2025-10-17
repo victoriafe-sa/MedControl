@@ -9,15 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputCepCadastro = document.getElementById('cadastroCep'); 
 
     // --- VARIÁVEIS DE ESTADO ---
+    // Armazena os dados do formulário de cadastro enquanto o usuário verifica o e-mail.
     let dadosUsuarioTemporario = null;
     let emailParaRecuperar = null;
     let timerInterval = null;
-    let fluxoAtual = 'cadastro'; // 'cadastro' ou 'recuperacao'
+    let fluxoAtual = 'cadastro'; // Controla se o modal de verificação é para 'cadastro' ou 'recuperacao'
 
     // --- FUNÇÕES UTILITÁRIAS ---
     const fecharModais = () => {
         document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        clearInterval(timerInterval);
+        clearInterval(timerInterval); // Garante que o timer pare ao fechar o modal.
     };
 
     const exibirMensagem = (el, texto, isErro) => {
@@ -31,14 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return re.test(String(email).toLowerCase());
     };
     
-    // --- LÓGICA DE ANIMAÇÃO ---
+    // --- LÓGICA DE ANIMAÇÃO DO PAINEL LOGIN/CADASTRO ---
     document.getElementById('btnCadastrar').addEventListener('click', () => container.classList.add("painel-direito-ativo"));
     document.getElementById('btnEntrar').addEventListener('click', () => container.classList.remove("painel-direito-ativo"));
     if (window.location.hash === '#register') {
         container.classList.add("painel-direito-ativo");
     }
 
-    // --- LOGIN ---
+    // --- LÓGICA DE LOGIN ---
     formularioLogin.addEventListener('submit', async (e) => {
         e.preventDefault();
         const emailOuCpf = document.getElementById('loginEmailCpf').value;
@@ -64,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- CADASTRO ---
+    // --- LÓGICA DE CADASTRO E VERIFICAÇÃO ---
     const limparErros = (formId) => {
         document.querySelectorAll(`#${formId} .input-error`).forEach(el => el.classList.remove('input-error'));
         document.querySelectorAll(`#${formId} .error-message`).forEach(el => el.textContent = '');
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function validarCadastro() {
+        // (Implementação da validação do formulário no lado do cliente)
         limparErros('formularioCadastro');
         let isValid = true;
         const fields = [
@@ -120,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isValid = false;
         }
 
-        // MODIFICADO: Verifica se o CEP foi validado com sucesso
+        //Verifica se o CEP foi validado com sucesso
         const cepInput = document.getElementById('cadastroCep');
         if (cepInput.value.trim() && !cepInput.classList.contains('input-success')) {
             cepInput.classList.add('input-error');
@@ -131,10 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return isValid;
     }
 
+    // --- ETAPA 1 e 2 (Fluxo) ---
+    // Evento disparado quando o usuário clica em "Cadastrar".
     formularioCadastro.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!validarCadastro()) return;
+        if (!validarCadastro()) return; // Validação client-side
         
+        // Armazena os dados do formulário temporariamente.
         dadosUsuarioTemporario = {
             nome: document.getElementById('cadastroNome').value,
             email: document.getElementById('cadastroEmail').value,
@@ -144,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
             senha: document.getElementById('cadastroSenha').value
         };
         
+        // --- ETAPA 3 (Fluxo) ---
+        // Faz uma requisição ao backend para verificar se e-mail/CPF já existem.
         try {
             const res = await fetch('http://localhost:7071/api/usuarios/verificar-existencia', {
                 method: 'POST',
@@ -167,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if(hasError) return;
 
+            // Se os dados forem únicos, inicia o processo de envio do código de verificação.
             fluxoAtual = 'cadastro';
             await iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
         } catch (err) {
@@ -217,12 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
     inputCepCadastro.addEventListener('blur', () => validarCep(inputCepCadastro, 'validacaoCadastroCep'));
 
 
-    // --- FLUXO DE VERIFICAÇÃO DE E-MAIL (UNIFICADO) ---
+    // --- ETAPA 7 (Fluxo) ---
+    // Função central que envia a requisição para o backend gerar e enviar o código.
     async function iniciarFluxoVerificacao(email, motivo) {
         document.getElementById('emailParaVerificar').textContent = email;
         const msgEl = document.getElementById('mensagemVerificacao');
         exibirMensagem(msgEl, 'Enviando código...', false);
         
+        // Ajusta o texto do modal dependendo se é um cadastro ou recuperação de senha.
         if (motivo === 'cadastro') {
             document.getElementById('tituloModalVerificacao').textContent = 'Verifique seu E-mail';
             document.getElementById('btnVerificarCodigo').textContent = 'Verificar e Cadastrar';
@@ -231,18 +241,21 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('btnVerificarCodigo').textContent = 'Verificar Código';
         }
 
-        modalVerificacaoEmail.style.display = 'flex';
+        modalVerificacaoEmail.style.display = 'flex'; // Exibe o modal para o usuário.
 
         try {
+            // Faz a chamada à API do backend.
             const res = await fetch('http://localhost:7071/api/usuarios/enviar-codigo-verificacao', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, motivo })
             });
             if (res.ok) {
+                // Se o backend enviou o e-mail com sucesso, inicia o timer no frontend.
                 msgEl.style.display = 'none';
                 iniciarTimer();
             } else {
+                // Caso contrário, exibe a mensagem de erro vinda do backend (ex: e-mail inválido pelo Hunter).
                 const dataErro = await res.json();
                 const mensagem = dataErro.message || 'Falha ao enviar o código de verificação.';
                 exibirMensagem(msgEl, mensagem, true);
@@ -252,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Inicia o cronômetro de 2 minutos na tela.
     function iniciarTimer() {
         clearInterval(timerInterval);
         let tempoRestante = 120;
@@ -272,38 +286,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    // Evento para o botão de reenviar o código.
     document.getElementById('btnReenviarCodigo').addEventListener('click', () => {
         const email = (fluxoAtual === 'cadastro') ? dadosUsuarioTemporario.email : emailParaRecuperar;
         iniciarFluxoVerificacao(email, fluxoAtual);
     });
 
+    // --- ETAPA 8 e 11 (Fluxo) ---
+    // Evento disparado quando o usuário insere o código e clica em "Verificar".
     document.getElementById('formularioVerificacao').addEventListener('submit', async (e) => {
         e.preventDefault();
         const codigo = document.getElementById('codigoVerificacao').value;
         const msgEl = document.getElementById('mensagemVerificacao');
         const email = (fluxoAtual === 'cadastro') ? dadosUsuarioTemporario.email : emailParaRecuperar;
         
+        // Se o fluxo for de cadastro, a requisição já finaliza o registro.
         if (fluxoAtual === 'cadastro') {
             dadosUsuarioTemporario.codigoVerificacao = codigo;
             try {
+                // Envia todos os dados do usuário + o código para o endpoint de registro.
                 const res = await fetch('http://localhost:7071/api/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dadosUsuarioTemporario)
                 });
                 const data = await res.json();
-                if (res.ok) {
+                if (res.ok) { // Sucesso
                     exibirMensagem(msgEl, data.message + ' Faça o login para continuar.', false);
                     setTimeout(() => {
                         fecharModais();
-                        container.classList.remove("painel-direito-ativo");
+                        container.classList.remove("painel-direito-ativo"); // Volta para a tela de login
                         formularioCadastro.reset();
                     }, 3000);
-                } else {
+                } else { // Falha (código errado, etc.)
                     exibirMensagem(msgEl, data.message, true);
                 }
             } catch (err) {
                 exibirMensagem(msgEl, 'Erro de conexão.', true);
             }
-        } else { // fluxoAtual === 'recuperacao'
+        } else { // Se o fluxo for de recuperação de senha, apenas valida o código.
             try {
                 const res = await fetch('http://localhost:7071/api/usuarios/verificar-codigo', {
                     method: 'POST',
@@ -311,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, codigo })
                 });
                 const data = await res.json();
-                if(res.ok) {
+                if(res.ok) { // Se o código for válido, avança para a etapa de criar nova senha.
                     fecharModais();
                     document.getElementById('passo1Recuperacao').style.display = 'none';
                     document.getElementById('passo2Recuperacao').style.display = 'block';
@@ -325,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- RECUPERAÇÃO DE SENHA ---
+    // --- LÓGICA DE RECUPERAÇÃO DE SENHA ---
     document.getElementById('linkEsqueceuSenha').addEventListener('click', (e) => {
         e.preventDefault();
         fecharModais();

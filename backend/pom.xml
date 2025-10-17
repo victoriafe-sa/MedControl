@@ -15,7 +15,7 @@
     </properties>
 
     <dependencies>
-        <!-- Servidor Web Javalin -->
+        <!-- Servidor Web Javalin: Micro-framework para criar a API REST de forma rápida. -->
         <dependency>
             <groupId>io.javalin</groupId>
             <artifactId>javalin</artifactId>
@@ -29,7 +29,7 @@
             <version>2.0.7</version>
         </dependency>
 
-        <!-- Manipulação de JSON (ObjectMapper) -->
+        <!-- Manipulação de JSON (ObjectMapper): Converte objetos Java para JSON e vice-versa. Essencial para a comunicação com o frontend. -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -50,31 +50,36 @@
             <version>6.1.4</version> 
         </dependency>
 
-        <!-- Bibliotecas Cliente do Google para a API do Gmail e OAuth 2.0 -->
+        <!-- == DEPENDÊNCIAS CHAVE PARA A FUNCIONALIDADE RF01.3 (VALIDAR CÓDIGO) == -->
+        
+        <!-- Biblioteca Cliente do Google para a API do Gmail e OAuth 2.0 -->
+        <!-- google-api-client: Biblioteca base para acessar APIs do Google. -->
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
             <version>2.2.0</version>
         </dependency>
+        <!-- google-oauth-client-jetty: Fornece as ferramentas para o fluxo de autorização OAuth 2.0, abrindo o navegador para o usuário permitir o acesso. -->
         <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-jetty</artifactId>
             <version>1.34.1</version>
         </dependency>
+        <!-- google-api-services-gmail: Contém as classes específicas para interagir com a API do Gmail (enviar e-mails, etc.). -->
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-gmail</artifactId>
             <version>v1-rev20220404-2.0.0</version>
         </dependency>
 
-        <!-- JavaMail API (útil para construir o objeto MimeMessage) -->
+        <!-- JavaMail API (útil para construir o objeto MimeMessage): Facilita a criação do corpo do e-mail (destinatário, assunto, texto) antes de enviá-lo pela API do Gmail. -->
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
             <version>1.6.2</version>
         </dependency>
         
-        <!-- Encoding para a API do Gmail -->
+        <!-- Encoding para a API do Gmail (commons-codec): Necessária para codificar a mensagem de e-mail em Base64, que é o formato exigido pela API do Gmail para o envio. -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>

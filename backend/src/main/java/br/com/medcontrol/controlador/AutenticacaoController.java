@@ -23,15 +23,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AutenticacaoController {
 
+    // Classe interna para armazenar o código de verificação e sua data de expiração.
+    // Isso evita a necessidade de criar uma tabela no banco de dados para códigos temporários.
     private static class CodigoInfo {
         String codigo;
         LocalDateTime expiracao;
 
         CodigoInfo(String codigo) {
             this.codigo = codigo;
-            this.expiracao = LocalDateTime.now().plusMinutes(2); // Código expira em 2 minutos
+            // Define o tempo de expiração para 2 minutos a partir do momento da criação.
+            this.expiracao = LocalDateTime.now().plusMinutes(2); 
         }
 
+        // Verifica se o código informado é igual ao armazenado E se ainda não expirou.
         boolean isValido(String codigo) {
             return this.codigo.equals(codigo) && expiracao.isAfter(LocalDateTime.now());
         }
@@ -39,10 +43,15 @@ public class AutenticacaoController {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    // Injeção de dependência dos serviços de E-mail e Hunter.
     private final EmailServico emailServico;
-    private final HunterServico hunterServico; // <-- Adicionar
+    private final HunterServico hunterServico;
+    // Mapa para armazenar os códigos de verificação em memória.
+    // A chave é o e-mail do usuário e o valor é o objeto CodigoInfo.
+    // ConcurrentHashMap é usado para segurança em ambientes com múltiplas threads.
     private final Map<String, CodigoInfo> codigosVerificacao = new ConcurrentHashMap<>();
 
+    // O construtor recebe o serviço de e-mail e instancia o serviço Hunter.
     public AutenticacaoController(EmailServico emailServico) {
         this.emailServico = emailServico;
         this.hunterServico = new HunterServico(); // <-- Instanciar
@@ -50,7 +59,6 @@ public class AutenticacaoController {
 
     public void verificarExistencia(Context ctx) {
         try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, Object> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
             String email = (String) req.get("email");
             String cpfCns = (String) req.get("cpf_cns");
@@ -62,12 +70,10 @@ public class AutenticacaoController {
             existencia.put("email", false);
             existencia.put("cpf_cns", false);
 
-            // Constrói a query base
             String sqlEmail = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE email = ? AND (? IS NULL OR id != ?))";
             String sqlCpfCns = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE cpf_cns = ? AND (? IS NULL OR id != ?))";
 
             try (Connection conn = DB.getConnection()) {
-                // Verifica Email
                 if (email != null && !email.isEmpty()) {
                     try (PreparedStatement ps = conn.prepareStatement(sqlEmail)) {
                         ps.setString(1, email);
@@ -80,7 +86,6 @@ public class AutenticacaoController {
                         }
                     }
                 }
-                // Verifica CPF/CNS
                 if (cpfCns != null && !cpfCns.isEmpty()) {
                     try (PreparedStatement ps = conn.prepareStatement(sqlCpfCns)) {
                         ps.setString(1, cpfCns);
@@ -102,25 +107,33 @@ public class AutenticacaoController {
         }
     }
 
+    // Endpoint: POST /api/usuarios/enviar-codigo-verificacao
+    // Responsável por iniciar o fluxo de verificação de e-mail.
     public void enviarCodigoVerificacao(Context ctx) {
         try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             
-            // ETAPA DE PRÉ-VALIDAÇÃO
+            // --- ETAPA 4 (Fluxo) & PONTO DE CONTATO COM API HUNTER.IO ---
+            // Antes de gastar recursos enviando um e-mail, verifica se o e-mail é "entregável".
             if (!hunterServico.isEmailValido(email)) {
                 ctx.status(400).json(Map.of("success", false, "message", "O endereço de e-mail é inválido ou não pode receber mensagens."));
-                return;
+                return; // Interrompe a execução se o e-mail for inválido.
             }
 
+            // --- ETAPA 5 (Fluxo) & PONTO DE CONTATO COM API GMAIL ---
             // Continua o fluxo normal se o e-mail for válido
             String motivo = req.getOrDefault("motivo", "cadastro");
+            // Gera um código de 6 dígitos seguro.
             String codigo = emailServico.gerarCodigoVerificacao();
+            // Utiliza o serviço para enviar o e-mail através da API do Gmail.
             emailServico.enviarCodigoVerificacao(email, codigo, motivo);
 
+            // Armazena o código gerado em memória com a data de expiração.
             codigosVerificacao.put(email, new CodigoInfo(codigo));
 
+            // --- ETAPA 6 (Fluxo) ---
+            // Retorna sucesso para o frontend, que irá exibir a tela de inserção de código.
             ctx.status(200).json(Map.of("success", true, "message", "Código de verificação enviado."));
         } catch (Exception e) {
             System.err.println("Erro ao enviar código de verificação: " + e.getMessage());
@@ -129,14 +142,19 @@ public class AutenticacaoController {
         }
     }
     
+    // Endpoint: POST /api/usuarios/verificar-codigo
+    // Usado principalmente para o fluxo de recuperação de senha, para validar o código antes de pedir a nova senha.
     public void verificarCodigo(Context ctx) {
         try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             String codigo = req.get("codigo");
+            
+            // --- ETAPA 9 (Fluxo) ---
+            // Recupera o código armazenado para este e-mail.
             CodigoInfo codigoInfo = codigosVerificacao.get(email);
 
+            // Valida se o código existe, se é o mesmo informado e se não expirou.
             if (codigoInfo != null && codigoInfo.isValido(codigo)) {
                 ctx.status(200).json(Map.of("success", true, "message", "Código verificado com sucesso."));
             } else {
@@ -154,7 +172,6 @@ public class AutenticacaoController {
             return;
         }
         try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> loginRequest = mapper.readValue(body, new TypeReference<Map<String, String>>() {});
             String emailOuCpf = loginRequest.get("emailOuCpf");
             String senha = loginRequest.get("senha");
@@ -197,13 +214,17 @@ public class AutenticacaoController {
     }
 
 
+    // Endpoint: POST /api/register
+    // Finaliza o processo de cadastro após a validação do código.
     public void registrar(Context ctx) {
         try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
 
             String email = user.get("email");
             String codigoRecebido = user.get("codigoVerificacao");
+            
+            // --- ETAPA 9 (Fluxo) ---
+            // Recupera e valida o código da mesma forma que o endpoint de verificação.
             CodigoInfo codigoInfo = codigosVerificacao.get(email);
 
             if (codigoInfo == null || !codigoInfo.isValido(codigoRecebido)) {
@@ -211,6 +232,8 @@ public class AutenticacaoController {
                 return;
             }
 
+            // --- ETAPA 10 (Fluxo - Sucesso) ---
+            // Se o código for válido, o processo continua.
             String senhaPlana = user.get("senha");
             String senhaHash = passwordEncoder.encode(senhaPlana);
 
@@ -230,11 +253,13 @@ public class AutenticacaoController {
                 }
 
                 ps.setString(6, senhaHash);
-                ps.setString(7, "usuario");
+                ps.setString(7, "usuario"); // Perfil padrão no cadastro
                 ps.executeUpdate();
                 
+                // Remove o código do mapa para que não seja reutilizado.
                 codigosVerificacao.remove(email);
                 
+                // Retorna sucesso para o frontend.
                 ctx.status(201).json(Map.of("success", true, "message", "Cadastro realizado com sucesso!"));
             }
         } catch (SQLIntegrityConstraintViolationException e) {
@@ -255,7 +280,6 @@ public class AutenticacaoController {
 
     public void registrarAdmin(Context ctx) {
          try {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
 
             String email = user.get("email");
@@ -312,7 +336,6 @@ public class AutenticacaoController {
     public void atualizarComVerificacao(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
 
             String email = user.get("email");
@@ -339,7 +362,6 @@ public class AutenticacaoController {
 
     public void verificarEmail(Context ctx) {
         try (Connection conn = DB.getConnection()) {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             String sql = "SELECT EXISTS (SELECT 1 FROM usuarios WHERE email = ?)";
@@ -360,7 +382,6 @@ public class AutenticacaoController {
 
     public void atualizarSenha(Context ctx) {
         try (Connection conn = DB.getConnection()) {
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String email = req.get("email");
             String newPassword = req.get("newPassword");
