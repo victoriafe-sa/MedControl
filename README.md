@@ -57,12 +57,12 @@ medcontrol-projeto-completo/
 
 ## Passo a Passo para Executar
 1. Configure o Banco de Dados: Use o schema.sql.
-2. Adcionar a pasta tokens no MedControl e o arquivo credentials.json em resources
+2. Verifique o arquivo de conexão com o banco para atualizar a senha do seu MySQL (backend/src//java/br/com/medcontrol/db/DB.java)
 3. Certifique-se de estar com Extension pack for JAVA e Maven for JAVA no VSCODE
 4. Execute o Back-end:
         .No VS Code, vá em Arquivo > Abrir Pasta... e selecione apenas a pasta backend.
         .Aguarde a extensão Java sincronizar o projeto (pode levar alguns segundos).
-        .Execute(Run) o arquivo ApiServer.java.
+        .Execute(Run Java) o arquivo ApiServer.java.
 5. Execute o Front-end: Abra o frontend/pages/home.html com a extensão "Live Server".
 
 

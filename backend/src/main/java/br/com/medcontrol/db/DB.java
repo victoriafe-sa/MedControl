@@ -18,7 +18,7 @@ public class DB {
     private static final String PORT = "3306"; // <-- Adicionada a porta para fácil alteração
     private static final String DATABASE = "medcontrol_db";
     private static final String USER = "root";
-    private static final String PASSWORD = "sua-senha"; // Altere para a sua senha do MySQL
+    private static final String PASSWORD = "1234"; // Altere para a sua senha do MySQL
 
     // A URL de conexão agora é montada dinamicamente com as variáveis acima.
     private static final String URL = String.format("jdbc:mysql://%s:%s/%s", HOST, PORT, DATABASE);
