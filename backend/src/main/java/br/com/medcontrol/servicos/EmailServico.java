@@ -1,4 +1,4 @@
-/*Código original para integração com a API do Gmail (desativado para testes):
+/* Código original para integração com a API do Gmail (desativado para testes):
 package br.com.medcontrol.servicos;
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -144,7 +144,7 @@ public class EmailServico {
     }
 }
 */
-//
+
 package br.com.medcontrol.servicos;
 
 // --- VERSÃO DE TESTE (MODO MOCK) ---
@@ -178,4 +178,3 @@ public class EmailServico {
         
     }
 }
-//

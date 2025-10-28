@@ -167,6 +167,18 @@ document.addEventListener('DOMContentLoaded', () => {
     cepEditarInput.addEventListener('input', () => formatarCep(cepEditarInput));
     cepEditarInput.addEventListener('blur', () => validarCep(cepEditarInput, 'validacaoEditarCep'));
 
+    cepEditarInput.addEventListener('focus', () => {
+    // Limpa a mensagem de validação
+    document.getElementById('validacaoEditarCep').textContent = '';
+    document.getElementById('validacaoEditarCep').className = 'validation-message';
+
+    // Limpa a mensagem de erro
+    document.getElementById('erroEditarCep').textContent = '';
+
+    // Remove as bordas coloridas
+    cepEditarInput.classList.remove('input-success', 'input-error');
+});
+
     const isValidEmail = (email) => {
         const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return re.test(String(email).toLowerCase());

@@ -216,6 +216,18 @@ document.addEventListener('DOMContentLoaded', () => {
     cepUsuarioInput.addEventListener('input', () => formatarCep(cepUsuarioInput));
     cepUsuarioInput.addEventListener('blur', () => validarCep(cepUsuarioInput, document.getElementById('validacaoCepUsuario')));
 
+    cepUsuarioInput.addEventListener('focus', () => {
+    // Limpa a mensagem de validação
+    document.getElementById('validacaoCepUsuario').textContent = '';
+    document.getElementById('validacaoCepUsuario').className = 'validation-message';
+    
+    // Limpa a mensagem de erro
+    document.getElementById('erroCepUsuario').textContent = '';
+    
+    // Remove as bordas coloridas
+    cepUsuarioInput.classList.remove('input-success', 'input-error');
+});
+
     async function carregarUsuarios() {
         try {
             const resposta = await fetch('http://localhost:7071/api/users');
@@ -501,27 +513,64 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btnReenviarCodigoAdmin').addEventListener('click', iniciarFluxoVerificacao);
 
-    document.getElementById('formularioVerificacao').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const codigo = document.getElementById('codigoVerificacao').value;
-        if (!codigo || codigo.length < 6) {
-            exibirMensagemNoModal(document.getElementById('mensagemVerificacao'), 'Código inválido.', true);
-            return;
-        }
-        dadosUsuarioAtualParaSalvar.codigoVerificacao = codigo;
-        
-        const id = (fluxoVerificacao === 'editarTabela') 
-            ? usuarioEditadoOriginal.id 
-            : (fluxoVerificacao === 'editarMeuPerfil' ? usuarioAtual.id : null);
-        
-        const estaEditando = fluxoVerificacao !== 'adicionar';
 
-        acaoAposConfirmarSenha = () => salvarUsuario(estaEditando, id, true);
-        fecharTodosModais();
-        document.getElementById('formularioConfirmarSenha').reset();
-        limparErrosFormulario('formularioConfirmarSenha');
-        modalConfirmarSenhaAdmin.classList.add('ativo');
-    });
+document.getElementById('formularioVerificacao').addEventListener('submit', async (e) => { // 1. Adicione 'async'
+    e.preventDefault();
+    
+    const codigo = document.getElementById('codigoVerificacao').value;
+    const msgEl = document.getElementById('mensagemVerificacao');
+    
+    if (!codigo || codigo.length < 6) {
+        exibirMensagemNoModal(msgEl, 'Código inválido.', true);
+        return;
+    }
+
+    // 2. ADICIONE A VERIFICAÇÃO DO CÓDIGO PRIMEIRO
+    try {
+        // Envia o código para o backend para verificação (mesmo endpoint usado
+        //  desde a função 'iniciarFluxoVerificacao')
+        const res = await fetch('http://localhost:7071/api/usuarios/verificar-codigo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: dadosUsuarioAtualParaSalvar.email, 
+                codigo: codigo 
+            })
+        });
+
+        const data = await res.json();
+
+        // 3. Se o código for VÁLIDO, prossiga para o modal de senha
+        if (res.ok) {
+            
+            // Armazena o código verificado para a função 'salvarUsuario'
+            dadosUsuarioAtualParaSalvar.codigoVerificacao = codigo; 
+    
+            const id = (fluxoVerificacao === 'editarTabela') 
+                ? usuarioEditadoOriginal.id 
+                : (fluxoVerificacao === 'editarMeuPerfil' ? usuarioAtual.id : null);
+            
+            const estaEditando = fluxoVerificacao !== 'adicionar';
+
+            // Define a ação que o modal de senha executará
+            acaoAposConfirmarSenha = () => salvarUsuario(estaEditando, id, true);
+            
+            // Agora sim, abre o modal de senha
+            fecharTodosModais();
+            document.getElementById('formularioConfirmarSenha').reset();
+            limparErrosFormulario('formularioConfirmarSenha');
+            modalConfirmarSenhaAdmin.classList.add('ativo');
+        
+        } else {
+            // 4. Se o código for INVÁLIDO, mostre o erro e permaneça no modal
+            exibirMensagemNoModal(msgEl, data.message || 'Código inválido.', true);
+        }
+
+    } catch (error) {
+        // 5. Lida com erros de conexão
+        exibirMensagemNoModal(msgEl, 'Erro de conexão ao verificar o código.', true);
+    }
+});
 
     document.getElementById('formularioConfirmarSenha').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -691,6 +740,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const validationElement = form.querySelector('#validacaoAdminEditCep');
         cepInput.addEventListener('input', () => formatarCep(cepInput));
         cepInput.addEventListener('blur', () => validarCep(cepInput, validationElement));
+
+        cepInput.addEventListener('focus', () => {
+    // Limpa a mensagem de validação
+    validationElement.textContent = '';
+    validationElement.className = 'validation-message';
+    
+    // Limpa a mensagem de erro
+    document.getElementById('erroadminEditCep').textContent = '';
+    
+    // Remove as bordas coloridas
+    cepInput.classList.remove('input-success', 'input-error');
+});
         
         modalEditarPerfilAdmin.classList.add('ativo');
     };
