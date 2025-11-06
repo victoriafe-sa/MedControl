@@ -29,7 +29,8 @@
         <h2 class="text-2xl font-bold text-gray-800">Painel de Gerenciamento</h2>
         <div class="border-b border-gray-300 mt-6">
             <nav class="flex flex-wrap -mb-px space-x-8" id="nav-abas">
-                <button data-aba="usuarios" class="btn-aba ativo py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Usuários</button>
+                <!-- Abas são configuradas pelo JS com base no perfil -->
+                <button data-aba="usuarios" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Usuários</button>
                 <button data-aba="medicamentos" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Medicamentos</button>
                 <button data-aba="ubs" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">UBS</button>
                 <button data-aba="validacao" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Validação</button>
@@ -39,7 +40,8 @@
         </div>
 
         <div class="mt-8">
-            <div id="conteudo-usuarios" class="conteudo-aba ativo">
+            <!-- Conteúdo da Aba Usuários -->
+            <div id="conteudo-usuarios" class="conteudo-aba">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-semibold">Gerenciar Perfis de Usuário</h3>
                     <button id="abrirModalAdicionarUsuario" class="btn-primario py-2 px-4 rounded-lg font-semibold">Adicionar Usuário</button>
@@ -56,10 +58,13 @@
                             <th class="p-4 text-sm font-semibold text-gray-600">Status</th>
                             <th class="p-4 text-sm font-semibold text-gray-600">Ações</th>
                         </tr></thead>
-                        <tbody id="corpoTabelaUsuarios"></tbody>
+                        <tbody id="corpoTabelaUsuarios">
+                            <!-- Linhas inseridas pelo admin-usuarios.js -->
+                        </tbody>
                     </table>
                 </div>
             </div>
+            <!-- Outras Abas (Conteúdo Placeholder) -->
             <div id="conteudo-medicamentos" class="conteudo-aba"><p>Em breve: Gerenciamento de Medicamentos</p></div>
             <div id="conteudo-ubs" class="conteudo-aba"><p>Em breve: Gerenciamento de UBS</p></div>
             <div id="conteudo-validacao" class="conteudo-aba"><p>Em breve: Validação de Receitas e Documentos</p></div>
@@ -130,6 +135,7 @@
                 <h3 class="text-2xl font-bold">Meu Perfil</h3>
                 <button class="fechar-modal text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
             </div>
+            <!-- Conteúdo renderizado pelo admin-perfil.js -->
             <div id="conteudoMeuPerfilAdmin" class="space-y-4 text-lg"></div>
         </div>
     </div>
@@ -141,8 +147,8 @@
                 <h2 class="text-2xl font-bold text-gray-800">Editar Meu Perfil</h2>
                 <button class="fechar-modal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
+            <!-- Formulário renderizado pelo admin-perfil.js -->
             <form id="formularioEditarPerfilAdmin" class="mt-6 space-y-4" novalidate>
-                 <!-- O conteúdo deste formulário será gerado dinamicamente via JS -->
             </form>
         </div>
     </div>
@@ -154,6 +160,7 @@
                 <h2 class="text-2xl font-bold text-gray-800">Redefinir Minha Senha</h2>
                 <button class="fechar-modal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
+            <!-- Formulário renderizado pelo admin-perfil.js -->
             <form id="formularioRedefinirSenhaAdmin" class="mt-6 space-y-4" novalidate>
             </form>
         </div>
@@ -178,7 +185,7 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação Genérico (Ativar/Desativar/Excluir) -->
+    <!-- Modal de Confirmação Genérico (Ativar/Desativar) -->
     <div id="modalConfirmacao" class="modal">
         <div class="bg-white w-full max-w-sm p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
              <h3 id="tituloConfirmacao" class="text-xl font-bold"></h3>
@@ -190,7 +197,7 @@
         </div>
     </div>
 
-    <!-- NOVO: Modal de Escolha Excluir/Desativar Conta -->
+    <!-- Modal de Escolha Excluir/Desativar Conta (para o Admin) -->
     <div id="modalEscolhaAcaoConta" class="modal">
         <div class="bg-white w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
             <h3 class="text-xl font-bold">Gerenciar Conta</h3>
@@ -219,7 +226,8 @@
     </div>
 
 
-    <script src="../scripts/Admin.js"></script>
+    <!-- ALTERADO: Scripts agora são do tipo "module" -->
+    <script src="../scripts/Admin.js" type="module"></script>
 
 </body>
 </html>

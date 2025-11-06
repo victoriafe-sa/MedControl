@@ -282,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('btnVerificarCodigo').textContent = 'Verificar Código';
         }
 
+        document.getElementById('btnReenviarCodigo').disabled = true;
+
         modalVerificacaoEmail.style.display = 'flex'; // Exibe o modal para o usuário.
 
         try {
@@ -300,9 +302,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dataErro = await res.json();
                 const mensagem = dataErro.message || 'Falha ao enviar o código de verificação.';
                 exibirMensagem(msgEl, mensagem, true);
+                document.getElementById('btnReenviarCodigo').disabled = false;
             }
         } catch (e) {
             exibirMensagem(msgEl, 'Erro de conexão com o servidor.', true);
+
+            document.getElementById('btnReenviarCodigo').disabled = false;
         }
     }
 
