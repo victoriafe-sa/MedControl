@@ -45,7 +45,29 @@ medcontrol-projeto-completo/
 │    │         ├── 📄 TelaLoginCadastro.js  
 │    │         ├── 📄 TelaUsuario.js  
 │    │         ├── 📄 Admin.js  
-│    │         └── 📄 Home.js  
+│    │         ├── 📄 Home.js  
+│    │         │
+│    │         ├── 📁 utils/  
+│    │         │         ├── 📄 api.js  
+│    │         │         ├── 📄 auth.js  
+│    │         │         ├── 📄 cep.js  
+│    │         │         ├── 📄 ui.js
+│    │         │         └── 📄 validacao.js
+│    │         ├── 📁 admin/  
+│    │         │         ├── 📄 admin-usuarios.js  
+│    │         │         ├── 📄 admin-ubs.js  
+│    │         │         ├── 📄 admin-medicamentos.js 
+│    │         │         ├── 📄 admin-validacao.js
+│    │         │         ├── 📄 admin-relatorios.js
+│    │         │         ├── 📄 admin-auditoria.js 
+│    │         │         └── 📄 admin-perfil.js
+│    │         └── 📁 usuario/  
+│    │                   ├── 📄 usuario-perfil.js  
+│    │                   ├── 📄 usuario-busca.js  
+│    │                   └── 📄 usuario-reservas.js  
+│    │                  
+│    │
+│    │
 │    └── 📁 styles/  
 │              ├── 📄 TelaLoginCadastro.css  
 │              ├── 📄 TelaUsuario.css  
