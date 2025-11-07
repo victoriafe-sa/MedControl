@@ -17,6 +17,10 @@ medcontrol-projeto-completo/
 │   │                   │                    │          ├── 📄 MedicamentoController.java  
 │   │                   │                    │          ├── 📄 UBSController.java  
 │   │                   │                    │          ├── 📄 UsuarioController.java  
+│   │                   │                    │          ├── 📄 ReceitaController.java 
+│   │                   │                    │          ├── 📄 EstoqueController.java 
+│   │                   │                    │          ├── 📄 ReservaController.java 
+│   │                   │                    │          ├── 📄 RetiradaController.java 
 │   │                   │                    │          └── 📄 AutenticacaoControler.java  
 │   │                   │                    ├── 📁 db/  
 │   │                   │                    │        └── 📄 DB.java  
@@ -25,7 +29,8 @@ medcontrol-projeto-completo/
 │   │                   │                              ├── 📄 EmailServico.java  (Para a API do Gmail)  
 │   │                   │                              ├── 📄 HunterServico.java  (Para API Hunter, verificar se email é TRUE)  
 │   │                   │                              ├── 📄 CepServico.java    (Para a API ViaCEP)  
-│   │                   │                              └── 📄 DocumentoServico.java (Para a API futura validar o CPF e CNS)  
+│   │                   │                              ├── 📄 DocumentoServico.java (Para a API futura validar o CPF e CNS)  
+│   │                   │                              └── 📄 MapServico.java 
 │   │                   │ 
 │   │                   └──📄 credentials.json  
 │   │
