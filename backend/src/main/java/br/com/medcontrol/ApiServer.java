@@ -2,7 +2,10 @@ package br.com.medcontrol;
 
 import br.com.medcontrol.controlador.AutenticacaoController;
 import br.com.medcontrol.controlador.UsuarioController;
-import br.com.medcontrol.servicos.CepServico; // <-- IMPORTADO
+import br.com.medcontrol.controlador.UBSController; 
+import br.com.medcontrol.controlador.MedicamentoController; 
+import br.com.medcontrol.controlador.EstoqueController; 
+import br.com.medcontrol.servicos.CepServico;
 import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
 import java.util.ArrayList;
@@ -22,11 +25,15 @@ public class ApiServer {
         
         // --- INSTÂNCIA DE SERVIÇOS ---
         EmailServico emailServico = new EmailServico();
-        CepServico cepServico = new CepServico(); // <-- INSTANCIADO
+        CepServico cepServico = new CepServico();
         
         // --- INSTÂNCIA DE CONTROLADORES ---
+        // CORREÇÃO: Removida injeção de CepServico
         AutenticacaoController autenticacaoController = new AutenticacaoController(emailServico);
-        UsuarioController usuarioController = new UsuarioController();
+        UsuarioController usuarioController = new UsuarioController(); // CORREÇÃO
+        UBSController ubsController = new UBSController(); 
+        MedicamentoController medicamentoController = new MedicamentoController(); 
+        EstoqueController estoqueController = new EstoqueController(); 
 
 
         // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
@@ -55,7 +62,8 @@ public class ApiServer {
 
         // --- ROTA DA API VIACEP ---
         app.get("/api/cep/{cep}", ctx -> {
-            String cep = ctx.pathParam("cep");
+            // Remove hífens e formatação
+            String cep = ctx.pathParam("cep").replaceAll("\\D", "");
             Map<String, Object> resultado = cepServico.buscarCep(cep);
             if (resultado.containsKey("erro") && (Boolean) resultado.get("erro")) {
                 ctx.status(404).json(resultado);
@@ -63,6 +71,28 @@ public class ApiServer {
                 ctx.status(200).json(resultado);
             }
         });
+
+        // --- RF03: ROTAS DE GERENCIAMENTO DE UBS ---
+        app.get("/api/ubs", ubsController::listarTodas);
+        app.get("/api/ubs/{id}", ubsController::buscarPorId);
+        app.post("/api/ubs", ubsController::cadastrar);
+        app.put("/api/ubs/{id}", ubsController::atualizar);
+        app.delete("/api/ubs/{id}", ubsController::excluir);
+
+        // --- RF04: ROTAS DE GERENCIAMENTO DE MEDICAMENTOS (BASE) ---
+        app.get("/api/medicamentos", medicamentoController::listarTodos);
+        app.post("/api/medicamentos", medicamentoController::cadastrar);
+        app.put("/api/medicamentos/{id}", medicamentoController::atualizar);
+        app.delete("/api/medicamentos/{id}", medicamentoController::excluir);
+        app.put("/api/medicamentos/{id}/status", medicamentoController::alterarStatus);
+
+        // --- RF04: ROTAS DE GERENCIAMENTO DE ESTOQUE ---
+        app.get("/api/estoque", estoqueController::listarEstoque);
+        app.post("/api/estoque", estoqueController::cadastrarEstoque);
+        app.put("/api/estoque/{id}", estoqueController::atualizarEstoque);
+        app.delete("/api/estoque/{id}", estoqueController::excluirEstoque);
+        app.post("/api/estoque/verificar-lote", estoqueController::verificarLote);
+
 
         // --- ROTAS PÚBLICAS (MOCK) ---
         app.get("/api/medicamentos/search", ctx -> {
@@ -73,12 +103,9 @@ public class ApiServer {
             }
             
             List<Map<String, Object>> ubsDisponiveis = new ArrayList<>();
+            // Este mock será substituído pela busca real no RF06
             if (nome.equalsIgnoreCase("paracetamol")) {
                  ubsDisponiveis.add(Map.of("nome", "UBS 01 - Asa Sul", "endereco", "Quadra 614 Sul, Brasília - DF", "estoque", 50));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
             } else if (nome.equalsIgnoreCase("ibuprofeno")) {
                  ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 85));

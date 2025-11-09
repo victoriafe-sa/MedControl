@@ -46,6 +46,17 @@ body {
     background-color: #4b5563;
 }
 
+/* MODIFICADO (Item 2): Botão de sucesso para "Ativar" */
+.btn-sucesso {
+    background-color: #16a34a; /* green-600 */
+    color: white;
+}
+
+.btn-sucesso:hover {
+    background-color: #15803d; /* green-700 */
+}
+
+
 .btn-aba.ativo {
     border-bottom-color: #1e3a8a;
     color: #1e3a8a;
@@ -84,10 +95,12 @@ body {
     padding-right: 1rem;
 }
 
+/* MODIFICADO (Item 4): Adicionado input[type="number"] */
 input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="date"],
+input[type="number"],
 select {
     border: 1px solid #d1d5db;
     padding: 0.5rem 0.75rem;

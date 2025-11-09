@@ -18,7 +18,7 @@ async function fetchApi(endpoint, options = {}) {
 
         if (!response.ok) {
             // Usa a mensagem do backend se disponível, senão uma padrão
-            const error = new Error(data.message || `Erro ${response.status}: ${response.statusText}`);
+            const error = new Error(data.message || data.erro || `Erro ${response.status}: ${response.statusText}`);
             error.status = response.status;
             error.data = data; // Anexa dados extras (ex: { field: 'email' })
             throw error;
@@ -36,6 +36,19 @@ async function fetchApi(endpoint, options = {}) {
     }
 }
 
+// Opções padrão para requisições POST/PUT
+const defaultPostOptions = (dados) => ({
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados)
+});
+
+const defaultPutOptions = (dados) => ({
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados)
+});
+
 export const api = {
     /**
      * Autentica um usuário.
@@ -43,11 +56,7 @@ export const api = {
      * @param {string} senha
      */
     login: (emailOuCpf, senha) => {
-        return fetchApi('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ emailOuCpf, senha })
-        });
+        return fetchApi('/login', defaultPostOptions({ emailOuCpf, senha }));
     },
 
     /**
@@ -57,11 +66,7 @@ export const api = {
      * @param {string|number|null} id - O ID do usuário a ser ignorado na verificação (para edições)
      */
     verificarExistencia: (email, cpf_cns, id = null) => {
-        return fetchApi('/usuarios/verificar-existencia', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, cpf_cns, id })
-        });
+        return fetchApi('/usuarios/verificar-existencia', defaultPostOptions({ email, cpf_cns, id }));
     },
 
     /**
@@ -70,11 +75,7 @@ export const api = {
      * @param {string} motivo - 'cadastro', 'recuperacao', 'alteracao'
      */
     enviarCodigoVerificacao: (email, motivo) => {
-        return fetchApi('/usuarios/enviar-codigo-verificacao', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, motivo })
-        });
+        return fetchApi('/usuarios/enviar-codigo-verificacao', defaultPostOptions({ email, motivo }));
     },
 
     /**
@@ -83,11 +84,7 @@ export const api = {
      * @param {string} codigo
      */
     verificarCodigo: (email, codigo) => {
-        return fetchApi('/usuarios/verificar-codigo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, codigo })
-        });
+        return fetchApi('/usuarios/verificar-codigo', defaultPostOptions({ email, codigo }));
     },
 
     /**
@@ -95,11 +92,7 @@ export const api = {
      * @param {object} dadosUsuario - Dados completos do usuário, incluindo senha e codigoVerificacao
      */
     registrarAdmin: (dadosUsuario) => {
-        return fetchApi('/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dadosUsuario)
-        });
+        return fetchApi('/users', defaultPostOptions(dadosUsuario));
     },
 
     /**
@@ -108,11 +101,7 @@ export const api = {
      * @param {object} dadosUsuario - Dados do usuário (sem senha)
      */
     atualizarUsuario: (id, dadosUsuario) => {
-        return fetchApi(`/users/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dadosUsuario)
-        });
+        return fetchApi(`/users/${id}`, defaultPutOptions(dadosUsuario));
     },
 
     /**
@@ -121,11 +110,7 @@ export const api = {
      * @param {object} dadosUsuario - Dados do usuário, incluindo codigoVerificacao
      */
     atualizarUsuarioComVerificacao: (id, dadosUsuario) => {
-        return fetchApi(`/users/${id}/update-verified`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dadosUsuario)
-        });
+        return fetchApi(`/users/${id}/update-verified`, defaultPutOptions(dadosUsuario));
     },
 
     /**
@@ -141,11 +126,7 @@ export const api = {
      * @param {boolean} novoStatus
      */
     alterarStatusUsuario: (id, novoStatus) => {
-        return fetchApi(`/users/${id}/status`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ativo: novoStatus })
-        });
+        return fetchApi(`/users/${id}/status`, defaultPutOptions({ ativo: novoStatus }));
     },
 
     /**
@@ -153,9 +134,7 @@ export const api = {
      * @param {string|number} id
      */
     excluirUsuario: (id) => {
-        return fetchApi(`/users/${id}`, {
-            method: 'DELETE'
-        });
+        return fetchApi(`/users/${id}`, { method: 'DELETE' });
     },
 
     /**
@@ -164,12 +143,7 @@ export const api = {
      * @param {string} password - Senha do usuário logado
      */
     verificarSenha: (adminId, password) => {
-        // O endpoint /api/admin/verify-password funciona para qualquer usuário
-        return fetchApi('/admin/verify-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminId, password })
-        });
+        return fetchApi('/admin/verify-password', defaultPostOptions({ adminId, password }));
     },
 
     /**
@@ -179,11 +153,7 @@ export const api = {
      * @param {string} novaSenha
      */
     redefinirSenhaLogado: (id, senhaAtual, novaSenha) => {
-        return fetchApi(`/users/${id}/redefine-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senhaAtual, novaSenha })
-        });
+        return fetchApi(`/users/${id}/redefine-password`, defaultPostOptions({ senhaAtual, novaSenha }));
     },
 
     /**
@@ -192,5 +162,29 @@ export const api = {
      */
     validarCep: (cep) => {
         return fetchApi(`/cep/${cep}`);
-    }
+    },
+
+    // --- NOVAS FUNÇÕES RF03 (UBS) ---
+    listarUbs: () => fetchApi('/ubs'),
+    cadastrarUbs: (dados) => fetchApi('/ubs', defaultPostOptions(dados)),
+    atualizarUbs: (id, dados) => fetchApi(`/ubs/${id}`, defaultPutOptions(dados)),
+    excluirUbs: (id) => fetchApi(`/ubs/${id}`, { method: 'DELETE' }),
+
+    // --- NOVAS FUNÇÕES RF04 (Medicamento Base) ---
+    listarMedicamentos: () => fetchApi('/medicamentos'),
+    cadastrarMedicamento: (dados) => fetchApi('/medicamentos', defaultPostOptions(dados)),
+    atualizarMedicamento: (id, dados) => fetchApi(`/medicamentos/${id}`, defaultPutOptions(dados)),
+    excluirMedicamento: (id) => fetchApi(`/medicamentos/${id}`, { method: 'DELETE' }),
+    // MODIFICADO (Item 2): Adicionada função de status
+    alterarStatusMedicamento: (id, novoStatus) => {
+        return fetchApi(`/medicamentos/${id}/status`, defaultPutOptions({ ativo: novoStatus }));
+    },
+
+    // --- NOVAS FUNÇÕES RF04 (Estoque) ---
+    listarEstoque: () => fetchApi('/estoque'),
+    cadastrarEstoque: (dados) => fetchApi('/estoque', defaultPostOptions(dados)),
+    atualizarEstoque: (id, dados) => fetchApi(`/estoque/${id}`, defaultPutOptions(dados)),
+    excluirEstoque: (id) => fetchApi(`/estoque/${id}`, { method: 'DELETE' }),
+    // MODIFICAÇÃO 1: Adicionada função de verificação de lote
+    verificarLote: (dados) => fetchApi('/estoque/verificar-lote', defaultPostOptions(dados)),
 };

@@ -1,7 +1,8 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
-import com.fasterxml.jackson.core.type.TypeReference; // IMPORT ADICIONADO
+// REMOVIDO: import br.com.medcontrol.servicos.CepServico; 
+import com.fasterxml.jackson.core.type.TypeReference; 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,38 +18,77 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal; 
 
 public class UsuarioController {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
-    // Método estático para ser chamado por outros controladores
-    public static void internalUpdate(int id, Map<String, String> user) throws SQLException, SQLIntegrityConstraintViolationException {
-        String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
+    // REMOVIDO: private final CepServico cepServico; 
+
+    // MODIFICADO: Construtor padrão
+    public UsuarioController() {
+        // REMOVIDO: this.cepServico = cepServico;
+    }
+    
+    // *** CORREÇÃO: Método agora aceita Map<String, Object> ***
+    public static void internalUpdate(int id, Map<String, Object> user) throws SQLException, SQLIntegrityConstraintViolationException {
+        
+        // *** CORREÇÃO: Ordem das colunas e parâmetros atualizada para bater com schema.sql ***
+        String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, latitude = ?, longitude = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
         if (user.get("perfil") == null) {
-            sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, data_nascimento = ? WHERE id = ?";
+            sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, latitude = ?, longitude = ?, data_nascimento = ? WHERE id = ?";
         }
 
         try (Connection conn = DB.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, user.get("nome"));
-            ps.setString(2, user.get("email"));
-            ps.setString(3, user.get("cpf_cns"));
-            ps.setString(4, user.get("cep"));
+            
+            ps.setString(1, (String) user.get("nome"));
+            ps.setString(2, (String) user.get("email"));
+            ps.setString(3, (String) user.get("cpf_cns"));
+            ps.setString(4, (String) user.get("cep"));
 
-            String dataNascimento = user.get("data_nascimento");
+            // *** CORREÇÃO: Lógica de conversão de Object para BigDecimal (igual ao registrar) ***
+            Object latObj = user.get("latitude");
+            Object lonObj = user.get("longitude");
+            BigDecimal latitude = null;
+            BigDecimal longitude = null;
+
+            try {
+                 if (latObj != null && !latObj.toString().isEmpty() && !latObj.toString().equals("null")) {
+                    latitude = new BigDecimal(latObj.toString());
+                }
+                if (lonObj != null && !lonObj.toString().isEmpty() && !lonObj.toString().equals("null")) {
+                    longitude = new BigDecimal(lonObj.toString());
+                }
+            } catch (NumberFormatException e) {
+                 System.err.println("Erro ao converter coordenadas (ignorado): " + e.getMessage());
+                 // Deixa latitude/longitude como null se a conversão falhar
+            }
+            
+            // ?5 = latitude
+            if (latitude != null) ps.setBigDecimal(5, latitude); else ps.setNull(5, Types.DECIMAL);
+            // ?6 = longitude
+            if (longitude != null) ps.setBigDecimal(6, longitude); else ps.setNull(6, Types.DECIMAL);
+
+            // ?7 = data_nascimento
+            String dataNascimento = (String) user.get("data_nascimento");
             if (dataNascimento == null || dataNascimento.trim().isEmpty() || dataNascimento.equals("null")) {
-                ps.setNull(5, Types.DATE);
+                ps.setNull(7, Types.DATE);
             } else {
-                ps.setDate(5, Date.valueOf(dataNascimento));
+                ps.setDate(7, Date.valueOf(dataNascimento));
             }
 
+            // Define os campos restantes
             if (user.get("perfil") != null) {
-                ps.setString(6, user.get("perfil"));
-                ps.setInt(7, id);
+                // ?8 = perfil
+                ps.setString(8, (String) user.get("perfil"));
+                // ?9 = id
+                ps.setInt(9, id);
             } else {
-                ps.setInt(6, id);
+                // ?8 = id
+                ps.setInt(8, id);
             }
             ps.executeUpdate();
         }
@@ -58,7 +98,6 @@ public class UsuarioController {
     public void redefinirSenha(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
             String senhaAtual = req.get("senhaAtual");
             String novaSenha = req.get("novaSenha");
@@ -113,6 +152,9 @@ public class UsuarioController {
                 user.put("data_nascimento", dataNascimento != null ? dataNascimento.toString() : null);
                 user.put("perfil", rs.getString("perfil"));
                 user.put("ativo", rs.getBoolean("ativo"));
+                // Adiciona lat/lng
+                user.put("latitude", rs.getObject("latitude"));
+                user.put("longitude", rs.getObject("longitude"));
                 userList.add(user);
             }
             ctx.json(userList);
@@ -125,9 +167,10 @@ public class UsuarioController {
     public void atualizar(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
-            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
-            internalUpdate(id, user);
+            Map<String, Object> userObj = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
+            
+            // Passa o Map<String, Object> original
+            internalUpdate(id, userObj);
             ctx.json(Map.of("success", true));
         } catch (SQLIntegrityConstraintViolationException e) {
             String campo = e.getMessage().toLowerCase().contains("email") ? "email" : "cpf_cns";
@@ -142,7 +185,6 @@ public class UsuarioController {
     public void alterarStatus(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            // MODIFICADO: Uso de TypeReference para segurança de tipos.
             Map<String, Boolean> status = mapper.readValue(ctx.body(), new TypeReference<Map<String, Boolean>>() {});
             String sql = "UPDATE usuarios SET ativo = ? WHERE id = ?";
              try (Connection conn = DB.getConnection();
@@ -175,7 +217,7 @@ public class UsuarioController {
     public void verificarSenhaAdmin(Context ctx) {
         try {
             Map<String, Object> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
-            Integer userId = (Integer) req.get("adminId"); // O nome da chave é 'adminId', mas representa o id do usuário logado
+            Integer userId = (Integer) req.get("adminId"); 
             String password = (String) req.get("password");
 
             if (userId == null || password == null) {
@@ -183,8 +225,6 @@ public class UsuarioController {
                 return;
             }
 
-            // CORREÇÃO: Remove a cláusula "AND perfil = 'admin'" para permitir que qualquer usuário
-            // do painel de gerenciamento confirme sua própria senha.
             String sql = "SELECT senha FROM usuarios WHERE id = ?";
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -198,7 +238,6 @@ public class UsuarioController {
                             ctx.status(401).json(Map.of("success", false, "message", "Senha incorreta."));
                         }
                     } else {
-                        // A mensagem de erro foi generalizada para "Usuário não encontrado".
                         ctx.status(404).json(Map.of("success", false, "message", "Usuário não encontrado."));
                     }
                 }

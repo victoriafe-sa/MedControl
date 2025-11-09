@@ -2,10 +2,10 @@ package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
 import br.com.medcontrol.servicos.EmailServico;
-import br.com.medcontrol.servicos.HunterServico; // <-- Importar
+import br.com.medcontrol.servicos.HunterServico;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference; // IMPORT ADICIONADO
+import com.fasterxml.jackson.core.type.TypeReference; 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,11 +20,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.math.BigDecimal; 
 
 public class AutenticacaoController {
 
     // Classe interna para armazenar o código de verificação e sua data de expiração.
-    // Isso evita a necessidade de criar uma tabela no banco de dados para códigos temporários.
     private static class CodigoInfo {
         String codigo;
         LocalDateTime expiracao;
@@ -47,14 +47,12 @@ public class AutenticacaoController {
     private final EmailServico emailServico;
     private final HunterServico hunterServico;
     // Mapa para armazenar os códigos de verificação em memória.
-    // A chave é o e-mail do usuário e o valor é o objeto CodigoInfo.
-    // ConcurrentHashMap é usado para segurança em ambientes com múltiplas threads.
     private final Map<String, CodigoInfo> codigosVerificacao = new ConcurrentHashMap<>();
 
-    // O construtor recebe o serviço de e-mail e instancia o serviço Hunter.
+    // O construtor recebe o serviço de e-mail
     public AutenticacaoController(EmailServico emailServico) {
         this.emailServico = emailServico;
-        this.hunterServico = new HunterServico(); // <-- Instanciar
+        this.hunterServico = new HunterServico(); 
     }
 
     public void verificarExistencia(Context ctx) {
@@ -108,7 +106,6 @@ public class AutenticacaoController {
     }
 
     // Endpoint: POST /api/usuarios/enviar-codigo-verificacao
-    // Responsável por iniciar o fluxo de verificação de e-mail.
     public void enviarCodigoVerificacao(Context ctx) {
         try {
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
@@ -195,6 +192,8 @@ public class AutenticacaoController {
                             user.put("cep", rs.getString("cep"));
                             user.put("data_nascimento", rs.getString("data_nascimento"));
                             user.put("ativo", rs.getBoolean("ativo"));
+                            user.put("latitude", rs.getObject("latitude")); // Inclui latitude
+                            user.put("longitude", rs.getObject("longitude")); // Inclui longitude
                             ctx.json(Map.of("success", true, "user", user));
                         } else {
                             ctx.status(401).json(Map.of("success", false, "message", "Credenciais inválidas ou usuário inativo."));
@@ -218,10 +217,10 @@ public class AutenticacaoController {
     // Finaliza o processo de cadastro após a validação do código.
     public void registrar(Context ctx) {
         try {
-            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
+            Map<String, Object> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
 
-            String email = user.get("email");
-            String codigoRecebido = user.get("codigoVerificacao");
+            String email = (String) user.get("email");
+            String codigoRecebido = (String) user.get("codigoVerificacao");
             
             // --- ETAPA 9 (Fluxo) ---
             // Recupera e valida o código da mesma forma que o endpoint de verificação.
@@ -234,32 +233,60 @@ public class AutenticacaoController {
 
             // --- ETAPA 10 (Fluxo - Sucesso) ---
             // Se o código for válido, o processo continua.
-            String senhaPlana = user.get("senha");
+            String senhaPlana = (String) user.get("senha");
             String senhaHash = passwordEncoder.encode(senhaPlana);
 
-            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String cep = (String) user.get("cep");
+            
+            Object latObj = user.get("latitude"); 
+            Object lonObj = user.get("longitude"); 
+            BigDecimal latitude = null;
+            BigDecimal longitude = null;
+            
+            try {
+                if (latObj != null && !latObj.toString().isEmpty() && !latObj.toString().equals("null")) {
+                    latitude = new BigDecimal(latObj.toString());
+                }
+                if (lonObj != null && !lonObj.toString().isEmpty() && !lonObj.toString().equals("null")) {
+                    longitude = new BigDecimal(lonObj.toString());
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Erro ao converter coordenadas (ignorado): " + e.getMessage());
+            }
+
+            // *** CORREÇÃO: Ordem das colunas e parâmetros atualizada para bater com schema.sql ***
+            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, latitude, longitude, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, user.get("nome"));
-                ps.setString(2, user.get("email"));
-                ps.setString(3, user.get("cpf_cns"));
-                ps.setString(4, user.get("cep"));
                 
-                String dataNascimento = user.get("data_nascimento");
+                ps.setString(1, (String) user.get("nome"));
+                ps.setString(2, (String) user.get("email"));
+                ps.setString(3, (String) user.get("cpf_cns"));
+                ps.setString(4, cep); 
+
+                // ?5 = latitude
+                if (latitude != null) ps.setBigDecimal(5, latitude); else ps.setNull(5, Types.DECIMAL);
+                // ?6 = longitude
+                if (longitude != null) ps.setBigDecimal(6, longitude); else ps.setNull(6, Types.DECIMAL);
+
+                // ?7 = data_nascimento
+                String dataNascimento = (String) user.get("data_nascimento");
                 if (dataNascimento == null || dataNascimento.trim().isEmpty()) {
-                    ps.setNull(5, Types.DATE);
+                    ps.setNull(7, Types.DATE);
                 } else {
-                    ps.setDate(5, Date.valueOf(dataNascimento));
+                    ps.setDate(7, Date.valueOf(dataNascimento));
                 }
 
-                ps.setString(6, senhaHash);
-                ps.setString(7, "usuario"); // Perfil padrão no cadastro
+                // ?8 = senha
+                ps.setString(8, senhaHash);
+                // ?9 = perfil
+                ps.setString(9, "usuario"); 
+                
                 ps.executeUpdate();
                 
-                // Remove o código do mapa para que não seja reutilizado.
                 codigosVerificacao.remove(email);
                 
-                // Retorna sucesso para o frontend.
                 ctx.status(201).json(Map.of("success", true, "message", "Cadastro realizado com sucesso!"));
             }
         } catch (SQLIntegrityConstraintViolationException e) {
@@ -280,10 +307,11 @@ public class AutenticacaoController {
 
     public void registrarAdmin(Context ctx) {
          try {
-            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
+            Map<String, Object> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
 
-            String email = user.get("email");
-            String codigoRecebido = user.get("codigoVerificacao");
+            String email = (String) user.get("email");
+            String codigoRecebido = (String) user.get("codigoVerificacao");
+
             CodigoInfo codigoInfo = codigosVerificacao.get(email);
 
             if (codigoInfo == null || !codigoInfo.isValido(codigoRecebido)) {
@@ -291,26 +319,56 @@ public class AutenticacaoController {
                 return;
             }
             
-            String senhaPlana = user.get("senha");
+            String senhaPlana = (String) user.get("senha");
             String senhaHash = passwordEncoder.encode(senhaPlana);
+
+            String cep = (String) user.get("cep");
+
+            Object latObj = user.get("latitude"); 
+            Object lonObj = user.get("longitude"); 
+            BigDecimal latitude = null;
+            BigDecimal longitude = null;
             
-            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try {
+                if (latObj != null && !latObj.toString().isEmpty() && !latObj.toString().equals("null")) {
+                    latitude = new BigDecimal(latObj.toString());
+                }
+                if (lonObj != null && !lonObj.toString().isEmpty() && !lonObj.toString().equals("null")) {
+                    longitude = new BigDecimal(lonObj.toString());
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Erro ao converter coordenadas (ignorado): " + e.getMessage());
+            }
+            
+            // *** CORREÇÃO: Ordem das colunas e parâmetros atualizada para bater com schema.sql ***
+            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, latitude, longitude, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, user.get("nome"));
-                ps.setString(2, user.get("email"));
-                ps.setString(3, user.get("cpf_cns"));
-                ps.setString(4, user.get("cep"));
                 
-                String dataNascimento = user.get("data_nascimento");
+                ps.setString(1, (String) user.get("nome"));
+                ps.setString(2, (String) user.get("email"));
+                ps.setString(3, (String) user.get("cpf_cns"));
+                ps.setString(4, cep);
+                
+                // ?5 = latitude
+                if (latitude != null) ps.setBigDecimal(5, latitude); else ps.setNull(5, Types.DECIMAL);
+                // ?6 = longitude
+                if (longitude != null) ps.setBigDecimal(6, longitude); else ps.setNull(6, Types.DECIMAL);
+                
+                // ?7 = data_nascimento
+                String dataNascimento = (String) user.get("data_nascimento");
                 if (dataNascimento == null || dataNascimento.trim().isEmpty()) {
-                    ps.setNull(5, Types.DATE);
+                    ps.setNull(7, Types.DATE);
                 } else {
-                    ps.setDate(5, Date.valueOf(dataNascimento));
+                    ps.setDate(7, Date.valueOf(dataNascimento));
                 }
                 
-                ps.setString(6, senhaHash);
-                ps.setString(7, user.get("perfil"));
+                // ?8 = senha
+                ps.setString(8, senhaHash);
+                // ?9 = perfil
+                ps.setString(9, (String) user.get("perfil"));
+
                 ps.executeUpdate();
                 
                 codigosVerificacao.remove(email);
@@ -336,10 +394,11 @@ public class AutenticacaoController {
     public void atualizarComVerificacao(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Map<String, String> user = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
+            Map<String, Object> userObj = mapper.readValue(ctx.body(), new TypeReference<Map<String, Object>>() {});
 
-            String email = user.get("email");
-            String codigoRecebido = user.get("codigoVerificacao");
+            String email = (String) userObj.get("email");
+            String codigoRecebido = (String) userObj.get("codigoVerificacao");
+
             CodigoInfo codigoInfo = codigosVerificacao.get(email);
 
             if (codigoInfo == null || !codigoInfo.isValido(codigoRecebido)) {
@@ -347,7 +406,7 @@ public class AutenticacaoController {
                 return;
             }
             
-            UsuarioController.internalUpdate(id, user);
+            UsuarioController.internalUpdate(id, userObj); 
             codigosVerificacao.remove(email); 
             ctx.json(Map.of("success", true));
 

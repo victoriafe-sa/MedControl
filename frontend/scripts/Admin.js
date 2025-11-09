@@ -3,6 +3,8 @@ import { verificarAutenticacao, verificarPermissaoAdmin, fazerLogout, getUsuario
 import { fecharTodosModais } from './utils/ui.js';
 import { initAdminUsuarios } from './admin/admin-usuarios.js';
 import { initAdminPerfil } from './admin/admin-perfil.js';
+import { initAdminUbs } from './admin/admin-ubs.js'; // <-- NOVO
+import { initAdminMedicamentos } from './admin/admin-medicamentos.js'; // <-- NOVO
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Autenticação e Inicialização ---
@@ -26,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const permissoes = {
             'admin': ['usuarios', 'medicamentos', 'ubs', 'validacao', 'relatorios', 'auditoria'],
             'farmaceutico': ['validacao'],
-            'gestor_estoque': ['medicamentos'],
-            'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios']
+            'gestor_estoque': ['medicamentos'], // Pode ver medicamentos/estoque
+            'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios'] // Pode ver ubs, estoque e validação
         };
 
         // Esconde todas as abas e conteúdos primeiro
@@ -54,8 +56,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.btn-aba').forEach(a => a.classList.remove('ativo'));
             if (primeiraAbaBtn) primeiraAbaBtn.classList.add('ativo');
             if (primeiroConteudo) primeiroConteudo.classList.add('ativo');
+
+            // Inicializa o módulo da primeira aba ativa
+            inicializarModuloAba(primeiraAba, primeiraAbaBtn);
         }
     };
+
+    // --- Inicialização de Módulos ---
+    const inicializarModuloAba = (nomeAba, abaBtn) => {
+        if (abaBtn && abaBtn.dataset.initialized) return; // Já inicializado
+
+        if (nomeAba === 'usuarios') {
+            initAdminUsuarios(getUsuarioAtual());
+        } else if (nomeAba === 'medicamentos') {
+            initAdminMedicamentos(getUsuarioAtual());
+        } else if (nomeAba === 'ubs') {
+            initAdminUbs(getUsuarioAtual());
+        }
+        // Adicionar outros inits (validacao, relatorios, etc.) aqui
+
+        if (abaBtn) abaBtn.dataset.initialized = true;
+    };
+
 
     // --- Navegação ---
     document.getElementById('btnSair').addEventListener('click', fazerLogout);
@@ -71,10 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 conteudoEl.classList.add('ativo');
             }
             
-            // Inicializa o módulo de usuários SE a aba clicada for a de usuários
-            if (aba.dataset.aba === 'usuarios') {
-                initAdminUsuarios(getUsuarioAtual());
-            }
+            // Inicializa o módulo da aba clicada (apenas na primeira vez)
+            inicializarModuloAba(aba.dataset.aba, aba);
         });
     });
 
@@ -83,12 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inicializa o módulo de perfil (que cuida do botão "Meu Perfil")
     initAdminPerfil(usuarioAtual);
-    
-    // Inicializa o módulo de usuários se for a aba ativa inicial
-    const abaAtiva = document.querySelector('.btn-aba.ativo');
-    if (abaAtiva && abaAtiva.dataset.aba === 'usuarios') {
-        initAdminUsuarios(usuarioAtual);
-    }
     
     // Adiciona listeners para fechar modais
     document.querySelectorAll('.fechar-modal').forEach(btn => btn.addEventListener('click', fecharTodosModais));

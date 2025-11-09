@@ -80,3 +80,39 @@ export function iniciarTimer(duracaoSegundos, timerEl, reenviarBtn) {
     
     return timerEl.intervalId;
 }
+
+/**
+ * ADICIONADO (Item 1): Abre o modal genérico de confirmação.
+ * @param {string} titulo
+ * @param {string} mensagem
+ * @param {function} callback - Função a ser executada ao confirmar.
+ * @param {string} [tipo='perigo'] - 'perigo' (vermelho) ou 'primario' (azul)
+ */
+export function abrirConfirmacao(titulo, mensagem, callback, tipo = 'perigo') {
+    const modalConfirmacao = document.getElementById('modalConfirmacao');
+    if (!modalConfirmacao) return;
+
+    document.getElementById('tituloConfirmacao').textContent = titulo;
+    document.getElementById('mensagemConfirmacao').textContent = mensagem;
+    const btnConfirmar = document.getElementById('btnConfirmarAcao');
+    
+    // Ajusta a cor do botão
+    btnConfirmar.classList.remove('btn-perigo', 'btn-primario');
+    if (tipo === 'perigo') {
+        btnConfirmar.classList.add('btn-perigo');
+    } else {
+        btnConfirmar.classList.add('btn-primario');
+    }
+    
+    // Clona o botão para remover listeners antigos
+    const novoBtn = btnConfirmar.cloneNode(true);
+    btnConfirmar.parentNode.replaceChild(novoBtn, btnConfirmar);
+
+    novoBtn.addEventListener('click', () => {
+        callback();
+        // MODIFICAÇÃO 3: Fecha apenas o modal de confirmação, não todos.
+        modalConfirmacao.classList.remove('ativo');
+    });
+    
+    modalConfirmacao.classList.add('ativo');
+}

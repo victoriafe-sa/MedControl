@@ -165,6 +165,18 @@ async function onFormularioEditarAdminSubmit(e) {
         data_nascimento: document.getElementById('adminEditNascimento').value,
         perfil: usuarioAdminAtual.perfil // Mantém o perfil atual
     };
+
+    // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
+    try {
+        const cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
+        dadosUsuarioAtualParaSalvar.latitude = cepData.latitude || null;
+        dadosUsuarioAtualParaSalvar.longitude = cepData.longitude || null;
+    } catch (err) {
+        console.error("Erro ao buscar coordenadas:", err);
+        document.getElementById('adminEditCep').classList.add('input-error');
+        document.getElementById('erroadminEditCep').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+        return; // Interrompe se a busca de CEP falhar
+    }
     
     // Etapa 2: Verificar duplicidade
     try {
@@ -246,6 +258,8 @@ async function salvarPerfilAdmin(comVerificacao) {
 
         if (resposta.success) {
             // Atualiza os dados locais
+            // --- ATUALIZAÇÃO ---
+            // Atualiza os dados locais com o que foi salvo (incluindo lat/lon)
             usuarioAdminAtual = { ...usuarioAdminAtual, ...dadosUsuarioAtualParaSalvar };
             salvarUsuarioSession(usuarioAdminAtual);
             
@@ -260,7 +274,14 @@ async function salvarPerfilAdmin(comVerificacao) {
             modalVerificacaoEmail.classList.add('ativo');
             exibirMensagemNoModal(document.getElementById('mensagemVerificacao'), error.message, true);
         } else {
-            alert('Erro ao salvar perfil: ' + (error.message || 'Erro desconhecido'));
+             // Exibe o erro no modal de edição, caso ele ainda esteja visível
+            const erroNomeEl = document.getElementById('erroadminEditNome');
+            if (erroNomeEl) {
+                erroNomeEl.textContent = `Erro: ${error.message || 'Ocorreu um erro.'}`;
+            } else {
+                // Fallback se o modal de edição não estiver visível
+                exibirToast(`Erro: ${error.message || 'Ocorreu um erro.'}`, true);
+            }
         }
     }
 }
@@ -488,7 +509,11 @@ export function initAdminPerfil(usuarioLogado) {
     document.getElementById('btnReenviarCodigoAdmin').addEventListener('click', () => {
         if (dadosUsuarioAtualParaSalvar) { // Garante que há dados para reenviar
             clearInterval(timerInterval);
-            iniciarFluxoVerificacaoAdmin();
+            // Verifica se é o fluxo de edição do admin
+            if (dadosUsuarioAtualParaSalvar.perfil === usuarioAdminAtual.perfil) {
+                iniciarFluxoVerificacaoAdmin();
+            }
+            // (O fluxo do admin-usuarios.js é tratado lá, se necessário)
         }
     });
 }

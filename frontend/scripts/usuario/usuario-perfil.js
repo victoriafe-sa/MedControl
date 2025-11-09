@@ -145,6 +145,18 @@ async function onFormularioEditarPerfilSubmit(e) {
         cep: document.getElementById('editarCep').value,
         data_nascimento: document.getElementById('editarNascimento').value,
     };
+
+    // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
+    try {
+        const cepData = await api.validarCep(dadosParaSalvar.cep.replace(/\D/g, ''));
+        dadosParaSalvar.latitude = cepData.latitude || null;
+        dadosParaSalvar.longitude = cepData.longitude || null;
+    } catch (err) {
+        console.error("Erro ao buscar coordenadas:", err);
+        document.getElementById('editarCep').classList.add('input-error');
+        document.getElementById('erroEditarCep').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+        return; // Interrompe se a busca de CEP falhar
+    }
     
     // Etapa 2: Verificar duplicidade
     try {
@@ -199,6 +211,8 @@ async function salvarPerfil(comVerificacao, codigo = null) {
         }
         
         if (resposta.success) {
+            // --- ATUALIZAÇÃO ---
+            // Atualiza os dados locais com o que foi salvo (incluindo lat/lon)
             usuarioAtual = { ...usuarioAtual, ...dadosParaSalvar };
             salvarUsuarioSession(usuarioAtual);
             
@@ -221,7 +235,14 @@ async function salvarPerfil(comVerificacao, codigo = null) {
          } else if (error.status === 400 && comVerificacao) { 
             exibirMensagemNoModal(document.getElementById('mensagemVerificacaoEdicao'), error.message, true);
          } else {
-            document.getElementById('erroEditarNome').textContent = `Erro: ${error.message || 'Ocorreu um erro.'}`;
+            // Exibe o erro no modal de edição, caso ele ainda esteja visível
+            const erroNomeEl = document.getElementById('erroEditarNome');
+            if (erroNomeEl) {
+                erroNomeEl.textContent = `Erro: ${error.message || 'Ocorreu um erro.'}`;
+            } else {
+                // Fallback se o modal de edição não estiver visível
+                exibirToast(`Erro: ${error.message || 'Ocorreu um erro.'}`, true);
+            }
          }
     }
 }

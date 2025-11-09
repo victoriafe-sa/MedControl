@@ -1,6 +1,7 @@
 // frontend/scripts/admin/admin-usuarios.js
 import { api } from '../utils/api.js';
-import { exibirToast, fecharTodosModais, limparErrosFormulario, exibirMensagemNoModal, iniciarTimer } from '../utils/ui.js';
+// MODIFICADO (Item 1): Importa 'abrirConfirmacao'
+import { exibirToast, fecharTodosModais, limparErrosFormulario, exibirMensagemNoModal, iniciarTimer, abrirConfirmacao } from '../utils/ui.js';
 import { isValidEmail, isMaisDe18 } from '../utils/validacao.js';
 import { formatarCep, validarCep, preencherValidacaoCep } from '../utils/cep.js';
 
@@ -164,28 +165,7 @@ function abrirModalParaEditar(usuario) {
     modalFormularioUsuario.classList.add('ativo');
 }
 
-/**
- * Abre o modal genérico de confirmação.
- * @param {string} titulo
- * @param {string} mensagem
- * @param {function} callback - Função a ser executada ao confirmar.
- */
-function abrirConfirmacao(titulo, mensagem, callback) {
-    document.getElementById('tituloConfirmacao').textContent = titulo;
-    document.getElementById('mensagemConfirmacao').textContent = mensagem;
-    const btnConfirmar = document.getElementById('btnConfirmarAcao');
-    
-    // Clona o botão para remover listeners antigos
-    const novoBtn = btnConfirmar.cloneNode(true);
-    btnConfirmar.parentNode.replaceChild(novoBtn, btnConfirmar);
-
-    novoBtn.addEventListener('click', () => {
-        callback();
-        fecharTodosModais();
-    });
-    
-    modalConfirmacao.classList.add('ativo');
-}
+// MODIFICADO (Item 1): Função 'abrirConfirmacao' removida. Agora será importada de ui.js
 
 /**
  * Altera o status (ativo/inativo) de um usuário.
@@ -257,13 +237,13 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
         let resposta;
         if (!estaEditando) {
             // Adicionando (requer senha e código)
-            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar);
+            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar); // Payload AGORA TEM lat/lon
         } else if (comVerificacao) {
             // Editando com e-mail novo (requer código)
-            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar);
+            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM lat/lon
         } else {
             // Editando sem e-mail novo (não requer código)
-            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar);
+            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM lat/lon
         }
 
         if (resposta.success) {
@@ -300,8 +280,17 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
  */
 async function onFormularioUsuarioSubmit(e) {
     e.preventDefault();
+
+    const btnSubmit = document.getElementById('btnEnviarFormularioUsuario');
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Salvando...';
+
     const estaEditando = !!document.getElementById('idUsuario').value;
-    if (!validarFormulario(estaEditando)) return;
+    if (!validarFormulario(estaEditando)) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Salvar';
+        return;
+    }
 
     dadosUsuarioAtualParaSalvar = {
         nome: document.getElementById('nomeUsuario').value,
@@ -316,6 +305,25 @@ async function onFormularioUsuarioSubmit(e) {
         dadosUsuarioAtualParaSalvar.senha = document.getElementById('senhaUsuario').value;
     }
     
+    // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
+    let cepData;
+    try {
+        // api.js's validarCep (fetchApi) retorna o json da resposta
+        cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
+        
+        // Adiciona coordenadas ao payload
+        dadosUsuarioAtualParaSalvar.latitude = cepData.latitude || null;
+        dadosUsuarioAtualParaSalvar.longitude = cepData.longitude || null;
+
+    } catch (err) {
+        console.error("Erro ao buscar coordenadas:", err);
+        document.getElementById('cepUsuario').classList.add('input-error');
+        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Salvar';
+        return;
+    }
+
     // Etapa 2: Verificar duplicidade
     try {
         const data = await api.verificarExistencia(
@@ -335,7 +343,11 @@ async function onFormularioUsuarioSubmit(e) {
             document.getElementById('erroCpfUsuario').textContent = 'Este CPF/CNS já está cadastrado.';
             hasError = true;
         }
-        if (hasError) return;
+        if (hasError) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Salvar';
+            return;
+        }
 
         // Etapa 3: Decidir fluxo (com ou sem verificação de e-mail)
         const emailOriginal = document.getElementById('emailOriginal').value;
@@ -357,6 +369,9 @@ async function onFormularioUsuarioSubmit(e) {
         console.error("Erro ao verificar dados:", err);
         document.getElementById('erroNomeUsuario').textContent = "Erro de conexão ao verificar dados.";
     }
+
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Salvar';
 }
 
 /**

@@ -168,6 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (!validarCadastro()) return; // Validação client-side
 
+        // **MODIFICADO**: Adicionado botão de loading
+        const btnSubmit = formularioCadastro.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Carregando...';
+
         // Armazena os dados do formulário temporariamente.
         dadosUsuarioTemporario = {
             nome: document.getElementById('cadastroNome').value,
@@ -177,6 +182,29 @@ document.addEventListener('DOMContentLoaded', () => {
             data_nascimento: document.getElementById('cadastroNascimento').value,
             senha: document.getElementById('cadastroSenha').value
         };
+
+        // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
+        let cepData;
+        try {
+            const cepRes = await fetch(`http://localhost:7071/api/cep/${dadosUsuarioTemporario.cep.replace(/\D/g, '')}`);
+            if (!cepRes.ok) {
+                 const erroCep = await cepRes.json();
+                 throw new Error(erroCep.message || 'CEP não retornou dados válidos.');
+            }
+            cepData = await cepRes.json();
+            
+            // Adiciona coordenadas ao payload
+            dadosUsuarioTemporario.latitude = cepData.latitude || null;
+            dadosUsuarioTemporario.longitude = cepData.longitude || null;
+
+        } catch (err) {
+            console.error("Erro ao buscar coordenadas:", err);
+            document.getElementById('cadastroCep').classList.add('input-error');
+            document.getElementById('erroCadastroCep').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Cadastrar';
+            return;
+        }
 
         // --- ETAPA 3 (Fluxo) ---
         // Faz uma requisição ao backend para verificar se e-mail/CPF já existem.
@@ -201,7 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('erroCadastroCpfCns').textContent = 'Este CPF/CNS já está cadastrado.';
                 hasError = true;
             }
-            if (hasError) return;
+            if (hasError) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Cadastrar';
+                return;
+            }
 
             // Se os dados forem únicos, inicia o processo de envio do código de verificação.
             fluxoAtual = 'cadastro';
@@ -209,6 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             alert('Erro de conexão ao verificar dados.');
         }
+        
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Cadastrar';
     });
 
     // --- FUNÇÕES DE FORMATAÇÃO E VALIDAÇÃO DE CEP ---
@@ -231,8 +266,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (cep.length === 8) {
             try {
+                // MODIFICADO: Não retorna mais, apenas valida
                 const response = await fetch(`http://localhost:7071/api/cep/${cep}`);
                 if (response.ok) {
+                    // **NOVO**: Pega os dados para popular o formulário (opcional)
+                    // const cepData = await response.json();
+                    // document.getElementById('cadastroRua').value = cepData.street || '';
+                    // document.getElementById('cadastroBairro').value = cepData.neighborhood || '';
+                    // etc...
+
                     inputElement.classList.add('input-success');
                     validationElement.textContent = 'CEP válido';
                     validationElement.classList.add('success');
@@ -350,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fluxoAtual === 'cadastro') {
             dadosUsuarioTemporario.codigoVerificacao = codigo;
             try {
-                // Envia todos os dados do usuário + o código para o endpoint de registro.
+                // Envia todos os dados do usuário (AGORA COM LAT/LON) + o código para o endpoint de registro.
                 const res = await fetch('http://localhost:7071/api/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dadosUsuarioTemporario)
                 });
@@ -361,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         fecharModais();
                         container.classList.remove("painel-direito-ativo"); // Volta para a tela de login
                         formularioCadastro.reset();
-                    }, 500);
+                    }, 3000); // Aumentado o tempo para 3s
                 } else { // Falha (código errado, etc.)
                     exibirMensagem(msgEl, data.message, true);
                 }
