@@ -28,6 +28,9 @@ public class CepServico {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI(url))
+                    // MODIFICAÇÃO: Adiciona cabeçalhos para evitar o "Connection reset"
+                    .header("Accept", "application/json")
+                    .header("User-Agent", "Java-HttpClient/21") // Simula um cliente
                     .GET()
                     .build();
 
