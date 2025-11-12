@@ -29,7 +29,6 @@
         <h2 class="text-2xl font-bold text-gray-800">Painel de Gerenciamento</h2>
         <div class="border-b border-gray-300 mt-6">
             <nav class="flex flex-wrap -mb-px space-x-8" id="nav-abas">
-                <!-- Abas são configuradas pelo JS com base no perfil -->
                 <button data-aba="usuarios" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Usuários</button>
                 <button data-aba="medicamentos" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Medicamentos</button>
                 <button data-aba="ubs" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">UBS</button>
@@ -40,7 +39,6 @@
         </div>
 
         <div class="mt-8">
-            <!-- Conteúdo da Aba Usuários -->
             <div id="conteudo-usuarios" class="conteudo-aba">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-semibold">Gerenciar Perfis de Usuário</h3>
@@ -59,13 +57,11 @@
                             <th class="p-4 text-sm font-semibold text-gray-600">Ações</th>
                         </tr></thead>
                         <tbody id="corpoTabelaUsuarios">
-                            <!-- Linhas inseridas pelo admin-usuarios.js -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- RF04 - Conteúdo da Aba Medicamentos -->
             <div id="conteudo-medicamentos" class="conteudo-aba">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-semibold">Gerenciar Estoque de Medicamentos</h3>
@@ -75,7 +71,6 @@
                     </div>
                 </div>
 
-                <!-- MODIFICAÇÃO 2 & 3: Barra de Busca e Filtro de UBS -->
                 <div class="flex justify-between items-center mb-4 p-4 bg-gray-50 rounded-lg">
                     <div class="flex-grow mr-4">
                         <label for="buscaEstoque" class="sr-only">Buscar no Estoque</label>
@@ -85,8 +80,7 @@
                         <label for="filtroUbsEstoque" class="sr-only">Filtrar por UBS</label>
                         <select id="filtroUbsEstoque" class="mt-1 block w-full min-w-[200px]">
                             <option value="">Todas as UBS</option>
-                            <!-- Opções de UBS serão populadas pelo JS -->
-                        </select>
+                            </select>
                     </div>
                 </div>
 
@@ -101,18 +95,24 @@
                             <th class="p-4 text-sm font-semibold text-gray-600">Ações</th>
                         </tr></thead>
                         <tbody id="corpoTabelaEstoque">
-                            <!-- Linhas inseridas pelo admin-medicamentos.js -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- RF03 - Conteúdo da Aba UBS -->
             <div id="conteudo-ubs" class="conteudo-aba">
                  <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-semibold">Gerenciar Unidades Básicas de Saúde (UBS)</h3>
                     <button id="abrirModalAdicionarUbs" class="btn-primario py-2 px-4 rounded-lg font-semibold">Adicionar UBS</button>
                 </div>
+                
+                <div class="flex justify-between items-center mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex-grow mr-4">
+                        <label for="buscaUbs" class="sr-only">Buscar UBS</label>
+                        <input type="text" id="buscaUbs" class="mt-1 block w-full" placeholder="Buscar por Nome, Endereço...">
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-md overflow-x-auto">
                     <table id="tabelaUbs" class="w-full text-left">
                         <thead class="bg-gray-100"><tr>
@@ -120,28 +120,22 @@
                             <th class="p-4 text-sm font-semibold text-gray-600">Endereço</th>
                             <th class="p-4 text-sm font-semibold text-gray-600">Telefone</th>
                             <th class="p-4 text-sm font-semibold text-gray-600">Horário</th>
-                            <th class="p-4 text-sm font-semibold text-gray-600">CEP</th> <!-- ADICIONADO -->
-                            <th class="p-4 text-sm font-semibold text-gray-600">Coordenadas</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">CEP</th> <th class="p-4 text-sm font-semibold text-gray-600">Coordenadas</th>
                             <th class="p-4 text-sm font-semibold text-gray-600">Status</th>
                             <th class="p-4 text-sm font-semibold text-gray-600">Ações</th>
                         </tr></thead>
                         <tbody id="corpoTabelaUbs">
-                            <!-- Linhas inseridas pelo admin-ubs.js -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Outras Abas (Conteúdo Placeholder) -->
             <div id="conteudo-validacao" class="conteudo-aba"><p>Em breve: Validação de Receitas e Documentos</p></div>
             <div id="conteudo-relatorios" class="conteudo-aba"><p>Em breve: Relatórios Gerenciais</p></div>
             <div id="conteudo-auditoria" class="conteudo-aba"><p>Em breve: Logs de Auditoria do Sistema</p></div>
         </div>
     </main>
 
-    <!-- Modais RF03 e RF04 -->
-    
-    <!-- Modal Adicionar/Editar UBS (RF03) -->
     <div id="modalUbs" class="modal">
         <div class="bg-white w-full max-w-lg p-6 sm:p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
@@ -151,9 +145,16 @@
             <form id="formularioUbs" novalidate>
                 <input type="hidden" id="idUbsForm">
                 <div class="space-y-4 corpo-modal">
-                    <div><label for="ubsNome" class="block text-sm font-medium text-gray-700">Nome da UBS</label><input type="text" id="ubsNome" class="mt-1 block w-full" required></div>
-                    <div><label for="ubsEndereco" class="block text-sm font-medium text-gray-700">Endereço Completo</label><input type="text" id="ubsEndereco" class="mt-1 block w-full" required></div>
-                    <!-- MODIFICADO: Adicionado campo CEP -->
+                    <div>
+                        <label for="ubsNome" class="block text-sm font-medium text-gray-700">Nome da UBS</label>
+                        <input type="text" id="ubsNome" class="mt-1 block w-full" required>
+                        <p id="erroUbsNome" class="error-message"></p>
+                    </div>
+                    <div>
+                        <label for="ubsEndereco" class="block text-sm font-medium text-gray-700">Endereço Completo</label>
+                        <input type="text" id="ubsEndereco" class="mt-1 block w-full" required>
+                        <p id="erroUbsEndereco" class="error-message"></p>
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label for="ubsTelefone" class="block text-sm font-medium text-gray-700">Telefone</label>
@@ -180,7 +181,6 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar/Editar Estoque (RF04) -->
     <div id="modalEstoque" class="modal">
         <div class="bg-white w-full max-w-lg p-6 sm:p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
@@ -199,7 +199,6 @@
                         <p id="erroEstoqueSelectUbs" class="error-message"></p>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <!-- MODIFICADO (Item 4): type="number" agora é estilizado -->
                         <div>
                             <label for="estoqueQuantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
                             <input type="number" id="estoqueQuantidade" class="mt-1 block w-full" required>
@@ -208,7 +207,6 @@
                         <div>
                             <label for="estoqueLote" class="block text-sm font-medium text-gray-700">Lote</label>
                             <input type="text" id="estoqueLote" class="mt-1 block w-full" required>
-                            <!-- MODIFICAÇÃO 1: Adicionado campo de erro para o lote -->
                             <p id="erroEstoqueLote" class="error-message"></p>
                         </div>
                     </div>
@@ -226,20 +224,16 @@
         </div>
     </div>
 
-    <!-- Modal Gerenciar Medicamentos Base (RF04) -->
     <div id="modalMedicamentoBase" class="modal">
-        <!-- MODIFICAÇÃO 1 (Anterior): Aumentado de max-w-4xl para max-w-6xl -->
         <div class="bg-white w-full max-w-6xl p-6 sm:p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
                  <h3 id="tituloModalMedicamentoBase" class="text-xl font-bold">Gerenciar Medicamentos (Base)</h3>
                  <button class="fechar-modal text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
             </div>
             <div class="grid grid-cols-3 gap-8">
-                <!-- Formulário de Cadastro -->
                 <div class="col-span-1">
                     <h4 id="tituloFormularioMedBase" class="text-lg font-semibold mb-4">Adicionar Novo Medicamento</h4>
                     <form id="formularioMedicamentoBase" class="space-y-4">
-                        <!-- MODIFICADO (Item 2): Adicionado ID oculto -->
                         <input type="hidden" id="idMedBaseForm">
                         <div><label for="medBaseNome" class="block text-sm font-medium text-gray-700">Nome Comercial</label><input type="text" id="medBaseNome" class="mt-1 block w-full" required></div>
                         <div><label for="medBasePrincipio" class="block text-sm font-medium text-gray-700">Princípio Ativo</label><input type="text" id="medBasePrincipio" class="mt-1 block w-full" required></div>
@@ -251,30 +245,25 @@
                         <button type="button" id="btnCancelarEdicaoMedBase" class="bg-gray-200 text-gray-800 w-full py-2 px-4 rounded-lg font-semibold" style="display: none;">Cancelar Edição</button>
                     </form>
                 </div>
-                <!-- Tabela de Medicamentos Base -->
                 <div class="col-span-2">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="text-lg font-semibold">Medicamentos Cadastrados</h4>
-                        <!-- MODIFICAÇÃO 1: Barra de Busca no Modal -->
                         <div class="w-1/2">
                             <input type="text" id="buscaMedBase" class="mt-1 block w-full" placeholder="Buscar por nome...">
                         </div>
                     </div>
                     
-                    <!-- MODIFICAÇÃO 1 (Anterior): Removido overflow-x-auto da div, pois a tabela deve caber -->
                     <div class="corpo-modal bg-white rounded-lg overflow-x-auto border" style="max-height: 50vh;">
                         <table class="w-full text-left">
                             <thead class="bg-gray-100 sticky top-0"><tr>
                                 <th class="p-4 text-sm font-semibold text-gray-600">Nome</th>
                                 <th class="p-4 text-sm font-semibold text-gray-600">Princípio Ativo</th>
                                 <th class="p-4 text-sm font-semibold text-gray-600">Controlado</th>
-                                <!-- MODIFICADO (Item 2): Adicionada coluna Status -->
                                 <th class="p-4 text-sm font-semibold text-gray-600">Status</th>
                                 <th class="p-4 text-sm font-semibold text-gray-600">Ações</th>
                             </tr></thead>
                             <tbody id="corpoTabelaMedicamentosBase">
-                                <!-- Linhas inseridas pelo admin-medicamentos.js -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -282,10 +271,51 @@
         </div>
     </div>
 
+    <div id="modalDetalhesUbs" class="modal">
+        <div class="bg-white w-full max-w-4xl p-6 sm:p-8 rounded-xl shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-6">
+                 <h3 id="detalhesUbsTitulo" class="text-xl font-bold">Detalhes da UBS</h3>
+                 <button class="fechar-modal text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            </div>
+            <div class="corpo-modal" style="max-height: 70vh;">
+                <div class="mb-6 border-b pb-4">
+                    <h4 class="text-lg font-semibold text-gray-800">Informações</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-sm">
+                        <p><strong>Nome:</strong> <span id="detalhesUbsNome"></span></p>
+                        <p><strong>Telefone:</strong> <span id="detalhesUbsTelefone"></span></p>
+                        <p class="col-span-1 md:col-span-2"><strong>Endereço:</strong> <span id="detalhesUbsEndereco"></span></p>
+                        <p><strong>CEP:</strong> <span id="detalhesUbsCep"></span></p>
+                        <p><strong>Horário:</strong> <span id="detalhesUbsHorario"></span></p>
+                        <p class="col-span-1 md:col-span-2"><strong>Coordenadas:</strong> Lat: <span id="detalhesUbsLat"></span>, Lon: <span id="detalhesUbsLon"></span></p>
+                    </div>
+                </div>
+                
+                <div>
+                     <h4 class="text-lg font-semibold text-gray-800 mb-4">Estoque Disponível</h4>
+                     <div class="overflow-y-auto border rounded-lg" style="max-height: 300px;">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100 sticky top-0"><tr>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Medicamento</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Princípio Ativo</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Lote</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Qtd.</th>
+                                <th class="p-3 text-sm font-semibold text-gray-600">Validade</th>
+                            </tr></thead>
+                            <tbody id="detalhesUbsEstoque">
+                                </tbody>
+                        </table>
+                     </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button type="button" class="fechar-modal bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-semibold">Fechar</button>
+                <button type="button" id="detalhesUbsBtnExcluir" class="btn-perigo py-2 px-4 rounded-lg font-semibold">Excluir UBS</button>
+                <button type="button" id="detalhesUbsBtnEditar" class="btn-primario py-2 px-4 rounded-lg font-semibold">Editar UBS</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Modais de Usuário (Necessários para admin-usuarios.js) -->
-    
-    <!-- Modal Adicionar/Editar Usuário (Tabela) -->
+
     <div id="modalFormularioUsuario" class="modal">
         <div class="bg-white w-full max-w-lg p-6 sm:p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
@@ -320,7 +350,6 @@
         </div>
     </div>
     
-    <!-- Modal de Verificação de E-mail (Genérico para Admin) -->
     <div id="modalVerificacaoEmail" class="modal">
         <div class="conteudo-modal-verificacao">
             <h2 id="tituloModalVerificacao">Verifique o E-mail</h2>
@@ -340,45 +369,38 @@
     </div>
 
 
-    <!-- Modal "Meu Perfil" do Admin -->
     <div id="modalMeuPerfilAdmin" class="modal">
         <div class="bg-white w-full max-w-2xl p-8 rounded-xl shadow-2xl m-4">
              <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h3 class="text-2xl font-bold">Meu Perfil</h3>
                 <button class="fechar-modal text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
             </div>
-            <!-- Conteúdo renderizado pelo admin-perfil.js -->
             <div id="conteudoMeuPerfilAdmin" class="space-y-4 text-lg"></div>
         </div>
     </div>
     
-    <!-- Modal para Editar o Perfil do Admin -->
     <div id="modalEditarPerfilAdmin" class="modal">
         <div class="bg-white w-full max-w-lg p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Editar Meu Perfil</h2>
                 <button class="fechar-modal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
-            <!-- Formulário renderizado pelo admin-perfil.js -->
             <form id="formularioEditarPerfilAdmin" class="mt-6 space-y-4" novalidate>
             </form>
         </div>
     </div>
 
-    <!-- Modal para Redefinir a Senha do Admin -->
     <div id="modalRedefinirSenhaAdmin" class="modal">
          <div class="bg-white w-full max-w-lg p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Redefinir Minha Senha</h2>
                 <button class="fechar-modal text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
             </div>
-            <!-- Formulário renderizado pelo admin-perfil.js -->
             <form id="formularioRedefinirSenhaAdmin" class="mt-6 space-y-4" novalidate>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Confirmação de Senha (para criar/excluir) -->
     <div id="modalConfirmarSenha" class="modal">
         <div class="bg-white w-full max-w-sm p-6 sm:p-8 rounded-xl shadow-2xl m-4">
              <h3 class="text-xl font-bold text-center">Confirmação de Segurança</h3>
@@ -397,7 +419,6 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação Genérico (Ativar/Desativar) -->
     <div id="modalConfirmacao" class="modal">
         <div class="bg-white w-full max-w-sm p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
              <h3 id="tituloConfirmacao" class="text-xl font-bold"></h3>
@@ -409,7 +430,6 @@
         </div>
     </div>
 
-    <!-- Modal de Escolha Excluir/Desativar Conta (para o Admin) -->
     <div id="modalEscolhaAcaoConta" class="modal">
         <div class="bg-white w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
             <h3 class="text-xl font-bold">Gerenciar Conta</h3>
@@ -438,7 +458,6 @@
     </div>
 
 
-    <!-- ALTERADO: Scripts agora são do tipo "module" -->
     <script src="../scripts/Admin.js" type="module"></script>
 
 </body>
