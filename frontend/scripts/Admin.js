@@ -5,6 +5,7 @@ import { initAdminUsuarios } from './admin/admin-usuarios.js';
 import { initAdminPerfil } from './admin/admin-perfil.js';
 import { initAdminUbs } from './admin/admin-ubs.js'; // <-- NOVO
 import { initAdminMedicamentos } from './admin/admin-medicamentos.js'; // <-- NOVO
+import { initAdminAuditoria } from './admin/admin-auditoria.js'; // <-- ADICIONADO RF08.3
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Autenticação e Inicialização ---
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'admin': ['usuarios', 'medicamentos', 'ubs', 'validacao', 'relatorios', 'auditoria'],
             'farmaceutico': ['validacao'],
             'gestor_estoque': ['medicamentos'], // Pode ver medicamentos/estoque
-            'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios'] // Pode ver ubs, estoque e validação
+            'gestor_ubs': ['ubs', 'medicamentos', 'relatorios'] // Pode ver ubs, estoque e validação 
         };
 
         // Esconde todas as abas e conteúdos primeiro
@@ -72,8 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
             initAdminMedicamentos(getUsuarioAtual());
         } else if (nomeAba === 'ubs') {
             initAdminUbs(getUsuarioAtual());
+        } else if (nomeAba === 'auditoria') { // <-- ADICIONADO RF08.3
+            initAdminAuditoria(getUsuarioAtual()); // <-- ADICIONADO RF08.3
         }
-        // Adicionar outros inits (validacao, relatorios, etc.) aqui
 
         if (abaBtn) abaBtn.dataset.initialized = true;
     };

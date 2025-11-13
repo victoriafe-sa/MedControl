@@ -4,7 +4,8 @@ import br.com.medcontrol.controlador.AutenticacaoController;
 import br.com.medcontrol.controlador.UsuarioController;
 import br.com.medcontrol.controlador.UBSController; 
 import br.com.medcontrol.controlador.MedicamentoController; 
-import br.com.medcontrol.controlador.EstoqueController; 
+import br.com.medcontrol.controlador.EstoqueController;
+import br.com.medcontrol.controlador.AuditoriaController; 
 import br.com.medcontrol.servicos.CepServico;
 import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
@@ -34,7 +35,7 @@ public class ApiServer {
         UBSController ubsController = new UBSController(); 
         MedicamentoController medicamentoController = new MedicamentoController(); 
         EstoqueController estoqueController = new EstoqueController(); 
-
+        AuditoriaController auditoriaController = new AuditoriaController(); // <-- ADICIONADO rf08
 
         // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
         app.post("/api/login", autenticacaoController::login);
@@ -42,7 +43,8 @@ public class ApiServer {
         app.post("/api/usuarios/enviar-codigo-verificacao", autenticacaoController::enviarCodigoVerificacao);
         app.post("/api/usuarios/verificar-codigo", autenticacaoController::verificarCodigo);
         app.post("/api/usuarios/verificar-existencia", autenticacaoController::verificarExistencia);
-
+        app.delete("/api/estoque/{id}", estoqueController::excluirEstoque); //RF08
+        
 
         // --- ROTAS PARA RECUPERAÇÃO DE SENHA ---
         app.post("/api/password-reset/check-email", autenticacaoController::verificarEmail);
@@ -90,10 +92,11 @@ public class ApiServer {
         app.get("/api/estoque", estoqueController::listarEstoque);
         app.post("/api/estoque", estoqueController::cadastrarEstoque);
         app.put("/api/estoque/{id}", estoqueController::atualizarEstoque);
-        app.delete("/api/estoque/{id}", estoqueController::excluirEstoque);
         app.post("/api/estoque/verificar-lote", estoqueController::verificarLote);
 
-
+        // --- RF08.4: ROTA DE AUDITORIA ---
+        app.get("/api/auditoria", auditoriaController::listarLogs);
+        
         // --- ROTAS PÚBLICAS (MOCK) ---
         app.get("/api/medicamentos/search", ctx -> {
             String nome = ctx.queryParam("nome");

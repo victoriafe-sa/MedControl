@@ -1,6 +1,7 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
+import br.com.medcontrol.servicos.AuditoriaServico; // <-- ADICIONADO RF08
 // REMOVIDO: import br.com.medcontrol.servicos.CepServico; 
 import com.fasterxml.jackson.core.type.TypeReference; 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -157,6 +158,11 @@ public class UsuarioController {
             
             // Passa o Map<String, Object> original
             internalUpdate(id, userObj);
+
+            // --- INÍCIO DA AUDITORIA RF08.4 ---
+            AuditoriaServico.registrarAcao(null, "ATUALIZAR", "usuarios", id, userObj);
+            // --- FIM DA AUDITORIA ---
+
             ctx.json(Map.of("success", true));
         } catch (SQLIntegrityConstraintViolationException e) {
             String campo = e.getMessage().toLowerCase().contains("email") ? "email" : "cpf_cns";
@@ -178,6 +184,12 @@ public class UsuarioController {
                 ps.setBoolean(1, status.get("ativo"));
                 ps.setInt(2, id);
                 ps.executeUpdate();
+
+                    // --- INÍCIO DA AUDITORIA RF08.4 ---
+                String acao = status.get("ativo") ? "ATIVAR" : "DESATIVAR";
+                AuditoriaServico.registrarAcao(null, acao, "usuarios", id, new HashMap<>(status)); // Converte para Map<String, Object>
+                // --- FIM DA AUDITORIA ---
+
                 ctx.json(Map.of("success", true));
             }
         } catch (Exception e) {
@@ -193,6 +205,11 @@ public class UsuarioController {
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
+
+                    // --- INÍCIO DA AUDITORIA RF08.4 ---
+                AuditoriaServico.registrarAcao(null, "EXCLUIR", "usuarios", id, null);
+                // --- FIM DA AUDITORIA ---
+                    
                 ctx.json(Map.of("success", true));
             }
         } catch (Exception e) {

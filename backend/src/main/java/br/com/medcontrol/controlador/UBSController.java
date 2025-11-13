@@ -1,6 +1,7 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
+import br.com.medcontrol.servicos.AuditoriaServico; // <-- ADICIONADO
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
@@ -8,6 +9,7 @@ import io.javalin.http.Context;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement; // <-- ADICIONADO
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -96,7 +98,7 @@ public class UBSController {
             String sql = "INSERT INTO ubs (nome, endereco, telefone, horario_funcionamento, cep, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 
                 ps.setString(1, (String) ubs.get("nome"));
                 ps.setString(2, (String) ubs.get("endereco"));
@@ -107,6 +109,17 @@ public class UBSController {
                 ps.setObject(7, ubs.get("longitude"));
                 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                int novoId = -1;
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        novoId = generatedKeys.getInt(1);
+                    }
+                }
+                AuditoriaServico.registrarAcao(null, "CRIAR", "ubs", novoId, ubs);
+                // --- FIM DA AUDITORIA ---    
+
                 ctx.status(201).json(Map.of("sucesso", true));
             }
         } catch (Exception e) {
@@ -139,6 +152,11 @@ public class UBSController {
                 ps.setInt(8, id);
 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                AuditoriaServico.registrarAcao(null, "ATUALIZAR", "ubs", id, ubs);
+                // --- FIM DA AUDITORIA ---
+
                 ctx.json(Map.of("sucesso", true));
             }
         } catch (Exception e) {
@@ -160,6 +178,11 @@ public class UBSController {
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                AuditoriaServico.registrarAcao(null, "DESATIVAR", "ubs", id, null);
+                // --- FIM DA AUDITORIA ---
+                
                 ctx.json(Map.of("sucesso", true));
             }
         } catch (Exception e) {

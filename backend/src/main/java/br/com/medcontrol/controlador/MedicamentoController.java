@@ -1,6 +1,7 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
+import br.com.medcontrol.servicos.AuditoriaServico; // <-- ADICIONADO
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
@@ -8,6 +9,7 @@ import io.javalin.http.Context;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement; // <-- ADICIONADO
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,7 +62,7 @@ public class MedicamentoController {
             String sql = "INSERT INTO medicamentos (nome_comercial, principio_ativo, concentracao, apresentacao, via_administracao, controlado) VALUES (?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 
                 ps.setString(1, (String) med.get("nome_comercial"));
                 ps.setString(2, (String) med.get("principio_ativo"));
@@ -70,6 +72,17 @@ public class MedicamentoController {
                 ps.setObject(6, med.get("controlado")); // Deixa o JDBC tratar Boolean
                 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                int novoId = -1;
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        novoId = generatedKeys.getInt(1);
+                    }
+                }
+                AuditoriaServico.registrarAcao(null, "CRIAR", "medicamentos", novoId, med);
+                // --- FIM DA AUDITORIA ---
+
                 ctx.status(201).json(Map.of("sucesso", true));
             }
         } catch (Exception e) {
@@ -100,6 +113,11 @@ public class MedicamentoController {
                 ps.setInt(7, id);
                 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                AuditoriaServico.registrarAcao(null, "ATUALIZAR", "medicamentos", id, med);
+                // --- FIM DA AUDITORIA ---
+
                 ctx.json(Map.of("sucesso", true));
             }
         } catch (Exception e) {
@@ -167,6 +185,17 @@ public class MedicamentoController {
             }
             
             conn.commit(); // Efetivar transação
+
+            // --- INÍCIO DA AUDITORIA RF08.4 ---
+            // Loga APÓS o commit da transação
+            String acao = novoStatus ? "ATIVAR" : "DESATIVAR";
+            AuditoriaServico.registrarAcao(null, acao, "medicamentos", id, new HashMap<>(status));
+            if (!novoStatus) {
+                // Loga a exclusão em massa do estoque associado
+                AuditoriaServico.registrarAcao(null, "EXCLUIR_EM_MASSA", "estoque", id, Map.of("id_medicamento_desativado", id));
+            }
+            // --- FIM DA AUDITORIA ---
+            
             ctx.json(Map.of("sucesso", true));
 
         } catch (Exception e) {

@@ -132,7 +132,31 @@
 
             <div id="conteudo-validacao" class="conteudo-aba"><p>Em breve: Validação de Receitas e Documentos</p></div>
             <div id="conteudo-relatorios" class="conteudo-aba"><p>Em breve: Relatórios Gerenciais</p></div>
-            <div id="conteudo-auditoria" class="conteudo-aba"><p>Em breve: Logs de Auditoria do Sistema</p></div>
+            <div id="conteudo-auditoria" class="conteudo-aba">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold">Logs de Auditoria do Sistema</h3>
+                    <button id="btnRecarregarLogs" class="btn-secundario py-2 px-4 rounded-lg font-semibold" style="background-color: #ca8a04; color: white;">Recarregar</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-100"><tr>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Data/Hora</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Usuário</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Ação</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Alvo</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">ID Alvo</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Detalhes</th>
+                        </tr></thead>
+                        <tbody id="corpoTabelaAuditoria">
+                            <!-- Conteúdo será preenchido por admin-auditoria.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalUbs" class="modal">
         </div>
     </main>
 

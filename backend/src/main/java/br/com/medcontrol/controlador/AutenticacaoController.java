@@ -3,7 +3,8 @@ package br.com.medcontrol.controlador;
 import br.com.medcontrol.db.DB;
 import br.com.medcontrol.servicos.EmailServico;
 import br.com.medcontrol.servicos.HunterServico;
-
+import br.com.medcontrol.servicos.AuditoriaServico; //RF08
+import java.sql.Statement; //RF08.3
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference; 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -326,7 +327,7 @@ public class AutenticacaoController {
             String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, logradouro, bairro, cidade, uf, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 
                 ps.setString(1, (String) user.get("nome"));
                 ps.setString(2, (String) user.get("email"));
@@ -353,6 +354,17 @@ public class AutenticacaoController {
                 ps.setString(11, (String) user.get("perfil"));
 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                int novoId = -1;
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        novoId = generatedKeys.getInt(1);
+                    }
+                }
+                // O admin ID não está disponível aqui de forma fácil, então passamos null
+                AuditoriaServico.registrarAcao(null, "CRIAR", "usuarios", novoId, user);
+                // --- FIM DA AUDITORIA ---
                 
                 codigosVerificacao.remove(email);
 

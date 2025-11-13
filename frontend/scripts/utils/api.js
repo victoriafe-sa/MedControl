@@ -185,6 +185,9 @@ export const api = {
     cadastrarEstoque: (dados) => fetchApi('/estoque', defaultPostOptions(dados)),
     atualizarEstoque: (id, dados) => fetchApi(`/estoque/${id}`, defaultPutOptions(dados)),
     excluirEstoque: (id) => fetchApi(`/estoque/${id}`, { method: 'DELETE' }),
-    // MODIFICAÇÃO 1: Adicionada função de verificação de lote
+   // MODIFICAÇÃO 1: Adicionada função de verificação de lote
     verificarLote: (dados) => fetchApi('/estoque/verificar-lote', defaultPostOptions(dados)),
+
+    // --- RF08.4: AUDITORIA ---
+    listarLogsAuditoria: () => fetchApi('/auditoria'),
 };

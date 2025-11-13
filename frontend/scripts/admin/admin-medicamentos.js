@@ -104,11 +104,11 @@ async function carregarDropdowns() {
             api.listarMedicamentos(),
             api.listarUbs()
         ]);
-        
-        listaMedicamentosCache = medicamentos; 
+
+        listaMedicamentosCache = medicamentos;
         const medicamentosAtivos = medicamentos.filter(m => m.ativo);
-        listaUbsCache = ubs; 
-        
+        listaUbsCache = ubs;
+
         popularSelect('estoqueSelectMed', medicamentosAtivos, 'id_medicamento', 'nome_comercial');
         popularSelect('estoqueSelectUbs', listaUbsCache, 'id_ubs', 'nome');
         // MODIFICAÇÃO 3: Popula o filtro de UBS da tabela principal
@@ -130,7 +130,7 @@ function popularSelect(selectId, lista, valorKey, textoKey) {
     } else {
         select.innerHTML = `<option value="">Selecione...</option>`;
     }
-    
+
     lista.forEach(item => {
         select.innerHTML += `<option value="${item[valorKey]}">${item[textoKey]}</option>`;
     });
@@ -141,8 +141,8 @@ function popularSelect(selectId, lista, valorKey, textoKey) {
 function abrirModalEstoque(item = null) {
     limparErrosFormulario('formularioEstoque');
     // MODIFICAÇÃO 1: Limpa erro do lote
-    if(erroEstoqueLote) erroEstoqueLote.textContent = '';
-    if(estoqueLoteInput) estoqueLoteInput.classList.remove('input-error');
+    if (erroEstoqueLote) erroEstoqueLote.textContent = '';
+    if (estoqueLoteInput) estoqueLoteInput.classList.remove('input-error');
 
     if (item) {
         estaEditandoEstoque = true;
@@ -152,7 +152,7 @@ function abrirModalEstoque(item = null) {
         document.getElementById('estoqueSelectUbs').value = item.id_ubs;
         document.getElementById('estoqueQuantidade').value = item.quantidade;
         document.getElementById('estoqueLote').value = item.lote;
-        
+
         if (item.data_validade) {
             try {
                 const dataObj = new Date(item.data_validade);
@@ -195,14 +195,14 @@ async function validarLote() {
     }
 
     try {
-        const dados = { 
-            id_ubs: parseInt(id_ubs), 
-            id_medicamento: parseInt(id_medicamento), 
-            lote, 
+        const dados = {
+            id_ubs: parseInt(id_ubs),
+            id_medicamento: parseInt(id_medicamento),
+            lote,
             id_estoque_excluir: id_estoque ? parseInt(id_estoque) : null
         };
         const resposta = await api.verificarLote(dados);
-        
+
         if (resposta.existe) {
             erroEstoqueLote.textContent = 'Este lote já está cadastrado para este medicamento nesta UBS.';
             estoqueLoteInput.classList.add('input-error');
@@ -225,12 +225,12 @@ async function salvarEstoque(e) {
     e.preventDefault();
     // Limpa erros antigos, exceto o de lote que validaremos
     limparErrosFormulario('formularioEstoque');
-    if(erroEstoqueLote) erroEstoqueLote.textContent = '';
-    if(estoqueLoteInput) estoqueLoteInput.classList.remove('input-error');
+    if (erroEstoqueLote) erroEstoqueLote.textContent = '';
+    if (estoqueLoteInput) estoqueLoteInput.classList.remove('input-error');
 
     // MODIFICAÇÃO 1: Revalida o lote antes de salvar
     const loteValido = await validarLote();
-    
+
     const dados = {
         id_medicamento: document.getElementById('estoqueSelectMed').value,
         id_ubs: document.getElementById('estoqueSelectUbs').value,
@@ -281,7 +281,7 @@ async function salvarEstoque(e) {
         carregarEstoque();
     } catch (erro) {
         // MODIFICAÇÃO 1: Trata erro de duplicidade vindo do backend (corrida)
-        if (erro.status === 409) { 
+        if (erro.status === 409) {
             erroEstoqueLote.textContent = 'Este lote já está cadastrado para este medicamento nesta UBS.';
             estoqueLoteInput.classList.add('input-error');
             exibirToast(erro.message || "Lote já cadastrado.", true);
@@ -299,7 +299,7 @@ async function excluirEstoque(id) {
             try {
                 await api.excluirEstoque(id);
                 exibirToast('Item excluído do estoque!');
-                carregarEstoque(); 
+                carregarEstoque();
             } catch (erro) {
                 exibirToast(`Erro ao excluir item: ${erro.message}`, true);
             }
@@ -322,8 +322,8 @@ async function carregarMedicamentosBase() {
 // MODIFICAÇÃO 1: Nova função para renderizar a tabela de med base (com filtro)
 function renderizarMedicamentosBase() {
     const filtroNome = document.getElementById('buscaMedBase')?.value.toLowerCase() || '';
-    
-    const medicamentosFiltrados = listaMedicamentosCache.filter(med => 
+
+    const medicamentosFiltrados = listaMedicamentosCache.filter(med =>
         med.nome_comercial.toLowerCase().includes(filtroNome) ||
         med.principio_ativo.toLowerCase().includes(filtroNome)
     );
@@ -337,7 +337,7 @@ function renderizarMedicamentosBase() {
     medicamentosFiltrados.forEach(med => {
         const tr = document.createElement('tr');
         tr.className = `border-b border-gray-200 ${!med.ativo ? 'bg-red-50 text-gray-500' : ''}`;
-        
+
         const statusBotao = med.ativo
             ? `<button class="btn-status-med-base btn-perigo py-1 px-3 rounded-lg text-sm" data-id="${med.id_medicamento}" data-status="false">Desativar</button>`
             : `<button class="btn-status-med-base btn-sucesso py-1 px-3 rounded-lg text-sm" data-id="${med.id_medicamento}" data-status="true">Ativar</button>`;
@@ -417,7 +417,7 @@ async function salvarMedicamentoBase(e) {
         exibirToast("Nome comercial e Princípio ativo são obrigatórios.", true);
         return;
     }
-    
+
     try {
         if (estaEditandoMedBase) {
             await api.atualizarMedicamento(id, dados);
@@ -426,17 +426,17 @@ async function salvarMedicamentoBase(e) {
             await api.cadastrarMedicamento(dados);
             exibirToast('Medicamento base cadastrado!');
         }
-        cancelarEdicaoMedBase(); 
-        await carregarDropdowns(); 
-        await carregarMedicamentosBase(); 
+        cancelarEdicaoMedBase();
+        await carregarDropdowns();
+        await carregarMedicamentosBase();
     } catch (erro) {
         exibirToast(`Erro ao salvar: ${erro.message}`, true);
     }
 }
 
 async function toggleStatusMedicamentoBase(id, novoStatus) {
-    const verboAcao = novoStatus ? 'ativar' : 'desativar'; 
-    const participioAcao = novoStatus ? 'ativado' : 'desativado'; 
+    const verboAcao = novoStatus ? 'ativar' : 'desativar';
+    const participioAcao = novoStatus ? 'ativado' : 'desativado';
     const tituloAcao = novoStatus ? 'Ativar' : 'Desativar';
 
     let mensagemConfirmacao = `Tem certeza que deseja ${verboAcao} este medicamento base?`;
@@ -451,14 +451,14 @@ async function toggleStatusMedicamentoBase(id, novoStatus) {
             try {
                 await api.alterarStatusMedicamento(id, novoStatus);
                 exibirToast(`Medicamento ${participioAcao} com sucesso!`);
-                await carregarDropdowns(); 
-                await carregarMedicamentosBase(); 
-                await carregarEstoque(); 
+                await carregarDropdowns();
+                await carregarMedicamentosBase();
+                await carregarEstoque();
             } catch (erro) {
                 exibirToast(`Erro ao ${verboAcao}: ${erro.message}`, true);
             }
         },
-        novoStatus ? 'primario' : 'perigo' 
+        novoStatus ? 'primario' : 'perigo'
     );
 }
 
@@ -483,21 +483,40 @@ export function initAdminMedicamentos() {
         return;
     }
 
+    // --- INÍCIO DA CORREÇÃO RF08.3 ---
+    // Oculta botões com base no perfil
+    const btnGerenciarMedicamentos = document.getElementById('abrirModalGerenciarMedicamentos');
+
+    if (usuarioLogado.perfil === 'gestor_ubs') {
+        if (btnGerenciarMedicamentos) {
+            btnGerenciarMedicamentos.style.display = 'none';
+        }
+    }
+    // --- FIM DA CORREÇÃO RF08.3 ---
+
     // Listeners dos botões principais
     document.getElementById('abrirModalAdicionarEstoque').addEventListener('click', () => abrirModalEstoque(null));
-    document.getElementById('abrirModalGerenciarMedicamentos').addEventListener('click', () => {
-        cancelarEdicaoMedBase(); 
+    /*document.getElementById('abrirModalGerenciarMedicamentos').addEventListener('click', () => {
+        cancelarEdicaoMedBase();
         carregarMedicamentosBase(); // Modificado para carregar e renderizar
         modalMedicamentoBase.classList.add('ativo');
-    });
-
+    });*/
+    
+    // Garante que o botão existe antes de adicionar listener
+    if (btnGerenciarMedicamentos) {
+        btnGerenciarMedicamentos.addEventListener('click', () => {
+            cancelarEdicaoMedBase();
+            carregarMedicamentosBase(); // Modificado para carregar e renderizar
+            modalMedicamentoBase.classList.add('ativo');
+        });
+    }
     // Listeners dos formulários
     formularioEstoque.addEventListener('submit', salvarEstoque);
     formularioMedicamentoBase.addEventListener('submit', salvarMedicamentoBase);
     document.getElementById('btnCancelarEdicaoMedBase').addEventListener('click', cancelarEdicaoMedBase);
 
     // MODIFICAÇÃO 1: Adiciona listener de blur para validar lote
-    if(estoqueLoteInput) {
+    if (estoqueLoteInput) {
         estoqueLoteInput.addEventListener('blur', validarLote);
     }
 
@@ -515,7 +534,7 @@ export function initAdminMedicamentos() {
         const target = e.target;
         if (target.classList.contains('btn-status-med-base')) {
             const id = target.dataset.id;
-            const novoStatus = target.dataset.status === 'true'; 
+            const novoStatus = target.dataset.status === 'true';
             toggleStatusMedicamentoBase(id, novoStatus);
         }
         if (target.classList.contains('btn-editar-med-base')) {
@@ -526,7 +545,7 @@ export function initAdminMedicamentos() {
 
     // MODIFICAÇÃO 1: Listener para busca no modal de med base
     document.getElementById('buscaMedBase').addEventListener('input', renderizarMedicamentosBase);
-    
+
     // MODIFICAÇÃO 2 & 3: Listeners para busca e filtro de estoque
     document.getElementById('buscaEstoque').addEventListener('input', renderizarEstoque);
     document.getElementById('filtroUbsEstoque').addEventListener('change', renderizarEstoque);

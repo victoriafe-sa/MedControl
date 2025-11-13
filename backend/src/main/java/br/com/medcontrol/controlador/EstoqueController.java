@@ -1,6 +1,7 @@
 package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
+import br.com.medcontrol.servicos.AuditoriaServico; // <-- ADICIONADO
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
@@ -10,6 +11,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLIntegrityConstraintViolationException; // MODIFICAÇÃO 1: Importado
+import java.sql.Statement; // <-- ADICIONADO
 import java.sql.Types; // MODIFICAÇÃO 1: Importado
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -117,7 +119,7 @@ public class EstoqueController {
             String sql = "INSERT INTO estoque (id_ubs, id_medicamento, quantidade, lote, data_validade) VALUES (?, ?, ?, ?, ?)";
 
             try (Connection conn = DB.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 
                 ps.setInt(1, Integer.parseInt(String.valueOf(item.get("id_ubs"))));
                 ps.setInt(2, Integer.parseInt(String.valueOf(item.get("id_medicamento"))));
@@ -126,6 +128,17 @@ public class EstoqueController {
                 ps.setDate(5, Date.valueOf((String) item.get("data_validade")));
                 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                int novoId = -1;
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        novoId = generatedKeys.getInt(1);
+                    }
+                }
+                AuditoriaServico.registrarAcao(null, "CRIAR", "estoque", novoId, item);
+                // --- FIM DA AUDITORIA ---
+
                 ctx.status(201).json(Map.of("sucesso", true));
             }
         // MODIFICAÇÃO 1: Captura específica para violação de constraint
@@ -163,6 +176,11 @@ public class EstoqueController {
                 ps.setInt(6, id);
                 
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                AuditoriaServico.registrarAcao(null, "ATUALIZAR", "estoque", id, item);
+                // --- FIM DA AUDITORIA ---
+
                 ctx.json(Map.of("sucesso", true));
             }
         // MODIFICAÇÃO 1: Captura específica para violação de constraint
@@ -192,6 +210,11 @@ public class EstoqueController {
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
+
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                AuditoriaServico.registrarAcao(null, "EXCLUIR", "estoque", id, null);
+                // --- FIM DA AUDITORIA ---
+                
                 ctx.json(Map.of("sucesso", true));
             }
         } catch (Exception e) {
