@@ -101,6 +101,21 @@ CREATE TABLE itens_receitas (
     FOREIGN KEY (id_medicamento) REFERENCES medicamentos(id_medicamento)
 );
 
+-- ============================================
+-- RF08.4: Auditoria de Ações (NOVA TABELA)
+-- ============================================
+CREATE TABLE auditoria (
+    id_auditoria INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NULL, -- ID do admin que fez a ação (pode ser nulo se não implementada autenticação de admin)
+    acao VARCHAR(255) NOT NULL, -- Ex: 'CRIAR', 'ATUALIZAR', 'EXCLUIR'
+    tabela_afetada VARCHAR(100) NOT NULL, -- Ex: 'usuarios', 'ubs'
+    registro_id INT NOT NULL, -- ID do registro afetado (ex: id_usuario, id_ubs)
+    detalhes TEXT NULL, -- JSON com os dados alterados
+    data_log DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+
 --- DADOS INICIAIS (PARA TESTES) ---
 --- RF01 / RF02
 
