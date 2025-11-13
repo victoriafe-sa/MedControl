@@ -19,8 +19,7 @@ import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.math.BigDecimal; 
+import java.util.concurrent.ConcurrentHashMap; 
 
 public class AutenticacaoController {
 
@@ -192,8 +191,10 @@ public class AutenticacaoController {
                             user.put("cep", rs.getString("cep"));
                             user.put("data_nascimento", rs.getString("data_nascimento"));
                             user.put("ativo", rs.getBoolean("ativo"));
-                            user.put("latitude", rs.getObject("latitude")); // Inclui latitude
-                            user.put("longitude", rs.getObject("longitude")); // Inclui longitude
+                            user.put("logradouro", rs.getString("logradouro"));
+                            user.put("bairro", rs.getString("bairro"));
+                            user.put("cidade", rs.getString("cidade"));
+                            user.put("uf", rs.getString("uf"));
                             ctx.json(Map.of("success", true, "user", user));
                         } else {
                             ctx.status(401).json(Map.of("success", false, "message", "Credenciais inválidas ou usuário inativo."));
@@ -238,24 +239,15 @@ public class AutenticacaoController {
 
             String cep = (String) user.get("cep");
             
-            Object latObj = user.get("latitude"); 
-            Object lonObj = user.get("longitude"); 
-            BigDecimal latitude = null;
-            BigDecimal longitude = null;
-            
-            try {
-                if (latObj != null && !latObj.toString().isEmpty() && !latObj.toString().equals("null")) {
-                    latitude = new BigDecimal(latObj.toString());
-                }
-                if (lonObj != null && !lonObj.toString().isEmpty() && !lonObj.toString().equals("null")) {
-                    longitude = new BigDecimal(lonObj.toString());
-                }
-            } catch (NumberFormatException e) {
-                System.err.println("Erro ao converter coordenadas (ignorado): " + e.getMessage());
-            }
+            // MODIFICAÇÃO 2.2: Remove latitude/longitude e obtém campos de endereço
+            String logradouro = (String) user.get("logradouro");
+            String bairro = (String) user.get("bairro");
+            String cidade = (String) user.get("cidade");
+            String uf = (String) user.get("uf");
+            // MODIFICAÇÃO 2.2: Remove lógica BigDecimal
 
-            // *** CORREÇÃO: Ordem das colunas e parâmetros atualizada para bater com schema.sql ***
-            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, latitude, longitude, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            // MODIFICAÇÃO 2.2: SQL Atualizado
+            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, logradouro, bairro, cidade, uf, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -265,23 +257,24 @@ public class AutenticacaoController {
                 ps.setString(3, (String) user.get("cpf_cns"));
                 ps.setString(4, cep); 
 
-                // ?5 = latitude
-                if (latitude != null) ps.setBigDecimal(5, latitude); else ps.setNull(5, Types.DECIMAL);
-                // ?6 = longitude
-                if (longitude != null) ps.setBigDecimal(6, longitude); else ps.setNull(6, Types.DECIMAL);
+                // MODIFICAÇÃO 2.2: Adiciona novos campos
+                ps.setString(5, logradouro);
+                ps.setString(6, bairro);
+                ps.setString(7, cidade);
+                ps.setString(8, uf);
 
-                // ?7 = data_nascimento
+                // ?9 = data_nascimento (era 7)
                 String dataNascimento = (String) user.get("data_nascimento");
                 if (dataNascimento == null || dataNascimento.trim().isEmpty()) {
-                    ps.setNull(7, Types.DATE);
+                    ps.setNull(9, Types.DATE);
                 } else {
-                    ps.setDate(7, Date.valueOf(dataNascimento));
+                    ps.setDate(9, Date.valueOf(dataNascimento));
                 }
 
-                // ?8 = senha
-                ps.setString(8, senhaHash);
-                // ?9 = perfil
-                ps.setString(9, "usuario"); 
+                // ?10 = senha (era 8)
+                ps.setString(10, senhaHash);
+                // ?11 = perfil (era 9)
+                ps.setString(11, "usuario"); 
                 
                 ps.executeUpdate();
                 
@@ -324,24 +317,13 @@ public class AutenticacaoController {
 
             String cep = (String) user.get("cep");
 
-            Object latObj = user.get("latitude"); 
-            Object lonObj = user.get("longitude"); 
-            BigDecimal latitude = null;
-            BigDecimal longitude = null;
+            String logradouro = (String) user.get("logradouro");
+            String bairro = (String) user.get("bairro");
+            String cidade = (String) user.get("cidade");
+            String uf = (String) user.get("uf");
             
-            try {
-                if (latObj != null && !latObj.toString().isEmpty() && !latObj.toString().equals("null")) {
-                    latitude = new BigDecimal(latObj.toString());
-                }
-                if (lonObj != null && !lonObj.toString().isEmpty() && !lonObj.toString().equals("null")) {
-                    longitude = new BigDecimal(lonObj.toString());
-                }
-            } catch (NumberFormatException e) {
-                System.err.println("Erro ao converter coordenadas (ignorado): " + e.getMessage());
-            }
-            
-            // *** CORREÇÃO: Ordem das colunas e parâmetros atualizada para bater com schema.sql ***
-            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, latitude, longitude, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            // MODIFICAÇÃO 2.2: SQL Atualizado
+            String sql = "INSERT INTO usuarios (nome, email, cpf_cns, cep, logradouro, bairro, cidade, uf, data_nascimento, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -351,23 +333,24 @@ public class AutenticacaoController {
                 ps.setString(3, (String) user.get("cpf_cns"));
                 ps.setString(4, cep);
                 
-                // ?5 = latitude
-                if (latitude != null) ps.setBigDecimal(5, latitude); else ps.setNull(5, Types.DECIMAL);
-                // ?6 = longitude
-                if (longitude != null) ps.setBigDecimal(6, longitude); else ps.setNull(6, Types.DECIMAL);
+                // MODIFICAÇÃO 2.2: Adiciona novos campos
+                ps.setString(5, logradouro);
+                ps.setString(6, bairro);
+                ps.setString(7, cidade);
+                ps.setString(8, uf);
                 
-                // ?7 = data_nascimento
+                // ?9 = data_nascimento (era 7)
                 String dataNascimento = (String) user.get("data_nascimento");
                 if (dataNascimento == null || dataNascimento.trim().isEmpty()) {
-                    ps.setNull(7, Types.DATE);
+                    ps.setNull(9, Types.DATE);
                 } else {
-                    ps.setDate(7, Date.valueOf(dataNascimento));
+                    ps.setDate(9, Date.valueOf(dataNascimento));
                 }
                 
-                // ?8 = senha
-                ps.setString(8, senhaHash);
-                // ?9 = perfil
-                ps.setString(9, (String) user.get("perfil"));
+                // ?10 = senha (era 8)
+                ps.setString(10, senhaHash);
+                // ?11 = perfil (era 9)
+                ps.setString(11, (String) user.get("perfil"));
 
                 ps.executeUpdate();
                 

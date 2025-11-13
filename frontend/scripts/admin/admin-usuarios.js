@@ -237,13 +237,13 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
         let resposta;
         if (!estaEditando) {
             // Adicionando (requer senha e código)
-            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar); // Payload AGORA TEM lat/lon
+            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar); // Payload AGORA TEM endereço
         } else if (comVerificacao) {
             // Editando com e-mail novo (requer código)
-            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM lat/lon
+            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM endereço
         } else {
             // Editando sem e-mail novo (não requer código)
-            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM lat/lon
+            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM endereço
         }
 
         if (resposta.success) {
@@ -311,14 +311,16 @@ async function onFormularioUsuarioSubmit(e) {
         // api.js's validarCep (fetchApi) retorna o json da resposta
         cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
         
-        // Adiciona coordenadas ao payload
-        dadosUsuarioAtualParaSalvar.latitude = cepData.latitude || null;
-        dadosUsuarioAtualParaSalvar.longitude = cepData.longitude || null;
+        // MODIFICAÇÃO 3.2: Adiciona campos de endereço
+        dadosUsuarioAtualParaSalvar.logradouro = cepData.logradouro || null;
+        dadosUsuarioAtualParaSalvar.bairro = cepData.bairro || null;
+        dadosUsuarioAtualParaSalvar.cidade = cepData.cidade || null;
+        dadosUsuarioAtualParaSalvar.uf = cepData.uf || null;
 
     } catch (err) {
-        console.error("Erro ao buscar coordenadas:", err);
+        console.error("Erro ao buscar dados do CEP:", err); // Modificado
         document.getElementById('cepUsuario').classList.add('input-error');
-        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Salvar';
         return;

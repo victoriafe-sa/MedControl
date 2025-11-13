@@ -15,8 +15,10 @@ CREATE TABLE usuarios (
     email VARCHAR(255) NOT NULL UNIQUE,
     cpf_cns VARCHAR(20) NOT NULL UNIQUE,
     cep VARCHAR(10),
-    latitude DECIMAL(10, 8) NULL,
-    longitude DECIMAL(11, 8) NULL,
+    logradouro VARCHAR(255) NULL,
+    bairro VARCHAR(100) NULL,
+    cidade VARCHAR(100) NULL,
+    uf CHAR(2) NULL,
     data_nascimento DATE,
     senha VARCHAR(255) NOT NULL,
     perfil ENUM('usuario', 'farmaceutico', 'admin', 'gestor_ubs', 'gestor_estoque') NOT NULL DEFAULT 'usuario',
@@ -104,18 +106,19 @@ CREATE TABLE itens_receitas (
 
 -- Inserir um dos administradores
 -- A senha é 'admin123' criptografada com Spring Security BCrypt.
--- CORRIGIDO: Adicionado latitude e longitude para os inserts de usuários.
-INSERT INTO usuarios (nome, email, cpf_cns, cep, latitude, longitude, data_nascimento, senha, perfil, ativo) VALUES
-('Admin', 'admin@medcontrol.com', '00000000000', '71000-000', -15.828550, -48.021060, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'admin', TRUE),
-('Farmaceutico', 'farmaceutico@medcontrol.com', '00000001000', '71000-000', -15.828550, -48.021060, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'farmaceutico', TRUE),
-('Gestor UBS', 'gestorubs@medcontrol.com', '00000007000', '71000-000', -15.828550, -48.021060, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'gestor_ubs', TRUE),
-('Gestor Estoque', 'gestorestoque@medcontrol.com', '00000000080', '71000-000', -15.828550, -48.021060, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'gestor_estoque', TRUE),
+-- MODIFICAÇÃO 1.2: Removido latitude/longitude e adicionado campos de endereço
+INSERT INTO usuarios (nome, email, cpf_cns, cep, logradouro, bairro, cidade, uf, data_nascimento, senha, perfil, ativo) VALUES
+('Admin', 'admin@medcontrol.com', '00000000000', '71000-000', NULL, NULL, NULL, NULL, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'admin', TRUE),
+('Farmaceutico', 'farmaceutico@medcontrol.com', '00000001000', '71000-000', NULL, NULL, NULL, NULL, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'farmaceutico', TRUE),
+('Gestor UBS', 'gestorubs@medcontrol.com', '00000007000', '71000-000', NULL, NULL, NULL, NULL, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'gestor_ubs', TRUE),
+('Gestor Estoque', 'gestorestoque@medcontrol.com', '00000000080', '71000-000', NULL, NULL, NULL, NULL, '1990-01-01', '$2a$10$9DXdZTm1mffqQsXJSmFHXeypWBtLlVQHCDLqCFLH42feS4v0MYatO', 'gestor_estoque', TRUE),
 -- Inserir um usuário comum
 -- A senha é 'usuario123' criptografada com Spring Security BCrypt.
-('Usuario de Teste', 'usuario@teste.com', '11122233344', '72000-000', -15.836800, -48.048700, '1995-05-15', '$2a$10$lWCdpXkPNggpxo/9HJ5NxO/hiXllbNkA.A9gH1qPdtvjjcquKE4o2', 'usuario', TRUE),
+('Usuario de Teste', 'usuario@teste.com', '11122233344', '72000-000', NULL, NULL, NULL, NULL, '1995-05-15', '$2a$10$lWCdpXkPNggpxo/9HJ5NxO/hiXllbNkA.A9gH1qPdtvjjcquKE4o2', 'usuario', TRUE),
 -- Inserir um usuário inativo para teste
 -- A senha é 'inativo123' criptografada com Spring Security BCrypt.
-('Usuario Inativo', 'inativo@teste.com', '55566677788', '73000-000', -15.698000, -47.886000, '1998-10-20', '$2a$10$IA7JfO3cNAoIwRag9BqdqecaGtTkV/FyLbucE1pGd305IdjfwlxTa', 'usuario', FALSE);
+('Usuario Inativo', 'inativo@teste.com', '55566677788', '73000-000', NULL, NULL, NULL, NULL, '1998-10-20', '$2a$10$IA7JfO3cNAoIwRag9BqdqecaGtTkV/FyLbucE1pGd305IdjfwlxTa', 'usuario', FALSE);
+
 
 --- DADOS INICIAIS (PARA TESTES) ---
 --- RF03 / RF04
@@ -141,17 +144,17 @@ INSERT INTO medicamentos (nome_comercial, principio_ativo, concentracao, apresen
 
 INSERT INTO estoque (id_ubs, id_medicamento, quantidade, lote, data_validade) VALUES
 -- UBS 01 Asa Sul (ID 1)
-(1, 5, 200, 'DP1-001', '2027-10-01'), -- Dipirona
-(1, 6, 300, 'OM1-001', '2026-08-01'), -- Omeprazol
-(1, 9, 80, 'AT1-001', '2026-11-01'), -- Atenolol
-(1, 12, 50, 'AZ1-001', '2026-12-01'), -- Azitromicina
+(1, 1, 200, 'DP1-001', '2027-10-01'), -- Dipirona
+(1, 2, 300, 'OM1-001', '2026-08-01'), -- Omeprazol
+(1, 5, 80, 'AT1-001', '2026-11-01'),  -- Atenolol
+(1, 8, 50, 'AZ1-001', '2026-12-01'),  -- Azitromicina
 
 -- UBS 02 Taguatinga Centro (ID 2)
-(2, 5, 150, 'DP2-002', '2027-10-01'), -- Dipirona
-(2, 8, 250, 'MT2-001', '2028-01-01'), -- Metformina
-(2, 10, 100, 'CP2-001', '2027-05-01'), -- Captopril
-(2, 14, 75, 'IN2-001', '2025-12-01'), -- Insulina NPH
+(2, 1, 150, 'DP2-002', '2027-10-01'), -- Dipirona
+(2, 4, 250, 'MT2-001', '2028-01-01'), -- Metformina
+(2, 6, 100, 'CP2-001', '2027-05-01'), -- Captopril
+(2, 10, 75, 'IN2-001', '2025-12-01'), -- Insulina NPH
 
 -- UBS 03 Guará II (ID 3)
-(3, 7, 120, 'SV3-001', '2027-01-15'), -- Sinvastatina
-(3, 11, 130, 'HD3-001', '2027-07-01'); -- Hidroclorotiazida
+(3, 3, 120, 'SV3-001', '2027-01-15'), -- Sinvastatina
+(3, 7, 130, 'HD3-001', '2027-07-01'); -- Hidroclorotiazida

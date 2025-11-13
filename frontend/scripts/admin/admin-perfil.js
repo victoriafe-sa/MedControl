@@ -169,12 +169,15 @@ async function onFormularioEditarAdminSubmit(e) {
     // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
     try {
         const cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
-        dadosUsuarioAtualParaSalvar.latitude = cepData.latitude || null;
-        dadosUsuarioAtualParaSalvar.longitude = cepData.longitude || null;
+        // MODIFICAÇÃO 3.3: Remove lat/lon e adiciona campos de endereço
+        dadosUsuarioAtualParaSalvar.logradouro = cepData.logradouro || null;
+        dadosUsuarioAtualParaSalvar.bairro = cepData.bairro || null;
+        dadosUsuarioAtualParaSalvar.cidade = cepData.cidade || null;
+        dadosUsuarioAtualParaSalvar.uf = cepData.uf || null;
     } catch (err) {
-        console.error("Erro ao buscar coordenadas:", err);
+        console.error("Erro ao buscar dados do CEP:", err); // Modificado
         document.getElementById('adminEditCep').classList.add('input-error');
-        document.getElementById('erroadminEditCep').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+        document.getElementById('erroadminEditCep').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
         return; // Interrompe se a busca de CEP falhar
     }
     
@@ -259,7 +262,7 @@ async function salvarPerfilAdmin(comVerificacao) {
         if (resposta.success) {
             // Atualiza os dados locais
             // --- ATUALIZAÇÃO ---
-            // Atualiza os dados locais com o que foi salvo (incluindo lat/lon)
+            // Atualiza os dados locais com o que foi salvo (incluindo endereço)
             usuarioAdminAtual = { ...usuarioAdminAtual, ...dadosUsuarioAtualParaSalvar };
             salvarUsuarioSession(usuarioAdminAtual);
             

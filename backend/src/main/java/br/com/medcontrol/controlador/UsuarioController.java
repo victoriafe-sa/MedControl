@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.math.BigDecimal; 
 
 public class UsuarioController {
 
@@ -35,10 +34,11 @@ public class UsuarioController {
     // *** CORREÇÃO: Método agora aceita Map<String, Object> ***
     public static void internalUpdate(int id, Map<String, Object> user) throws SQLException, SQLIntegrityConstraintViolationException {
         
-        // *** CORREÇÃO: Ordem das colunas e parâmetros atualizada para bater com schema.sql ***
-        String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, latitude = ?, longitude = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
+        // MODIFICAÇÃO 2.3: SQL Atualizado
+        String sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, logradouro = ?, bairro = ?, cidade = ?, uf = ?, data_nascimento = ?, perfil = ? WHERE id = ?";
         if (user.get("perfil") == null) {
-            sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, latitude = ?, longitude = ?, data_nascimento = ? WHERE id = ?";
+            // MODIFICAÇÃO 2.3: SQL Atualizado
+            sql = "UPDATE usuarios SET nome = ?, email = ?, cpf_cns = ?, cep = ?, logradouro = ?, bairro = ?, cidade = ?, uf = ?, data_nascimento = ? WHERE id = ?";
         }
 
         try (Connection conn = DB.getConnection();
@@ -49,46 +49,29 @@ public class UsuarioController {
             ps.setString(3, (String) user.get("cpf_cns"));
             ps.setString(4, (String) user.get("cep"));
 
-            // *** CORREÇÃO: Lógica de conversão de Object para BigDecimal (igual ao registrar) ***
-            Object latObj = user.get("latitude");
-            Object lonObj = user.get("longitude");
-            BigDecimal latitude = null;
-            BigDecimal longitude = null;
-
-            try {
-                 if (latObj != null && !latObj.toString().isEmpty() && !latObj.toString().equals("null")) {
-                    latitude = new BigDecimal(latObj.toString());
-                }
-                if (lonObj != null && !lonObj.toString().isEmpty() && !lonObj.toString().equals("null")) {
-                    longitude = new BigDecimal(lonObj.toString());
-                }
-            } catch (NumberFormatException e) {
-                 System.err.println("Erro ao converter coordenadas (ignorado): " + e.getMessage());
-                 // Deixa latitude/longitude como null se a conversão falhar
-            }
+            ps.setString(5, (String) user.get("logradouro"));
+            ps.setString(6, (String) user.get("bairro"));
+            ps.setString(7, (String) user.get("cidade"));
+            ps.setString(8, (String) user.get("uf"));
             
-            // ?5 = latitude
-            if (latitude != null) ps.setBigDecimal(5, latitude); else ps.setNull(5, Types.DECIMAL);
-            // ?6 = longitude
-            if (longitude != null) ps.setBigDecimal(6, longitude); else ps.setNull(6, Types.DECIMAL);
-
-            // ?7 = data_nascimento
+            
+            // ?9 = data_nascimento (era 7)
             String dataNascimento = (String) user.get("data_nascimento");
             if (dataNascimento == null || dataNascimento.trim().isEmpty() || dataNascimento.equals("null")) {
-                ps.setNull(7, Types.DATE);
+                ps.setNull(9, Types.DATE);
             } else {
-                ps.setDate(7, Date.valueOf(dataNascimento));
+                ps.setDate(9, Date.valueOf(dataNascimento));
             }
 
             // Define os campos restantes
             if (user.get("perfil") != null) {
-                // ?8 = perfil
-                ps.setString(8, (String) user.get("perfil"));
-                // ?9 = id
-                ps.setInt(9, id);
+                // ?10 = perfil (era 8)
+                ps.setString(10, (String) user.get("perfil"));
+                // ?11 = id (era 9)
+                ps.setInt(11, id);
             } else {
-                // ?8 = id
-                ps.setInt(8, id);
+                // ?10 = id (era 8)
+                ps.setInt(10, id);
             }
             ps.executeUpdate();
         }
@@ -152,9 +135,12 @@ public class UsuarioController {
                 user.put("data_nascimento", dataNascimento != null ? dataNascimento.toString() : null);
                 user.put("perfil", rs.getString("perfil"));
                 user.put("ativo", rs.getBoolean("ativo"));
-                // Adiciona lat/lng
-                user.put("latitude", rs.getObject("latitude"));
-                user.put("longitude", rs.getObject("longitude"));
+                
+                // MODIFICAÇÃO 2.3: Adiciona campos de endereço
+                user.put("logradouro", rs.getString("logradouro"));
+                user.put("bairro", rs.getString("bairro"));
+                user.put("cidade", rs.getString("cidade"));
+                user.put("uf", rs.getString("uf"));
                 userList.add(user);
             }
             ctx.json(userList);

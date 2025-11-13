@@ -193,14 +193,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             cepData = await cepRes.json();
             
-            // Adiciona coordenadas ao payload
-            dadosUsuarioTemporario.latitude = cepData.latitude || null;
-            dadosUsuarioTemporario.longitude = cepData.longitude || null;
+            // MODIFICAÇÃO 3.1: Remove lat/lon e adiciona campos de endereço
+            dadosUsuarioTemporario.logradouro = cepData.logradouro || null;
+            dadosUsuarioTemporario.bairro = cepData.bairro || null;
+            dadosUsuarioTemporario.cidade = cepData.cidade || null;
+            dadosUsuarioTemporario.uf = cepData.uf || null;
 
         } catch (err) {
-            console.error("Erro ao buscar coordenadas:", err);
+            console.error("Erro ao buscar dados do CEP:", err); // Modificado
             document.getElementById('cadastroCep').classList.add('input-error');
-            document.getElementById('erroCadastroCep').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+            document.getElementById('erroCadastroCep').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
             btnSubmit.disabled = false;
             btnSubmit.textContent = 'Cadastrar';
             return;
@@ -392,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fluxoAtual === 'cadastro') {
             dadosUsuarioTemporario.codigoVerificacao = codigo;
             try {
-                // Envia todos os dados do usuário (AGORA COM LAT/LON) + o código para o endpoint de registro.
+                // Envia todos os dados do usuário (AGORA COM ENDEREÇO) + o código para o endpoint de registro.
                 const res = await fetch('http://localhost:7071/api/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dadosUsuarioTemporario)
                 });

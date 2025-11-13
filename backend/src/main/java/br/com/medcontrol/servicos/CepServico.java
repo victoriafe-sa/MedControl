@@ -17,20 +17,19 @@ public class CepServico {
     private final ObjectMapper mapper = new ObjectMapper();
 
     /**
-     * Busca informações de um CEP utilizando a API BrasilAPI v2.
+     * Busca informações de um CEP utilizando a API ViaCEP.
      * @param cep O CEP a ser consultado (deve conter apenas números).
-     * @return Um Map com os dados do endereço, incluindo latitude/longitude, ou um mapa indicando erro.
+     * @return Um Map com os dados do endereço, ou um mapa indicando erro.
      */
     public Map<String, Object> buscarCep(String cep) {
-        // MODIFICADO: URL trocada para BrasilAPI v2
-        String url = String.format("https://brasilapi.com.br/api/cep/v2/%s", cep);
+        // MODIFICAÇÃO 2.1: URL trocada para ViaCEP
+        String url = String.format("https://viacep.com.br/ws/%s/json/", cep);
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI(url))
-                    // MODIFICAÇÃO: Adiciona cabeçalhos para evitar o "Connection reset"
                     .header("Accept", "application/json")
-                    .header("User-Agent", "Java-HttpClient/21") // Simula um cliente
+                    .header("User-Agent", "Java-HttpClient/21")
                     .GET()
                     .build();
 
@@ -40,41 +39,34 @@ public class CepServico {
                 // Mapeia a resposta principal
                 Map<String, Object> responseMap = mapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
                 
-                // Extrai as coordenadas do objeto 'location'
-                if (responseMap.containsKey("location")) {
-                    try {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> location = (Map<String, Object>) responseMap.get("location");
-                        
-                        @SuppressWarnings("unchecked")
-                        Map<String, String> coordinates = (Map<String, String>) location.get("coordinates");
-                        
-                        if (coordinates != null) {
-                            responseMap.put("latitude", coordinates.get("latitude"));
-                            responseMap.put("longitude", coordinates.get("longitude"));
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Erro ao processar coordenadas do CEP: " + e.getMessage());
-                        // Continua mesmo sem coordenadas, mas loga o erro
-                    }
+                // MODIFICAÇÃO 2.1: Verifica se a ViaCEP retornou erro
+                if (responseMap.containsKey("erro")) {
+                    Map<String, Object> errorMap = new HashMap<>();
+                    errorMap.put("erro", true);
+                    errorMap.put("message", "CEP não encontrado.");
+                    return errorMap;
                 }
                 
-                return responseMap;
+                // MODIFICAÇÃO 2.1: Remove lógica de location/coordinates e popula com ViaCEP
+                Map<String, Object> resultMap = new HashMap<>();
+                resultMap.put("cep", responseMap.get("cep"));
+                resultMap.put("logradouro", responseMap.get("logradouro"));
+                resultMap.put("bairro", responseMap.get("bairro"));
+                resultMap.put("cidade", responseMap.get("localidade")); // ViaCEP usa "localidade"
+                resultMap.put("uf", responseMap.get("uf"));
+                
+                return resultMap; // Retorna o mapa formatado
+
             } else {
-                 // MODIFICADO: Trata o 404 (CEP não encontrado) da BrasilAPI
+                 // Trata erros de status HTTP (diferente de 200)
                  Map<String, Object> errorMap = new HashMap<>();
                  errorMap.put("erro", true);
-                 
-                 if (response.statusCode() == 404) {
-                    errorMap.put("message", "CEP não encontrado.");
-                 } else {
-                    errorMap.put("message", "Erro na consulta do CEP. Status: " + response.statusCode());
-                 }
+                 errorMap.put("message", "Erro na consulta do CEP. Status: " + response.statusCode());
                  return errorMap;
             }
 
         } catch (IOException | InterruptedException e) {
-            System.err.println("Falha ao consultar BrasilAPI API: " + e.getMessage());
+            System.err.println("Falha ao consultar ViaCEP API: " + e.getMessage()); // Modificado
             Thread.currentThread().interrupt(); // Restaura o status de interrupção
             Map<String, Object> errorMap = new HashMap<>();
             errorMap.put("erro", true);

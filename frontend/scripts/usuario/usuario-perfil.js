@@ -149,12 +149,14 @@ async function onFormularioEditarPerfilSubmit(e) {
     // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
     try {
         const cepData = await api.validarCep(dadosParaSalvar.cep.replace(/\D/g, ''));
-        dadosParaSalvar.latitude = cepData.latitude || null;
-        dadosParaSalvar.longitude = cepData.longitude || null;
+        dadosParaSalvar.logradouro = cepData.logradouro || null;
+        dadosParaSalvar.bairro = cepData.bairro || null;
+        dadosParaSalvar.cidade = cepData.cidade || null;
+        dadosParaSalvar.uf = cepData.uf || null;
     } catch (err) {
-        console.error("Erro ao buscar coordenadas:", err);
+        console.error("Erro ao buscar dados do CEP:", err); // Modificado
         document.getElementById('editarCep').classList.add('input-error');
-        document.getElementById('erroEditarCep').textContent = err.message || 'Não foi possível buscar coordenadas para este CEP.';
+        document.getElementById('erroEditarCep').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
         return; // Interrompe se a busca de CEP falhar
     }
     
@@ -212,7 +214,7 @@ async function salvarPerfil(comVerificacao, codigo = null) {
         
         if (resposta.success) {
             // --- ATUALIZAÇÃO ---
-            // Atualiza os dados locais com o que foi salvo (incluindo lat/lon)
+            // Atualiza os dados locais com o que foi salvo (incluindo endereço)
             usuarioAtual = { ...usuarioAtual, ...dadosParaSalvar };
             salvarUsuarioSession(usuarioAtual);
             
