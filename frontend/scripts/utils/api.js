@@ -1,4 +1,8 @@
 // frontend/scripts/utils/api.js
+// --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+// Importa a função para buscar o usuário logado
+import { getUsuarioAtual } from './auth.js';
+// --- FIM DA MODIFICAÇÃO ---
 
 const BASE_URL = 'http://localhost:7071/api';
 
@@ -11,6 +15,20 @@ const BASE_URL = 'http://localhost:7071/api';
  */
 async function fetchApi(endpoint, options = {}) {
     try {
+        // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+        // Adiciona o ID do usuário logado ao header para auditoria
+        const usuarioLogado = getUsuarioAtual();
+        if (usuarioLogado && usuarioLogado.id) {
+            // Garante que o objeto headers exista
+            if (!options.headers) {
+                options.headers = {};
+            }
+            // Adiciona o ID do usuário em um header customizado
+            // O backend irá ler este header para salvar o log de auditoria
+            options.headers['X-User-ID'] = usuarioLogado.id;
+        }
+        // --- FIM DA MODIFICAÇÃO ---
+
         const response = await fetch(`${BASE_URL}${endpoint}`, options);
 
         // Tenta pegar o JSON mesmo se a resposta não for ok (para mensagens de erro)

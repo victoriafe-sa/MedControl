@@ -464,7 +464,7 @@ async function toggleStatusMedicamentoBase(id, novoStatus) {
 
 // --- Inicialização ---
 
-export function initAdminMedicamentos() {
+export function initAdminMedicamentos(usuarioLogado) {
     // Mapeamento dos elementos
     modalEstoque = document.getElementById('modalEstoque');
     formularioEstoque = document.getElementById('formularioEstoque');

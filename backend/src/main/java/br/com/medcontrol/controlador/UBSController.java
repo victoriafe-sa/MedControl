@@ -111,13 +111,20 @@ public class UBSController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
                 int novoId = -1;
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         novoId = generatedKeys.getInt(1);
                     }
                 }
-                AuditoriaServico.registrarAcao(null, "CRIAR", "ubs", novoId, ubs);
+                AuditoriaServico.registrarAcao(adminId, "CRIAR", "ubs", novoId, ubs); // MODIFICADO
                 // --- FIM DA AUDITORIA ---    
 
                 ctx.status(201).json(Map.of("sucesso", true));
@@ -154,7 +161,14 @@ public class UBSController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                AuditoriaServico.registrarAcao(null, "ATUALIZAR", "ubs", id, ubs);
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
+                AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "ubs", id, ubs); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
 
                 ctx.json(Map.of("sucesso", true));
@@ -180,7 +194,14 @@ public class UBSController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                AuditoriaServico.registrarAcao(null, "DESATIVAR", "ubs", id, null);
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
+                AuditoriaServico.registrarAcao(adminId, "DESATIVAR", "ubs", id, null); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
                 
                 ctx.json(Map.of("sucesso", true));

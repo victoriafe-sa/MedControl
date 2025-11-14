@@ -130,13 +130,20 @@ public class EstoqueController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
                 int novoId = -1;
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         novoId = generatedKeys.getInt(1);
                     }
                 }
-                AuditoriaServico.registrarAcao(null, "CRIAR", "estoque", novoId, item);
+                AuditoriaServico.registrarAcao(adminId, "CRIAR", "estoque", novoId, item); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
 
                 ctx.status(201).json(Map.of("sucesso", true));
@@ -178,7 +185,14 @@ public class EstoqueController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                AuditoriaServico.registrarAcao(null, "ATUALIZAR", "estoque", id, item);
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
+                AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "estoque", id, item); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
 
                 ctx.json(Map.of("sucesso", true));
@@ -212,7 +226,14 @@ public class EstoqueController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                AuditoriaServico.registrarAcao(null, "EXCLUIR", "estoque", id, null);
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
+                AuditoriaServico.registrarAcao(adminId, "EXCLUIR", "estoque", id, null); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
                 
                 ctx.json(Map.of("sucesso", true));

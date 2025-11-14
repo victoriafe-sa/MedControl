@@ -356,6 +356,13 @@ public class AutenticacaoController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
                 int novoId = -1;
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
@@ -363,7 +370,7 @@ public class AutenticacaoController {
                     }
                 }
                 // O admin ID não está disponível aqui de forma fácil, então passamos null
-                AuditoriaServico.registrarAcao(null, "CRIAR", "usuarios", novoId, user);
+                AuditoriaServico.registrarAcao(adminId, "CRIAR", "usuarios", novoId, user); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
                 
                 codigosVerificacao.remove(email);

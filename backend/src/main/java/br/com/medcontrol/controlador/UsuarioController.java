@@ -160,7 +160,14 @@ public class UsuarioController {
             internalUpdate(id, userObj);
 
             // --- INÍCIO DA AUDITORIA RF08.4 ---
-            AuditoriaServico.registrarAcao(null, "ATUALIZAR", "usuarios", id, userObj);
+            // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+            Integer adminId = null;
+            try {
+                adminId = Integer.parseInt(ctx.header("X-User-ID"));
+            } catch (Exception e) { /* ignora */ }
+            // --- FIM DA MODIFICAÇÃO ---
+
+            AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "usuarios", id, userObj); // MODIFICADO
             // --- FIM DA AUDITORIA ---
 
             ctx.json(Map.of("success", true));
@@ -185,9 +192,16 @@ public class UsuarioController {
                 ps.setInt(2, id);
                 ps.executeUpdate();
 
-                    // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
                 String acao = status.get("ativo") ? "ATIVAR" : "DESATIVAR";
-                AuditoriaServico.registrarAcao(null, acao, "usuarios", id, new HashMap<>(status)); // Converte para Map<String, Object>
+                AuditoriaServico.registrarAcao(adminId, acao, "usuarios", id, new HashMap<>(status)); // Converte para Map<String, Object> // MODIFICADO
                 // --- FIM DA AUDITORIA ---
 
                 ctx.json(Map.of("success", true));
@@ -206,8 +220,15 @@ public class UsuarioController {
                 ps.setInt(1, id);
                 ps.executeUpdate();
 
-                    // --- INÍCIO DA AUDITORIA RF08.4 ---
-                AuditoriaServico.registrarAcao(null, "EXCLUIR", "usuarios", id, null);
+                // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+                
+                AuditoriaServico.registrarAcao(adminId, "EXCLUIR", "usuarios", id, null); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
                     
                 ctx.json(Map.of("success", true));

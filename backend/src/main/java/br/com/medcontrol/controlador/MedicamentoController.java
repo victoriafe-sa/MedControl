@@ -74,13 +74,20 @@ public class MedicamentoController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
                 int novoId = -1;
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         novoId = generatedKeys.getInt(1);
                     }
                 }
-                AuditoriaServico.registrarAcao(null, "CRIAR", "medicamentos", novoId, med);
+                AuditoriaServico.registrarAcao(adminId, "CRIAR", "medicamentos", novoId, med); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
 
                 ctx.status(201).json(Map.of("sucesso", true));
@@ -115,7 +122,14 @@ public class MedicamentoController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                AuditoriaServico.registrarAcao(null, "ATUALIZAR", "medicamentos", id, med);
+                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+                Integer adminId = null;
+                try {
+                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
+                } catch (Exception e) { /* ignora */ }
+                // --- FIM DA MODIFICAÇÃO ---
+
+                AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "medicamentos", id, med); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
 
                 ctx.json(Map.of("sucesso", true));
@@ -187,12 +201,19 @@ public class MedicamentoController {
             conn.commit(); // Efetivar transação
 
             // --- INÍCIO DA AUDITORIA RF08.4 ---
+            // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
+            Integer adminId = null;
+            try {
+                adminId = Integer.parseInt(ctx.header("X-User-ID"));
+            } catch (Exception e) { /* ignora */ }
+            // --- FIM DA MODIFICAÇÃO ---
+
             // Loga APÓS o commit da transação
             String acao = novoStatus ? "ATIVAR" : "DESATIVAR";
-            AuditoriaServico.registrarAcao(null, acao, "medicamentos", id, new HashMap<>(status));
+            AuditoriaServico.registrarAcao(adminId, acao, "medicamentos", id, new HashMap<>(status)); // MODIFICADO
             if (!novoStatus) {
                 // Loga a exclusão em massa do estoque associado
-                AuditoriaServico.registrarAcao(null, "EXCLUIR_EM_MASSA", "estoque", id, Map.of("id_medicamento_desativado", id));
+                AuditoriaServico.registrarAcao(adminId, "EXCLUIR_EM_MASSA", "estoque", id, Map.of("id_medicamento_desativado", id)); // MODIFICADO
             }
             // --- FIM DA AUDITORIA ---
             
