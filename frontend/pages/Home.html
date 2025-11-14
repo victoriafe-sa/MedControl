@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedControl - Encontre seus medicamentos no SUS</title>
+    <link rel="icon" type="image/x-icon" href="../img/editar.ico">
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
@@ -11,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/Home.css">
+    
 
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -20,34 +22,44 @@
         <nav class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <!-- Logo -->
             <a href="Home.html" class="flex items-center space-x-2">
-                <svg class="icone-logo h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 10.5H3.375c-.621 0-1.125.504-1.125 1.125v2.25c0 .621.504 1.125 1.125 1.125H3.75m14.25 0V21a2.25 2.25 0 01-2.25 2.25H8.25A2.25 2.25 0 016 21V15m12 0V3.375c0-.621-.504-1.125-1.125-1.125H9.375c-.621 0-1.125.504-1.125 1.125V15m12 0h-9" /></svg>
+
                 <h1 class="text-3xl font-bold texto-logo">MedControl</h1>
             </a>
-            <!-- Links de Navegação -->
+            <!-- Links de Navegação (Desktop) -->
             <div class="hidden md:flex items-center space-x-8">
-                <a href="#sobre" class="text-gray-600 hover:text-blue-800 font-medium">Sobre</a>
-                <a href="TelaLoginCadastro.html#register" class="text-gray-600 hover:text-blue-800 font-medium">Crie sua Conta</a>
-                <a href="TelaLoginCadastro.html" class="bg-gray-100 text-gray-800 hover:bg-gray-200 py-2 px-4 rounded-lg font-semibold">Login</a>
+                <a href="#sobre" class="text-gray-600 hover:text-blue-800 font-medium transition-colors">Sobre</a>
+                <a href="TelaLoginCadastro.html#register" class="text-gray-600 hover:text-blue-800 font-medium transition-colors">Crie sua Conta</a>
+                <a href="TelaLoginCadastro.html" class="btn-primario py-2 px-5 rounded-lg font-semibold transition-colors shadow-sm">Login</a>
             </div>
-             <button class="md:hidden p-2">
+             <!-- Botão do Menu Móvel (Hamburger) -->
+             <button id="mobile-menu-button" class="md:hidden p-2 text-gray-600 hover:text-blue-800 focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
             </button>
         </nav>
+        
+        <!-- Menu Móvel (escondido por padrão) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg border-t border-gray-200">
+            <a href="#sobre" class="block py-3 px-5 text-gray-700 hover:bg-gray-100 font-medium transition-colors">Sobre</a>
+            <a href="TelaLoginCadastro.html#register" class="block py-3 px-5 text-gray-700 hover:bg-gray-100 font-medium transition-colors">Crie sua Conta</a>
+            <a href="TelaLoginCadastro.html" class="block py-3 px-5 text-blue-800 bg-blue-50 hover:bg-blue-100 font-semibold transition-colors">Login</a>
+        </div>
     </header>
 
     <!-- Seção Principal (Hero) -->
-    <main class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div class="max-w-3xl mx-auto">
-            <h2 class="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
-                Encontre medicamentos na rede pública do DF.
-            </h2>
-            <p class="mt-6 text-lg text-gray-600">
-                Consulte a disponibilidade de medicamentos nas Unidades Básicas de Saúde (UBS) perto de você. Rápido, fácil e sem sair de casa.
-            </p>
-            <div class="mt-8">
-                <button id="btnAbrirModalBusca" class="btn-primario inline-block py-3 px-8 rounded-lg text-lg font-semibold shadow-lg transform hover:-translate-y-1 transition-transform">
-                    Buscar Medicamentos Agora
-                </button>
+    <main id="inicio" class="bg-blue-900 text-white py-20 text-center">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-4xl md:text-5xl font-bold text-white leading-tight">
+                    Encontre medicamentos na rede pública do DF.
+                </h2>
+                <p class="mt-6 text-lg text-blue-100">
+                    Consulte a disponibilidade de medicamentos nas Unidades Básicas de Saúde (UBS) perto de você. Rápido, fácil e sem sair de casa.
+                </p>
+                <div class="mt-8">
+                    <button id="btnAbrirModalBusca" class="bg-white text-blue-800 inline-block py-3 px-8 rounded-lg text-lg font-semibold shadow-lg transform hover:-translate-y-1 transition-transform">
+                        Buscar Medicamentos Agora
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -112,18 +124,16 @@
         </div>
     </section>
     
-    <!-- Seção de Cadastro (CTA) -->
-    <section id="cadastro" class="bg-blue-800 text-white">
+    <section id="cadastro" class="bg-blue-900 text-white">
         <div class="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-20 text-center">
             <h3 class="text-3xl font-bold">Tenha mais controle sobre sua saúde.</h3>
-            <p class="mt-4 max-w-2xl mx-auto text-blue-100">Crie sua conta gratuita para acessar funcionalidades exclusivas:</p>
-            <ul class="mt-8 space-y-4 inline-block text-left">
+            <p class="mt-4 max-w-2xl mx-auto text-blue-200">Crie sua conta gratuita para acessar funcionalidades exclusivas:</p> <ul class="mt-8 space-y-4 inline-block text-left">
                 <li class="flex items-center"><svg class="h-6 w-6 text-green-400 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Faça e gerencie suas reservas online.</li>
                 <li class="flex items-center"><svg class="h-6 w-6 text-green-400 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Consulte seu histórico de medicamentos retirados.</li>
                 <li class="flex items-center"><svg class="h-6 w-6 text-green-400 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Receba notificações sobre seus agendamentos.</li>
             </ul>
             <div class="mt-10">
-                <a href="TelaLoginCadastro.html#register" class="bg-white text-blue-800 inline-block py-3 px-8 rounded-lg text-lg font-semibold shadow-lg transform hover:-translate-y-1 transition-transform">
+                <a href="TelaLoginCadastro.html#register" class="bg-white text-blue-900 inline-block py-3 px-8 rounded-lg text-lg font-semibold shadow-lg transform hover:-translate-y-1 transition-transform">
                     Criar minha conta agora
                 </a>
             </div>

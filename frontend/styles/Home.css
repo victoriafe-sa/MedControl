@@ -3,23 +3,78 @@ body {
 }
 
 .icone-logo {
-    color: #10b981;
+    color: #10b981; /* Verde MedControl */
 }
 
 .texto-logo {
-    color: #1e3a8a;
+    color: #1e3a8a; /* Azul MedControl */
 }
 
+/* --- SEÇÃO HERO MELHORADA --- */
+.hero-section {
+    /* MODIFICAÇÃO: Trocado o gradiente claro pelo azul principal */
+    background-color: #1e3a8a; /* Azul MedControl */
+}
+
+.hero-title {
+    /* MODIFICAÇÃO: Trocado o gradiente de texto por branco sólido para legibilidade */
+    color: #ffffff;
+}
+/* --- FIM DA SEÇÃO HERO --- */
+
+
+/* --- BOTÕES MELHORADOS --- */
 .btn-primario {
     background-color: #1e3a8a;
     color: white;
-    transition: background-color 0.3s;
+    padding: 10px 22px; /* Padding padrão */
+    border-radius: 0.5rem; /* 8px */
+    font-weight: 600;
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .btn-primario:hover {
     background-color: #1c347d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
 
+.btn-secundario {
+    background-color: transparent;
+    color: #1e3a8a;
+    border: 2px solid #1e3a8a;
+    padding: 8px 20px; /* Um pouco menor que o primário */
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-secundario:hover {
+    background-color: #eef2ff; /* Azul bem claro */
+    color: #1c347d;
+}
+
+/* MODIFICADO: Botão CTA (Call to Action) para a seção Hero */
+.btn-hero-white {
+    background-color: #ffffff; /* Fundo branco */
+    color: #1e3a8a; /* Texto azul MedControl */
+    /* O padding é controlado pelas classes do Tailwind no HTML (py-4 px-10) */
+    border-radius: 0.5rem; /* 8px */
+    font-weight: 600;
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-hero-white:hover {
+    background-color: #f0f5ff; /* Azul bem clarinho (quase branco) */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+}
+/* --- FIM DOS BOTÕES --- */
+
+
+/* --- MODAL MELHORADO --- */
 .modal-busca {
     display: none;
     position: fixed;
@@ -30,35 +85,81 @@ body {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.6);
-    align-items: center;
-    justify-content: center;
+    /* Animação de fade-in para o fundo */
+    animation: fadeIn 0.3s ease;
 }
 
 .conteudo-modal-busca {
     background-color: #fff;
     margin: auto;
-    padding: 2rem;
-    border-radius: 0.5rem;
+    padding: 2.5rem; /* Mais espaçamento interno */
+    border-radius: 0.75rem; /* Mais arredondado */
     width: 90%;
     max-width: 500px;
     text-align: center;
     position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Animação para o modal "cair" */
+.modal-animate {
+    animation: slideInDown 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .btn-fechar {
     position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 2rem;
-    font-weight: bold;
+    top: 15px; /* Ajustado */
+    right: 20px; /* Ajustado */
+    font-size: 2.5rem; /* Maior */
+    line-height: 1;
+    font-weight: 300; /* Mais fino */
     color: #aaa;
     cursor: pointer;
+    transition: color 0.2s;
 }
 
-/* --- NOVOS ESTILOS --- */
+.btn-fechar:hover {
+    color: #333;
+}
+/* --- FIM DO MODAL --- */
 
+
+/* --- ESTILOS DOS CARDS --- */
+.card-style {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.card-style:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+/* --- FIM DOS CARDS --- */
+
+
+/* --- LISTA DE UBS NO MODAL --- */
 .ubs-list {
-    max-height: 240px; /* Altura para ~3 itens */
+    max-height: 240px;
     overflow-y: auto;
     padding-right: 8px; 
 }

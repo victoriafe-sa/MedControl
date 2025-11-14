@@ -1,4 +1,4 @@
- document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     const modalBusca = document.getElementById('modalBusca');
     const btnAbrirModalBusca = document.getElementById('btnAbrirModalBusca');
     const btnFecharModalBusca = document.getElementById('btnFecharModalBusca');
@@ -61,5 +61,23 @@
             resultadosBusca.innerHTML = `<p class="text-red-600 text-center">Não foi possível conectar ao servidor.</p>`;
         }
     });
+    // --- INÍCIO DA MODIFICAÇÃO (Menu Responsivo) ---
+    const btnMenu = document.getElementById('mobile-menu-button');
+    const menu = document.getElementById('mobile-menu');
+
+    if (btnMenu && menu) {
+        // Alterna a visibilidade do menu ao clicar no botão
+        btnMenu.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+
+        // Opcional: Fecha o menu ao clicar em um link (útil para o link "#sobre")
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                menu.classList.add('hidden');
+            });
+        });
+    }
+    // --- FIM DA MODIFICAÇÃO ---
 });
 
