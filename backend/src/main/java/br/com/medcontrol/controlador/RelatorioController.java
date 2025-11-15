@@ -75,12 +75,13 @@ public class RelatorioController {
             // 3. Projeção de Demanda (Retiradas nos últimos 30 dias) - Depende da RF5.6 (retiradas)
             
             // --- INÍCIO DA MODIFICAÇÃO ---
-            // CORREÇÃO: "COUNT(DISTINCT id_retirada)" era ambíguo. Trocado para "COUNT(DISTINCT r.id_retirada)"
-            String sqlDemanda = "SELECT DATE(data_retirada) as dia, COUNT(DISTINCT r.id_retirada) as total_retiradas, SUM(ir.quantidade) as total_itens " +
+            // CORREÇÃO: "DATE(data_retirada)" era ambíguo. Trocado para "DATE(r.data_retirada)"
+            // em todas as ocorrências (SELECT, GROUP BY e ORDER BY).
+            String sqlDemanda = "SELECT DATE(r.data_retirada) as dia, COUNT(DISTINCT r.id_retirada) as total_retiradas, SUM(ir.quantidade) as total_itens " +
                                 "FROM retiradas r " +
                                 "JOIN itens_retiradas ir ON r.id_retirada = ir.id_retirada " +
                                 "WHERE r.data_retirada >= CURDATE() - INTERVAL 30 DAY " +
-                                "GROUP BY DATE(data_retirada) ORDER BY DATE(data_retirada) ASC";
+                                "GROUP BY DATE(r.data_retirada) ORDER BY DATE(r.data_retirada) ASC";
             // --- FIM DA MODIFICAÇÃO ---
             
             List<Map<String, Object>> projecaoDemanda = new ArrayList<>();
@@ -94,6 +95,8 @@ public class RelatorioController {
             } catch (SQLException e) {
                 // Ignora se a tabela retiradas ainda não existir
                 System.err.println("Aviso: Tabela 'retiradas' pode não existir. " + e.getMessage());
+                // Adiciona um print do erro específico para facilitar o debug
+                e.printStackTrace();
             }
             dashboard.put("projecaoDemanda", projecaoDemanda);
 

@@ -130,7 +130,35 @@ async function abrirModalDetalhesUbs(ubs) {
 
         corpoEstoque.innerHTML = '';
         estoqueDaUbs.forEach(item => {
-            const dataValidade = new Date(item.data_validade).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+            // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
+            let dataValidade = 'N/A';
+            if (item.data_validade) {
+                try {
+                    let dataObj;
+                    if (typeof item.data_validade === 'string') {
+                        // Se for string (ex: "2027-10-01"), substitui '-' por '/'
+                        dataObj = new Date(item.data_validade.replace(/-/g, '/'));
+                    } else if (typeof item.data_validade === 'number') {
+                        // Se for número (timestamp), usa diretamente
+                        dataObj = new Date(item.data_validade);
+                    } else {
+                        // Tenta criar a data com o que vier
+                        dataObj = new Date(item.data_validade);
+                    }
+                    
+                    // Verifica se a data criada é válida
+                    if (isNaN(dataObj.getTime())) {
+                        dataValidade = 'Inválida';
+                    } else {
+                        dataValidade = dataObj.toLocaleDateString('pt-BR');
+                    }
+                } catch (e) {
+                    console.error("Erro ao formatar data:", item.data_validade, e);
+                    dataValidade = 'Inválida';
+                }
+            }
+            // --- FIM DA MODIFICAÇÃO ---
+
             corpoEstoque.innerHTML += `
                 <tr class="border-b">
                     <td class="p-3 text-sm">${item.nome_comercial}</td>

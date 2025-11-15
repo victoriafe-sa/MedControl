@@ -202,16 +202,16 @@ INSERT INTO medicamentos (nome_comercial, principio_ativo, concentracao, apresen
 INSERT INTO estoque (id_ubs, id_medicamento, quantidade, lote, data_validade) VALUES
 -- UBS 01 Asa Sul (ID 1)
 (1, 1, 200, 'DP1-001', '2027-10-01'), -- Dipirona
-(1, 2, 300, 'OM1-001', '2026-08-01'), -- Omeprazol
+(1, 2, 13, 'OM1-001', '2026-08-01'), -- Omeprazol
 (1, 5, 80, 'AT1-001', '2026-11-01'),  -- Atenolol
-(1, 8, 50, 'AZ1-001', '2026-12-01'),  -- Azitromicina
+(1, 8, 10, 'AZ1-001', '2026-12-01'),  -- Azitromicina
 
 -- UBS 02 Taguatinga Centro (ID 2)
 (2, 1, 150, 'DP2-002', '2027-10-01'), -- Dipirona
-(2, 4, 250, 'MT2-001', '2028-01-01'), -- Metformina
+(2, 4, 40, 'MT2-001', '2028-01-01'), -- Metformina
 (2, 6, 100, 'CP2-001', '2027-05-01'), -- Captopril
 (2, 10, 75, 'IN2-001', '2025-12-01'), -- Insulina NPH
 
 -- UBS 03 Guará II (ID 3)
-(3, 3, 120, 'SV3-001', '2027-01-15'), -- Sinvastatina
+(3, 3, 12, 'SV3-001', '2027-01-15'), -- Sinvastatina
 (3, 7, 130, 'HD3-001', '2027-07-01'); -- Hidroclorotiazida

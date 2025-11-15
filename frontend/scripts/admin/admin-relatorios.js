@@ -104,7 +104,12 @@ function renderizarGraficoDemanda(projecaoDemanda) {
     const dadosProjecao = projecaoDemanda || []; 
     
     // Formata os dados para o Chart.js
-    const labels = dadosProjecao.map(item => new Date(item.dia + 'T00:00:00-03:00').toLocaleDateString('pt-BR'));
+    // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
+    // Substitui '-' por '/' para forçar o parse como data local, não UTC
+    const labels = dadosProjecao.map(item => 
+        new Date(item.dia.replace(/-/g, '/')).toLocaleDateString('pt-BR')
+    );
+    // --- FIM DA MODIFICAÇÃO ---
     const data = dadosProjecao.map(item => item.total_itens);
 
     meuGraficoDemanda = new Chart(ctx, {
@@ -159,7 +164,34 @@ async function buscarRelatorioEstoque(ubs_id) {
         }
 
         dados.forEach(item => {
-            const dataValidade = item.data_validade ? new Date(item.data_validade + 'T00:00:00-03:00').toLocaleDateString('pt-BR') : 'N/A';
+            // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
+            let dataValidade = 'N/A';
+            if (item.data_validade) {
+                try {
+                    let dataObj;
+                    if (typeof item.data_validade === 'string') {
+                        // Se for string (ex: "2027-10-01"), substitui '-' por '/'
+                        dataObj = new Date(item.data_validade.replace(/-/g, '/'));
+                    } else if (typeof item.data_validade === 'number') {
+                        // Se for número (timestamp), usa diretamente
+                        dataObj = new Date(item.data_validade);
+                    } else {
+                        // Tenta criar a data com o que vier
+                        dataObj = new Date(item.data_validade);
+                    }
+                    
+                    // Verifica se a data criada é válida
+                    if (isNaN(dataObj.getTime())) {
+                        dataValidade = 'Inválida';
+                    } else {
+                        dataValidade = dataObj.toLocaleDateString('pt-BR');
+                    }
+                } catch (e) {
+                    console.error("Erro ao formatar data:", item.data_validade, e);
+                    dataValidade = 'Inválida';
+                }
+            }
+            // --- FIM DA MODIFICAÇÃO ---
             
             let statusCor = 'text-green-600';
             if (item.status === 'Vencido') statusCor = 'text-red-700 bg-red-100 font-bold';

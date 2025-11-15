@@ -71,15 +71,34 @@ function renderizarEstoque() {
     }
 
     estoqueFiltrado.forEach(item => {
-        let dataValidade = 'Inválida';
+        // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
+        let dataValidade = 'N/A';
         if (item.data_validade) {
             try {
-                const dataObj = new Date(item.data_validade);
-                dataValidade = dataObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                let dataObj;
+                if (typeof item.data_validade === 'string') {
+                    // Se for string (ex: "2027-10-01"), substitui '-' por '/'
+                    dataObj = new Date(item.data_validade.replace(/-/g, '/'));
+                } else if (typeof item.data_validade === 'number') {
+                    // Se for número (timestamp), usa diretamente
+                    dataObj = new Date(item.data_validade);
+                } else {
+                    // Tenta criar a data com o que vier
+                    dataObj = new Date(item.data_validade);
+                }
+                
+                // Verifica se a data criada é válida
+                if (isNaN(dataObj.getTime())) {
+                    dataValidade = 'Inválida';
+                } else {
+                    dataValidade = dataObj.toLocaleDateString('pt-BR');
+                }
             } catch (e) {
                 console.error("Erro ao formatar data:", item.data_validade, e);
+                dataValidade = 'Inválida';
             }
         }
+        // --- FIM DA MODIFICAÇÃO ---
 
         const tr = document.createElement('tr');
         tr.className = `border-b border-gray-200 ${item.quantidade === 0 ? 'bg-yellow-50 text-gray-600' : ''}`;
@@ -153,11 +172,22 @@ function abrirModalEstoque(item = null) {
 
         if (item.data_validade) {
             try {
+                // Formato YYYY-MM-DD é necessário para o input type="date"
+                // O backend envia a data já nesse formato (ou como objeto Date que vira string)
+                // A correção do 'Invalid Date' estava na *leitura* (renderizarEstoque), 
+                // aqui para o *input*, precisamos garantir que está como YYYY-MM-DD.
+                
+                // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
+                // O backend envia "YYYY-MM-DD". O input[type=date] precisa desse formato.
+                // Mas se a data for de um objeto Date(), ela pode ter fuso.
+                // A forma mais segura é recriar a data baseando-se no UTC.
                 const dataObj = new Date(item.data_validade);
                 const ano = dataObj.getUTCFullYear();
                 const mes = (dataObj.getUTCMonth() + 1).toString().padStart(2, '0'); // Mês é 0-indexado
                 const dia = dataObj.getUTCDate().toString().padStart(2, '0');
                 document.getElementById('estoqueDataValidade').value = `${ano}-${mes}-${dia}`;
+                // --- FIM DA MODIFICAÇÃO ---
+
             } catch (e) {
                 console.error("Erro ao formatar data para o modal:", item.data_validade, e);
                 document.getElementById('estoqueDataValidade').value = null;
