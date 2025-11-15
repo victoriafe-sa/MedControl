@@ -2,6 +2,7 @@ package br.com.medcontrol.controlador;
 
 import br.com.medcontrol.db.DB;
 import br.com.medcontrol.servicos.AuditoriaServico; // <-- ADICIONADO
+import br.com.medcontrol.servicos.LogBuscaServico; // <-- ADICIONADO RF6.3
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
@@ -9,7 +10,9 @@ import io.javalin.http.Context;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+// import java.sql.SQLException; // <-- REMOVIDO (Não usado)
 import java.sql.Statement; // <-- ADICIONADO
+// import java.sql.Types; // <-- REMOVIDO (Não usado)
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -238,6 +241,71 @@ public class MedicamentoController {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    /**
+     * ADICIONADO RF6.3 - Realiza a busca de medicamentos no estoque e registra o log.
+     * GET /api/medicamentos/search
+     */
+    public void buscarMedicamento(Context ctx) {
+        String termo = ctx.queryParam("nome");
+        List<Map<String, Object>> resultados = new ArrayList<>();
+        Integer idMedicamentoEncontrado = null; // Para o log
+        
+        if (termo == null || termo.trim().isEmpty()) {
+            ctx.status(400).json(new ArrayList<>());
+            return;
+        }
+
+        String termoBusca = "%" + termo.trim().toLowerCase() + "%";
+
+        String sql = "SELECT e.id_estoque, e.quantidade, u.nome, u.endereco, m.id_medicamento " +
+                     "FROM estoque e " +
+                     "JOIN medicamentos m ON e.id_medicamento = m.id_medicamento " +
+                     "JOIN ubs u ON e.id_ubs = u.id_ubs " +
+                     "WHERE (LOWER(m.nome_comercial) LIKE ? OR LOWER(m.principio_ativo) LIKE ?) " +
+                     "AND e.quantidade > 0 AND m.ativo = TRUE AND u.ativo = TRUE " +
+                     "ORDER BY u.nome, e.quantidade DESC";
+
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, termoBusca);
+            ps.setString(2, termoBusca);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (idMedicamentoEncontrado == null) {
+                        idMedicamentoEncontrado = rs.getInt("id_medicamento");
+                    }
+                    resultados.add(Map.of(
+                        "id_estoque", rs.getInt("id_estoque"),
+                        "quantidade", rs.getInt("quantidade"),
+                        "nome", rs.getString("nome"), // Nome da UBS
+                        "endereco", rs.getString("endereco")
+                    ));
+                }
+            }
+            
+            ctx.json(resultados);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500).json(Map.of("erro", "Erro ao realizar busca de medicamento."));
+        }
+
+        // --- RF6.3: Registrar Log de Busca ---
+        try {
+            boolean teveResultados = !resultados.isEmpty();
+            Integer idUsuario = (ctx.header("X-User-ID") != null) ? Integer.parseInt(ctx.header("X-User-ID")) : null;
+            
+            LogBuscaServico.registrar(termo, teveResultados, idUsuario, idMedicamentoEncontrado);
+
+        } catch (Exception e) {
+            System.err.println("--- FALHA NO LOG DE BUSCA (RF6.3) ---");
+            e.printStackTrace();
+            // A falha no log não deve interromper a busca do usuário.
         }
     }
 }

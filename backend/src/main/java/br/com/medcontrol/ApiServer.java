@@ -6,11 +6,13 @@ import br.com.medcontrol.controlador.UBSController;
 import br.com.medcontrol.controlador.MedicamentoController; 
 import br.com.medcontrol.controlador.EstoqueController;
 import br.com.medcontrol.controlador.AuditoriaController; 
+import br.com.medcontrol.controlador.RelatorioController; // <-- ADICIONADO RF09
+import br.com.medcontrol.controlador.RetiradaController; // <-- ADICIONADO RF6.3
 import br.com.medcontrol.servicos.CepServico;
 import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
-import java.util.ArrayList;
-import java.util.List;
+// Removido (será movido para MedicamentoController): import java.util.ArrayList;
+// Removido (será movido para MedicamentoController): import java.util.List;
 import java.util.Map;
 
 public class ApiServer {
@@ -36,6 +38,8 @@ public class ApiServer {
         MedicamentoController medicamentoController = new MedicamentoController(); 
         EstoqueController estoqueController = new EstoqueController(); 
         AuditoriaController auditoriaController = new AuditoriaController(); // <-- ADICIONADO rf08
+        RetiradaController retiradaController = new RetiradaController(); // <-- ADICIONADO RF6.3
+        RelatorioController relatorioController = new RelatorioController(); // <-- ADICIONADO RF09
 
         // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
         app.post("/api/login", autenticacaoController::login);
@@ -94,29 +98,19 @@ public class ApiServer {
         app.put("/api/estoque/{id}", estoqueController::atualizarEstoque);
         app.post("/api/estoque/verificar-lote", estoqueController::verificarLote);
 
+        // --- RF6.3: ROTA DE REGISTRO DE RETIRADA ---
+        app.post("/api/retiradas", retiradaController::registrarRetirada);
+        
         // --- RF08.4: ROTA DE AUDITORIA ---
         app.get("/api/auditoria", auditoriaController::listarLogs);
         
+        // --- RF09: ROTAS DE RELATÓRIOS E DASHBOARD ---
+        app.get("/api/relatorios/estoque", relatorioController::getRelatorioEstoque);
+        app.get("/api/relatorios/demanda", relatorioController::getRelatorioDemanda);
+        app.get("/api/dashboard/indicadores", relatorioController::getIndicadoresDashboard);
+        
         // --- ROTAS PÚBLICAS (MOCK) ---
-        app.get("/api/medicamentos/search", ctx -> {
-            String nome = ctx.queryParam("nome");
-            if (nome == null || nome.trim().isEmpty()) {
-                ctx.status(400).json(new ArrayList<>());
-                return;
-            }
-            
-            List<Map<String, Object>> ubsDisponiveis = new ArrayList<>();
-            // Este mock será substituído pela busca real no RF06
-            if (nome.equalsIgnoreCase("paracetamol")) {
-                 ubsDisponiveis.add(Map.of("nome", "UBS 01 - Asa Sul", "endereco", "Quadra 614 Sul, Brasília - DF", "estoque", 50));
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 120));
-            } else if (nome.equalsIgnoreCase("ibuprofeno")) {
-                 ubsDisponiveis.add(Map.of("nome", "UBS 02 - Taguatinga Centro", "endereco", "QNC AE 1, Taguatinga - DF", "estoque", 85));
-            } else if (nome.equalsIgnoreCase("losartana")) {
-                 ubsDisponiveis.add(Map.of("nome", "UBS 03 - Guará II", "endereco", "QE 23, Guará II - DF", "estoque", 0));
-            }
-            
-            ctx.json(ubsDisponiveis);
-        });
+        // MODIFICADO RF5.6: Rota movida de MOCK para o controlador
+        app.get("/api/medicamentos/search", medicamentoController::buscarMedicamento);
     }
 }

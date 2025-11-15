@@ -1,12 +1,10 @@
 // frontend/scripts/admin/admin-medicamentos.js
 import { api } from '../utils/api.js';
-// MODIFICADO (Item 1): Importa 'abrirConfirmacao'
 import { exibirToast, fecharTodosModais, limparErrosFormulario, abrirConfirmacao } from '../utils/ui.js';
 
 // Caches
 let listaMedicamentosCache = [];
 let listaUbsCache = [];
-// MODIFICAÇÃO 2: Cache para a lista de estoque principal
 let listaEstoqueCache = [];
 
 // Seletores Modais
@@ -15,47 +13,50 @@ let modalEstoque, formularioEstoque, modalMedicamentoBase, formularioMedicamento
 // Seletores Tabelas
 let corpoTabelaEstoque, corpoTabelaMedicamentosBase;
 
-// MODIFICAÇÃO 1: Seletores para validação de lote
+// Seletores para validação de lote
 let estoqueLoteInput, erroEstoqueLote;
 
-// MODIFICADO (Item 2): Variáveis de estado para edição
+// Variáveis de estado para edição
 let estaEditandoEstoque = false;
 let estaEditandoMedBase = false;
 
 // --- Funções Principais ---
 
-async function carregarDadosIniciais() {
+// MODIFICADO: Função exportada para ser chamada pelo Admin.js
+export async function carregarDadosMedicamentos() {
+    if (!corpoTabelaEstoque) return; // Guarda
     try {
         await Promise.all([
             carregarEstoque(),
-            carregarDropdowns()
+            carregarDropdowns(),
+            carregarMedicamentosBase() // Adicionado para recarregar a tabela base
         ]);
     } catch (erro) {
-        console.error("Erro ao carregar dados iniciais de medicamentos:", erro);
+        console.error("Erro ao carregar dados de medicamentos:", erro);
         exibirToast(`Falha ao carregar dados: ${erro.message}`, true);
     }
 }
 
-// MODIFICAÇÃO 2: Separado em carregar e renderizar
 async function carregarEstoque() {
     try {
         listaEstoqueCache = await api.listarEstoque(); // Salva no cache
-        renderizarEstoque(); // Renderiza pela primeira vez
+        renderizarEstoque(); // Renderiza
     } catch (erro) {
         corpoTabelaEstoque.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">${erro.message || 'Falha ao carregar estoque.'}</td></tr>`;
     }
 }
 
-// MODIFICAÇÃO 2 & 3: Nova função para renderizar estoque com filtros
 function renderizarEstoque() {
     const filtroBusca = document.getElementById('buscaEstoque')?.value.toLowerCase() || '';
     const filtroUbsId = document.getElementById('filtroUbsEstoque')?.value || '';
+
+    if (!corpoTabelaEstoque) return; // Guarda
 
     const estoqueFiltrado = listaEstoqueCache.filter(item => {
         const buscaMatch = filtroBusca === '' ||
             item.nome_comercial.toLowerCase().includes(filtroBusca) ||
             item.principio_ativo.toLowerCase().includes(filtroBusca) ||
-            item.lote.toLowerCase().includes(filtroBusca);
+            (item.lote && item.lote.toLowerCase().includes(filtroBusca)); // Verifica se lote existe
 
         const ubsMatch = filtroUbsId === '' ||
             item.id_ubs.toString() === filtroUbsId;
@@ -111,7 +112,6 @@ async function carregarDropdowns() {
 
         popularSelect('estoqueSelectMed', medicamentosAtivos, 'id_medicamento', 'nome_comercial');
         popularSelect('estoqueSelectUbs', listaUbsCache, 'id_ubs', 'nome');
-        // MODIFICAÇÃO 3: Popula o filtro de UBS da tabela principal
         popularSelect('filtroUbsEstoque', listaUbsCache, 'id_ubs', 'nome');
 
     } catch (erro) {
@@ -122,7 +122,6 @@ async function carregarDropdowns() {
 function popularSelect(selectId, lista, valorKey, textoKey) {
     const select = document.getElementById(selectId);
     if (!select) return;
-    // Guarda a opção "Todos" se ela existir (para o filtro da tabela)
     const primeiroOption = select.querySelector('option');
     select.innerHTML = '';
     if (primeiroOption && primeiroOption.value === '') {
@@ -140,7 +139,6 @@ function popularSelect(selectId, lista, valorKey, textoKey) {
 
 function abrirModalEstoque(item = null) {
     limparErrosFormulario('formularioEstoque');
-    // MODIFICAÇÃO 1: Limpa erro do lote
     if (erroEstoqueLote) erroEstoqueLote.textContent = '';
     if (estoqueLoteInput) estoqueLoteInput.classList.remove('input-error');
 
@@ -177,21 +175,16 @@ function abrirModalEstoque(item = null) {
     modalEstoque.classList.add('ativo');
 }
 
-/**
- * MODIFICAÇÃO 1: Validação de lote em tempo real (on-blur)
- * @returns {Promise<boolean>} - True se o lote for válido, false se for duplicado.
- */
 async function validarLote() {
     const lote = estoqueLoteInput.value.trim();
     const id_ubs = document.getElementById('estoqueSelectUbs').value;
     const id_medicamento = document.getElementById('estoqueSelectMed').value;
     const id_estoque = document.getElementById('idEstoqueForm').value || null; // 'null' se for novo
 
-    // Só valida se os 3 campos estiverem preenchidos
     if (!lote || !id_ubs || !id_medicamento) {
         erroEstoqueLote.textContent = '';
         estoqueLoteInput.classList.remove('input-error');
-        return true; // Não é um erro, apenas não pode validar ainda
+        return true; 
     }
 
     try {
@@ -223,12 +216,10 @@ async function validarLote() {
 
 async function salvarEstoque(e) {
     e.preventDefault();
-    // Limpa erros antigos, exceto o de lote que validaremos
     limparErrosFormulario('formularioEstoque');
     if (erroEstoqueLote) erroEstoqueLote.textContent = '';
     if (estoqueLoteInput) estoqueLoteInput.classList.remove('input-error');
 
-    // MODIFICAÇÃO 1: Revalida o lote antes de salvar
     const loteValido = await validarLote();
 
     const dados = {
@@ -239,7 +230,6 @@ async function salvarEstoque(e) {
         data_validade: document.getElementById('estoqueDataValidade').value
     };
 
-    // Validação de campos vazios
     let camposValidos = true;
     if (!dados.id_medicamento) {
         document.getElementById('erroEstoqueSelectMed').textContent = 'Selecione um medicamento.';
@@ -278,9 +268,8 @@ async function salvarEstoque(e) {
             exibirToast('Estoque cadastrado com sucesso!');
         }
         fecharTodosModais();
-        carregarEstoque();
+        carregarEstoque(); // Recarrega a tabela de estoque
     } catch (erro) {
-        // MODIFICAÇÃO 1: Trata erro de duplicidade vindo do backend (corrida)
         if (erro.status === 409) {
             erroEstoqueLote.textContent = 'Este lote já está cadastrado para este medicamento nesta UBS.';
             estoqueLoteInput.classList.add('input-error');
@@ -299,7 +288,7 @@ async function excluirEstoque(id) {
             try {
                 await api.excluirEstoque(id);
                 exibirToast('Item excluído do estoque!');
-                carregarEstoque();
+                carregarEstoque(); // Recarrega a tabela de estoque
             } catch (erro) {
                 exibirToast(`Erro ao excluir item: ${erro.message}`, true);
             }
@@ -307,21 +296,21 @@ async function excluirEstoque(id) {
     );
 }
 
-// --- Funções Modal Medicamento Base (MODIFICADO Item 2) ---
+// --- Funções Modal Medicamento Base ---
 
-// MODIFICAÇÃO 1: Separado em carregar e renderizar
 async function carregarMedicamentosBase() {
     try {
         listaMedicamentosCache = await api.listarMedicamentos();
-        renderizarMedicamentosBase(); // Renderiza pela primeira vez
+        renderizarMedicamentosBase(); 
     } catch (erro) {
         corpoTabelaMedicamentosBase.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">${erro.message || 'Falha ao carregar medicamentos.'}</td></tr>`;
     }
 }
 
-// MODIFICAÇÃO 1: Nova função para renderizar a tabela de med base (com filtro)
 function renderizarMedicamentosBase() {
     const filtroNome = document.getElementById('buscaMedBase')?.value.toLowerCase() || '';
+
+    if (!corpoTabelaMedicamentosBase) return; // Guarda
 
     const medicamentosFiltrados = listaMedicamentosCache.filter(med =>
         med.nome_comercial.toLowerCase().includes(filtroNome) ||
@@ -427,8 +416,8 @@ async function salvarMedicamentoBase(e) {
             exibirToast('Medicamento base cadastrado!');
         }
         cancelarEdicaoMedBase();
-        await carregarDropdowns();
-        await carregarMedicamentosBase();
+        await carregarDropdowns(); // Recarrega dropdowns em ambos os casos
+        await carregarMedicamentosBase(); // Recarrega a tabela de med base
     } catch (erro) {
         exibirToast(`Erro ao salvar: ${erro.message}`, true);
     }
@@ -453,7 +442,7 @@ async function toggleStatusMedicamentoBase(id, novoStatus) {
                 exibirToast(`Medicamento ${participioAcao} com sucesso!`);
                 await carregarDropdowns();
                 await carregarMedicamentosBase();
-                await carregarEstoque();
+                await carregarEstoque(); // Recarrega estoque também
             } catch (erro) {
                 exibirToast(`Erro ao ${verboAcao}: ${erro.message}`, true);
             }
@@ -465,6 +454,9 @@ async function toggleStatusMedicamentoBase(id, novoStatus) {
 // --- Inicialização ---
 
 export function initAdminMedicamentos(usuarioLogado) {
+    // MODIFICADO: Previne reinicialização
+    if (document.getElementById('corpoTabelaEstoque')?.dataset.initialized) return;
+
     // Mapeamento dos elementos
     modalEstoque = document.getElementById('modalEstoque');
     formularioEstoque = document.getElementById('formularioEstoque');
@@ -472,8 +464,6 @@ export function initAdminMedicamentos(usuarioLogado) {
     modalMedicamentoBase = document.getElementById('modalMedicamentoBase');
     formularioMedicamentoBase = document.getElementById('formularioMedicamentoBase');
     corpoTabelaMedicamentosBase = document.getElementById('corpoTabelaMedicamentosBase');
-
-    // MODIFICAÇÃO 1: Mapeia campos de lote
     estoqueLoteInput = document.getElementById('estoqueLote');
     erroEstoqueLote = document.getElementById('erroEstoqueLote');
 
@@ -482,31 +472,23 @@ export function initAdminMedicamentos(usuarioLogado) {
         console.error('Elementos da aba Medicamentos não encontrados.');
         return;
     }
+    corpoTabelaEstoque.dataset.initialized = true; // Marca como inicializado
 
-    // --- INÍCIO DA CORREÇÃO RF08.3 ---
-    // Oculta botões com base no perfil
+    // --- Lógica de Visibilidade ---
     const btnGerenciarMedicamentos = document.getElementById('abrirModalGerenciarMedicamentos');
-
     if (usuarioLogado.perfil === 'gestor_ubs') {
         if (btnGerenciarMedicamentos) {
             btnGerenciarMedicamentos.style.display = 'none';
         }
     }
-    // --- FIM DA CORREÇÃO RF08.3 ---
 
     // Listeners dos botões principais
     document.getElementById('abrirModalAdicionarEstoque').addEventListener('click', () => abrirModalEstoque(null));
-    /*document.getElementById('abrirModalGerenciarMedicamentos').addEventListener('click', () => {
-        cancelarEdicaoMedBase();
-        carregarMedicamentosBase(); // Modificado para carregar e renderizar
-        modalMedicamentoBase.classList.add('ativo');
-    });*/
     
-    // Garante que o botão existe antes de adicionar listener
     if (btnGerenciarMedicamentos) {
         btnGerenciarMedicamentos.addEventListener('click', () => {
             cancelarEdicaoMedBase();
-            carregarMedicamentosBase(); // Modificado para carregar e renderizar
+            carregarMedicamentosBase(); // Carrega a lista ao abrir
             modalMedicamentoBase.classList.add('ativo');
         });
     }
@@ -515,7 +497,6 @@ export function initAdminMedicamentos(usuarioLogado) {
     formularioMedicamentoBase.addEventListener('submit', salvarMedicamentoBase);
     document.getElementById('btnCancelarEdicaoMedBase').addEventListener('click', cancelarEdicaoMedBase);
 
-    // MODIFICAÇÃO 1: Adiciona listener de blur para validar lote
     if (estoqueLoteInput) {
         estoqueLoteInput.addEventListener('blur', validarLote);
     }
@@ -543,14 +524,9 @@ export function initAdminMedicamentos(usuarioLogado) {
         }
     });
 
-    // MODIFICAÇÃO 1: Listener para busca no modal de med base
     document.getElementById('buscaMedBase').addEventListener('input', renderizarMedicamentosBase);
-
-    // MODIFICAÇÃO 2 & 3: Listeners para busca e filtro de estoque
     document.getElementById('buscaEstoque').addEventListener('input', renderizarEstoque);
     document.getElementById('filtroUbsEstoque').addEventListener('change', renderizarEstoque);
 
-
-    // Carregamento inicial
-    carregarDadosIniciais();
+    // REMOVIDO: carregarDadosIniciais() será chamado pelo Admin.js
 }

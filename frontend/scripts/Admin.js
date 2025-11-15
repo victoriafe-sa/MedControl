@@ -1,11 +1,35 @@
 // frontend/scripts/Admin.js
 import { verificarAutenticacao, verificarPermissaoAdmin, fazerLogout, getUsuarioAtual } from './utils/auth.js';
 import { fecharTodosModais } from './utils/ui.js';
-import { initAdminUsuarios } from './admin/admin-usuarios.js';
+// --- MODIFICADO: Importar init E carregar ---
+import { initAdminUsuarios, carregarUsuarios } from './admin/admin-usuarios.js';
 import { initAdminPerfil } from './admin/admin-perfil.js';
-import { initAdminUbs } from './admin/admin-ubs.js'; // <-- NOVO
-import { initAdminMedicamentos } from './admin/admin-medicamentos.js'; // <-- NOVO
-import { initAdminAuditoria } from './admin/admin-auditoria.js'; // <-- ADICIONADO RF08.3
+import { initAdminUbs, carregarUbs } from './admin/admin-ubs.js';
+import { initAdminMedicamentos, carregarDadosMedicamentos } from './admin/admin-medicamentos.js';
+import { initAdminAuditoria, carregarLogs } from './admin/admin-auditoria.js';
+import { initAdminValidacao, carregarDadosValidacao } from './admin/admin-validacao.js';
+import { initAdminRelatorios, carregarTodosRelatorios } from './admin/admin-relatorios.js';
+
+// --- Mapeamento de inicialização (só roda 1 vez para configurar listeners) ---
+const funcoesInitAba = {
+    'usuarios': initAdminUsuarios,
+    'medicamentos': initAdminMedicamentos,
+    'ubs': initAdminUbs,
+    'validacao': initAdminValidacao,
+    'relatorios': initAdminRelatorios,
+    'auditoria': initAdminAuditoria,
+};
+
+// --- Mapeamento de recarga (roda toda vez que a aba é ativada) ---
+const funcoesRecarregarAba = {
+    'usuarios': carregarUsuarios,
+    'medicamentos': carregarDadosMedicamentos,
+    'ubs': carregarUbs,
+    'validacao': carregarDadosValidacao,
+    'relatorios': carregarTodosRelatorios,
+    'auditoria': carregarLogs,
+};
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Autenticação e Inicialização ---
@@ -30,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'admin': ['usuarios', 'medicamentos', 'ubs', 'validacao', 'relatorios', 'auditoria'],
             'farmaceutico': ['validacao'],
             'gestor_estoque': ['medicamentos'], // Pode ver medicamentos/estoque
-            'gestor_ubs': ['ubs', 'medicamentos', 'relatorios'] // Pode ver ubs, estoque e validação 
+            'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios'] // Modificado RF09 e RF5.6
         };
 
         // Esconde todas as abas e conteúdos primeiro
@@ -58,45 +82,47 @@ document.addEventListener('DOMContentLoaded', () => {
             if (primeiraAbaBtn) primeiraAbaBtn.classList.add('ativo');
             if (primeiroConteudo) primeiroConteudo.classList.add('ativo');
 
-            // Inicializa o módulo da primeira aba ativa
-            inicializarModuloAba(primeiraAba, primeiraAbaBtn);
+            // --- MODIFICADO: Inicializa TODOS os módulos permitidos de uma vez ---
+            abasVisiveis.forEach(nomeAba => {
+                const initFn = funcoesInitAba[nomeAba];
+                if (initFn) {
+                    initFn(getUsuarioAtual()); // Roda a inicialização (seta listeners)
+                }
+            });
+
+            // Carrega os dados da primeira aba visível
+            const recarregarFn = funcoesRecarregarAba[primeiraAba];
+            if (recarregarFn) {
+                recarregarFn();
+            }
         }
     };
-
-    // --- Inicialização de Módulos ---
-    const inicializarModuloAba = (nomeAba, abaBtn) => {
-        if (abaBtn && abaBtn.dataset.initialized) return; // Já inicializado
-
-        if (nomeAba === 'usuarios') {
-            initAdminUsuarios(getUsuarioAtual());
-        } else if (nomeAba === 'medicamentos') {
-            initAdminMedicamentos(getUsuarioAtual());
-        } else if (nomeAba === 'ubs') {
-            initAdminUbs(getUsuarioAtual());
-        } else if (nomeAba === 'auditoria') { // <-- ADICIONADO RF08.3
-            initAdminAuditoria(getUsuarioAtual()); // <-- ADICIONADO RF08.3
-        }
-
-        if (abaBtn) abaBtn.dataset.initialized = true;
-    };
-
 
     // --- Navegação ---
     document.getElementById('btnSair').addEventListener('click', fazerLogout);
 
     document.querySelectorAll('.btn-aba').forEach(aba => {
         aba.addEventListener('click', () => {
+            const nomeAba = aba.dataset.aba;
+            
+            // --- Se a aba já está ativa, não faz nada ---
+            if (aba.classList.contains('ativo')) return;
+
             document.querySelectorAll('.btn-aba').forEach(a => a.classList.remove('ativo'));
             document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
+            
             aba.classList.add('ativo');
-            const conteudoId = `conteudo-${aba.dataset.aba}`;
+            const conteudoId = `conteudo-${nomeAba}`;
             const conteudoEl = document.getElementById(conteudoId);
             if (conteudoEl) {
                 conteudoEl.classList.add('ativo');
             }
             
-            // Inicializa o módulo da aba clicada (apenas na primeira vez)
-            inicializarModuloAba(aba.dataset.aba, aba);
+            // --- MODIFICADO: Chama a função de recarregar dados CADA VEZ que a aba é clicada ---
+            const recarregarFn = funcoesRecarregarAba[nomeAba];
+            if (recarregarFn) {
+                recarregarFn();
+            }
         });
     });
 

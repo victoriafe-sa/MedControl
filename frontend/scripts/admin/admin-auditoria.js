@@ -4,7 +4,7 @@ import { exibirToast } from '../utils/ui.js';
 
 let corpoTabelaAuditoria;
 
-async function carregarLogs() {
+export async function carregarLogs() {
     if (!corpoTabelaAuditoria) return;
     corpoTabelaAuditoria.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Carregando logs...</td></tr>`;
 
@@ -63,6 +63,9 @@ async function carregarLogs() {
 }
 
 export function initAdminAuditoria(usuarioLogado) {
+    // MODIFICADO: Previne reinicialização
+    if (document.getElementById('corpoTabelaAuditoria')?.dataset.initialized) return;
+
     corpoTabelaAuditoria = document.getElementById('corpoTabelaAuditoria');
     const btnRecarregarLogs = document.getElementById('btnRecarregarLogs');
 
@@ -70,6 +73,7 @@ export function initAdminAuditoria(usuarioLogado) {
         console.error('Elementos da aba Auditoria não encontrados.');
         return;
     }
+    corpoTabelaAuditoria.dataset.initialized = true; // Marca como inicializado
 
     // Apenas 'admin' pode ver auditoria (conforme Admin.js)
     if (usuarioLogado.perfil !== 'admin') {
@@ -79,5 +83,5 @@ export function initAdminAuditoria(usuarioLogado) {
 
     btnRecarregarLogs.addEventListener('click', carregarLogs);
 
-    carregarLogs();
+    // REMOVIDO: carregarLogs() será chamado pelo Admin.js
 }

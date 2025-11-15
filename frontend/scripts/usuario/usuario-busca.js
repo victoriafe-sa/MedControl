@@ -1,4 +1,6 @@
 // frontend/scripts/usuario/usuario-busca.js
+// ADICIONADO RF6.3: Importar o 'api' para que o ID do usuário seja logado
+import { api } from '../utils/api.js';
 
 /**
  * Inicializa a lógica de busca de medicamentos na tela do usuário.
@@ -25,37 +27,37 @@ export function initUsuarioBusca() {
         mensagemStatus.textContent = 'Buscando...';
 
         try {
-            // No futuro, isso chamará api.buscarMedicamento(nome)
-            // Por enquanto, usamos o mesmo mock da Home.js
-            const resposta = await fetch(`http://localhost:7071/api/medicamentos/search?nome=${encodeURIComponent(nome)}`);
-            const listaUbs = await resposta.json();
+            // MODIFICADO RF6.3: Troca 'fetch' direto por 'api.buscarMedicamento'
+            // Isso garante que o 'X-User-ID' header seja enviado para o log.
+            const listaUbs = await api.buscarMedicamento(nome);
 
-            if (resposta.ok) {
-                if (listaUbs.length > 0) {
-                    mensagemStatus.textContent = `Resultados para "${nome}":`;
-                    let htmlResultados = '<ul class="space-y-4">';
-                    listaUbs.forEach(ubs => {
-                        htmlResultados += `
-                            <li class="bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
-                                <div>
-                                    <p class="font-semibold text-xl text-gray-800">${ubs.nome}</p>
-                                    <p class="text-gray-600">${ubs.endereco}</p>
-                                    <p class="text-green-600 font-medium">Estoque: ${ubs.estoque} unidades</p>
-                                </div>
-                                <button class="btn-primario py-2 px-6 rounded-lg font-semibold">Reservar</button>
-                            </li>`;
-                    });
-                    htmlResultados += '</ul>';
-                    containerResultados.innerHTML = htmlResultados;
-                } else {
-                    mensagemStatus.textContent = `Nenhum resultado encontrado para "${nome}".`;
-                }
+            // A API agora retorna erro em caso de falha, então não precisamos checar 'resposta.ok'
+            
+            if (listaUbs.length > 0) {
+                mensagemStatus.textContent = `Resultados para "${nome}":`;
+                let htmlResultados = '<ul class="space-y-4">';
+                listaUbs.forEach(ubs => {
+                    // MODIFICADO RF6.3: O endpoint real retorna 'quantidade', não 'estoque'
+                    htmlResultados += `
+                        <li class="bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold text-xl text-gray-800">${ubs.nome}</p>
+                                <p class="text-gray-600">${ubs.endereco}</p>
+                                <p class="text-green-600 font-medium">Estoque: ${ubs.quantidade} unidades</p>
+                            </div>
+                            <button class="btn-primario py-2 px-6 rounded-lg font-semibold">Reservar</button>
+                        </li>`;
+                });
+                htmlResultados += '</ul>';
+                containerResultados.innerHTML = htmlResultados;
             } else {
-                mensagemStatus.textContent = 'Erro ao buscar. Tente novamente.';
+                mensagemStatus.textContent = `Nenhum resultado encontrado para "${nome}".`;
             }
+
         } catch (erro) {
             console.error('Erro na busca:', erro);
-            mensagemStatus.textContent = 'Não foi possível conectar ao servidor.';
+            // 'api.js' já lança um erro formatado
+            mensagemStatus.textContent = erro.message || 'Não foi possível conectar ao servidor.';
         }
     });
 }

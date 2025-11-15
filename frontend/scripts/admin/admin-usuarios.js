@@ -1,6 +1,5 @@
 // frontend/scripts/admin/admin-usuarios.js
 import { api } from '../utils/api.js';
-// MODIFICADO (Item 1): Importa 'abrirConfirmacao'
 import { exibirToast, fecharTodosModais, limparErrosFormulario, exibirMensagemNoModal, iniciarTimer, abrirConfirmacao } from '../utils/ui.js';
 import { isValidEmail, isMaisDe18 } from '../utils/validacao.js';
 import { formatarCep, validarCep, preencherValidacaoCep } from '../utils/cep.js';
@@ -83,8 +82,10 @@ function validarFormulario(isEditing) {
 
 /**
  * Carrega e renderiza a lista de usuários na tabela.
+ * MODIFICADO: Função exportada para ser chamada pelo Admin.js
  */
-async function carregarUsuarios() {
+export async function carregarUsuarios() {
+    if (!corpoTabelaUsuarios) return; // Adiciona guarda
     try {
         const usuarios = await api.listarUsuarios();
         // Filtra o próprio admin da lista
@@ -149,7 +150,6 @@ function abrirModalParaEditar(usuario) {
     
     const cepInput = document.getElementById('cepUsuario');
     const cepValidationMsg = document.getElementById('validacaoCepUsuario');
-    // Chama a nova função utilitária e passa o CEP do usuário
     preencherValidacaoCep(cepInput, cepValidationMsg, usuario.cep);
 
     document.getElementById('idUsuario').value = usuario.id;
@@ -165,8 +165,6 @@ function abrirModalParaEditar(usuario) {
     modalFormularioUsuario.classList.add('ativo');
 }
 
-// MODIFICADO (Item 1): Função 'abrirConfirmacao' removida. Agora será importada de ui.js
-
 /**
  * Altera o status (ativo/inativo) de um usuário.
  * @param {string|number} id
@@ -175,7 +173,7 @@ function abrirModalParaEditar(usuario) {
 async function alterarStatusUsuario(id, novoStatus) {
     try {
         await api.alterarStatusUsuario(id, novoStatus);
-        carregarUsuarios();
+        carregarUsuarios(); // Recarrega a lista
         exibirToast('Status alterado com sucesso!');
     } catch (e) {
         exibirToast('Erro ao alterar status.', true);
@@ -190,7 +188,7 @@ async function excluirUsuario(id) {
     try {
         await api.excluirUsuario(id);
         fecharTodosModais();
-        carregarUsuarios();
+        carregarUsuarios(); // Recarrega a lista
         exibirToast('Usuário excluído com sucesso!');
     } catch (e) {
         fecharTodosModais();
@@ -236,30 +234,24 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
     try {
         let resposta;
         if (!estaEditando) {
-            // Adicionando (requer senha e código)
-            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar); // Payload AGORA TEM endereço
+            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar); 
         } else if (comVerificacao) {
-            // Editando com e-mail novo (requer código)
-            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM endereço
+            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar); 
         } else {
-            // Editando sem e-mail novo (não requer código)
-            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar); // Payload AGORA TEM endereço
+            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar); 
         }
 
         if (resposta.success) {
             fecharTodosModais();
-            carregarUsuarios();
+            carregarUsuarios(); // Recarrega a lista
             exibirToast(estaEditando ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
         }
     } catch (error) {
-        // Trata erros específicos que podem vir da API
         if (error.status === 400 && comVerificacao) {
-            // Código de verificação errado
             fecharTodosModais();
             modalVerificacaoEmail.classList.add('ativo');
             exibirMensagemNoModal(document.getElementById('mensagemVerificacao'), error.message, true);
         } else if (error.status === 409) {
-             // Duplicidade (email/cpf)
             fecharTodosModais();
             modalFormularioUsuario.classList.add('ativo');
             const campo = error.data.field === 'email' ? 'emailUsuario' : 'cpfUsuario';
@@ -267,7 +259,6 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
             document.getElementById(campo).classList.add('input-error');
             document.getElementById(erroEl).textContent = `Este ${error.data.field} já está cadastrado.`;
         } else {
-            // Outros erros
             alert('Erro ao salvar usuário: ' + (error.message || 'Erro desconhecido'));
         }
     }
@@ -305,22 +296,19 @@ async function onFormularioUsuarioSubmit(e) {
         dadosUsuarioAtualParaSalvar.senha = document.getElementById('senhaUsuario').value;
     }
     
-    // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
     let cepData;
     try {
-        // api.js's validarCep (fetchApi) retorna o json da resposta
         cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
         
-        // MODIFICAÇÃO 3.2: Adiciona campos de endereço
         dadosUsuarioAtualParaSalvar.logradouro = cepData.logradouro || null;
         dadosUsuarioAtualParaSalvar.bairro = cepData.bairro || null;
         dadosUsuarioAtualParaSalvar.cidade = cepData.cidade || null;
         dadosUsuarioAtualParaSalvar.uf = cepData.uf || null;
 
     } catch (err) {
-        console.error("Erro ao buscar dados do CEP:", err); // Modificado
+        console.error("Erro ao buscar dados do CEP:", err); 
         document.getElementById('cepUsuario').classList.add('input-error');
-        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
+        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; 
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Salvar';
         return;
@@ -441,7 +429,8 @@ async function onFormularioConfirmarSenhaSubmit(e) {
  * @param {object} usuarioLogado - O objeto do usuário admin logado.
  */
 export function initAdminUsuarios(usuarioLogado) {
-    if (!document.getElementById('corpoTabelaUsuarios')) return; // Só executa se estiver na aba certa
+    // MODIFICADO: Previne reinicialização
+    if (document.getElementById('corpoTabelaUsuarios')?.dataset.initialized) return;
 
     usuarioAdminAtual = usuarioLogado;
     
@@ -453,6 +442,9 @@ export function initAdminUsuarios(usuarioLogado) {
     formularioUsuario = document.getElementById('formularioUsuario');
     corpoTabelaUsuarios = document.getElementById('corpoTabelaUsuarios');
     cepUsuarioInput = document.getElementById('cepUsuario');
+
+    if (!corpoTabelaUsuarios) return; // Sai se a aba não estiver no DOM
+    corpoTabelaUsuarios.dataset.initialized = true; // Marca como inicializado
 
     // Adiciona Listeners
     document.getElementById('abrirModalAdicionarUsuario').addEventListener('click', abrirModalParaAdicionar);
@@ -479,10 +471,10 @@ export function initAdminUsuarios(usuarioLogado) {
             abrirModalParaEditar(JSON.parse(target.dataset.usuario));
         } else if (target.classList.contains('btn-excluir')) {
             const id = target.dataset.id;
-            acaoAposConfirmarSenha = () => excluirUsuario(id); // Define a ação
+            acaoAposConfirmarSenha = () => excluirUsuario(id); 
             document.getElementById('formularioConfirmarSenha').reset();
             limparErrosFormulario('formularioConfirmarSenha');
-            modalConfirmarSenhaAdmin.classList.add('ativo'); // Pede a senha
+            modalConfirmarSenhaAdmin.classList.add('ativo'); 
         } else if (target.classList.contains('btn-status')) {
             const id = target.dataset.id;
             const statusAtual = target.dataset.statusAtual === 'true';
@@ -500,6 +492,5 @@ export function initAdminUsuarios(usuarioLogado) {
         iniciarFluxoVerificacao();
     });
 
-    // Carrega dados iniciais
-    carregarUsuarios();
+    // REMOVIDO: carregarUsuarios() será chamado pelo Admin.js
 }

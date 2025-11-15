@@ -208,4 +208,15 @@ export const api = {
 
     // --- RF08.4: AUDITORIA ---
     listarLogsAuditoria: () => fetchApi('/auditoria'),
+    
+    // --- ADICIONADO RF10: REGISTRAR RETIRADA ---
+    registrarRetirada: (dados) => fetchApi('/retiradas', defaultPostOptions(dados)),
+
+    // --- ADICIONADO RF06: BUSCAR MEDICAMENTO (PARA LOG) ---
+    buscarMedicamento: (nome) => fetchApi(`/medicamentos/search?nome=${encodeURIComponent(nome)}`),
+
+    // --- ADICIONADO RF09: RELATÓRIOS ---
+    getRelatorioEstoque: (ubs_id) => fetchApi(`/relatorios/estoque?ubs_id=${ubs_id}`),
+    getRelatorioDemanda: (inicio, fim) => fetchApi(`/relatorios/demanda?inicio=${inicio}&fim=${fim}`),
+    getIndicadoresDashboard: () => fetchApi('/dashboard/indicadores'),
 };

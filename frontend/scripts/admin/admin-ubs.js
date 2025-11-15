@@ -1,26 +1,16 @@
 // frontend/scripts/admin/admin-ubs.js
 import { api } from '../utils/api.js';
-// MODIFICADO: Importa funções de CEP
 import { formatarCep, validarCep, preencherValidacaoCep } from '../utils/cep.js';
 import { exibirToast, fecharTodosModais, limparErrosFormulario, abrirConfirmacao } from '../utils/ui.js';
 
 let modalUbs, formularioUbs, corpoTabelaUbs, ubsCepInput, ubsCepValidacao, ubsCepErro;
 let estaEditando = false;
-let ubsListaCache = []; // ADICIONADO (RF03.1)
-let modalDetalhesUbs; // ADICIONADO (RF03.1)
+let ubsListaCache = []; 
+let modalDetalhesUbs; 
 
-async function carregarUbs() {
-    try {
-        // MODIFICADO (RF03.1): Salva no cache
-        ubsListaCache = await api.listarUbs();
-        renderizarUbs(); // MODIFICADO (RF03.1): Chama o renderizador
-    } catch (erro) {
-        corpoTabelaUbs.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">${erro.message || 'Falha ao carregar UBS.'}</td></tr>`;
-    }
-}
-
-// ADICIONADO (RF03.1): Função para renderizar com filtro
+// ADICIONADO: Função para renderizar com filtro
 function renderizarUbs() {
+    if (!corpoTabelaUbs) return; // Guarda
     const filtroBusca = document.getElementById('buscaUbs')?.value.toLowerCase() || '';
 
     const ubsFiltrada = ubsListaCache.filter(ubs => {
@@ -39,7 +29,6 @@ function renderizarUbs() {
     ubsFiltrada.forEach(ubs => {
         const tr = document.createElement('tr');
         tr.className = `border-b border-gray-200`;
-        // MODIFICADO (RF03.1): Adicionado botão "Detalhes"
         tr.innerHTML = `
             <td class="p-4">${ubs.nome}</td>
             <td class="p-4">${ubs.endereco}</td>
@@ -58,12 +47,22 @@ function renderizarUbs() {
     });
 }
 
+// MODIFICADO: Função exportada para ser chamada pelo Admin.js
+export async function carregarUbs() {
+    if (!corpoTabelaUbs) return; // Guarda
+    try {
+        ubsListaCache = await api.listarUbs();
+        renderizarUbs(); 
+    } catch (erro) {
+        corpoTabelaUbs.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">${erro.message || 'Falha ao carregar UBS.'}</td></tr>`;
+    }
+}
+
 
 function abrirModalUbs(ubs = null) {
     limparErrosFormulario('formularioUbs');
-    formularioUbs.reset(); // Limpa o formulário
+    formularioUbs.reset(); 
     
-    // MODIFICADO: Limpa validação de CEP
     preencherValidacaoCep(ubsCepInput, ubsCepValidacao, ubs ? ubs.cep : null);
     
     if (ubs) {
@@ -74,7 +73,7 @@ function abrirModalUbs(ubs = null) {
         document.getElementById('ubsEndereco').value = ubs.endereco;
         document.getElementById('ubsTelefone').value = ubs.telefone;
         document.getElementById('ubsHorario').value = ubs.horario_funcionamento;
-        document.getElementById('ubsCep').value = ubs.cep; // ADICIONADO
+        document.getElementById('ubsCep').value = ubs.cep; 
         document.getElementById('ubsLatitude').value = ubs.latitude;
         document.getElementById('ubsLongitude').value = ubs.longitude;
     } else {
@@ -85,7 +84,6 @@ function abrirModalUbs(ubs = null) {
     modalUbs.classList.add('ativo');
 }
 
-// ADICIONADO (RF03.1): Lógica do Modal de Detalhes
 async function abrirModalDetalhesUbs(ubs) {
     modalDetalhesUbs.classList.add('ativo');
     
@@ -103,7 +101,6 @@ async function abrirModalDetalhesUbs(ubs) {
     const btnEditar = document.getElementById('detalhesUbsBtnEditar');
     const btnExcluir = document.getElementById('detalhesUbsBtnExcluir');
     
-    // Clona para remover listeners antigos (boa prática)
     const btnEditarClone = btnEditar.cloneNode(true);
     btnEditar.parentNode.replaceChild(btnEditarClone, btnEditar);
     btnEditarClone.addEventListener('click', () => {
@@ -123,7 +120,6 @@ async function abrirModalDetalhesUbs(ubs) {
     corpoEstoque.innerHTML = `<tr><td colspan="5" class="p-3 text-center">Carregando estoque...</td></tr>`;
 
     try {
-        // Reutiliza a API de listar estoque (a mesma da aba medicamentos)
         const todoEstoque = await api.listarEstoque();
         const estoqueDaUbs = todoEstoque.filter(item => item.id_ubs === ubs.id_ubs);
 
@@ -153,9 +149,8 @@ async function abrirModalDetalhesUbs(ubs) {
 
 async function salvarUbs(e) {
     e.preventDefault();
-    limparErrosFormulario('formularioUbs'); // ADICIONADO: Limpa erros antigos
+    limparErrosFormulario('formularioUbs'); 
 
-    // ADICIONADO (RF03.2): Validação de campos obrigatórios
     let camposValidos = true;
     const nomeInput = document.getElementById('ubsNome');
     const enderecoInput = document.getElementById('ubsEndereco');
@@ -171,17 +166,15 @@ async function salvarUbs(e) {
         camposValidos = false;
     }
 
-    // MODIFICADO (RF03.2): Validação do CEP
     if (ubsCepInput.value && !ubsCepInput.classList.contains('input-success')) {
         ubsCepErro.textContent = 'Por favor, valide um CEP válido.';
-        camposValidos = false; // Modificado
+        camposValidos = false; 
     }
 
-    if (!camposValidos) { // Modificado
+    if (!camposValidos) { 
         exibirToast('Verifique os campos obrigatórios.', true);
         return;
     }
-    // Fim da Validação
     
     const id = document.getElementById('idUbsForm').value;
     const dados = {
@@ -189,7 +182,7 @@ async function salvarUbs(e) {
         endereco: document.getElementById('ubsEndereco').value,
         telefone: document.getElementById('ubsTelefone').value,
         horario_funcionamento: document.getElementById('ubsHorario').value,
-        cep: document.getElementById('ubsCep').value, // ADICIONADO
+        cep: document.getElementById('ubsCep').value, 
         latitude: document.getElementById('ubsLatitude').value || null,
         longitude: document.getElementById('ubsLongitude').value || null,
     };
@@ -203,7 +196,7 @@ async function salvarUbs(e) {
             exibirToast('UBS cadastrada com sucesso!');
         }
         fecharTodosModais();
-        carregarUbs();
+        carregarUbs(); // Recarrega a lista
     } catch (erro) {
         exibirToast(`Erro ao salvar UBS: ${erro.message}`, true);
     }
@@ -212,13 +205,12 @@ async function salvarUbs(e) {
 async function excluirUbs(id) {
     abrirConfirmacao(
         'Desativar UBS',
-        // MODIFICADO (RF03.4): Mensagem de confirmação ajustada
         'Você tem certeza que deseja desativar esta UBS? Esta ação não poderá ser desfeita.',
         async () => {
             try {
                 await api.excluirUbs(id);
                 exibirToast('UBS desativada com sucesso!');
-                carregarUbs();
+                carregarUbs(); // Recarrega a lista
             } catch (erro) {
                 exibirToast(`Erro ao desativar UBS: ${erro.message}`, true);
             }
@@ -227,26 +219,28 @@ async function excluirUbs(id) {
 }
 
 export function initAdminUbs() {
+    // MODIFICADO: Previne reinicialização
+    if (document.getElementById('corpoTabelaUbs')?.dataset.initialized) return;
+
     modalUbs = document.getElementById('modalUbs');
     formularioUbs = document.getElementById('formularioUbs');
     corpoTabelaUbs = document.getElementById('corpoTabelaUbs');
-    modalDetalhesUbs = document.getElementById('modalDetalhesUbs'); // ADICIONADO
+    modalDetalhesUbs = document.getElementById('modalDetalhesUbs'); 
     
-    // MODIFICADO: Mapeia campos de CEP da UBS
     ubsCepInput = document.getElementById('ubsCep');
     ubsCepValidacao = document.getElementById('validacaoUbsCep');
     ubsCepErro = document.getElementById('erroUbsCep');
 
-    if (!modalUbs || !formularioUbs || !corpoTabelaUbs || !ubsCepInput || !modalDetalhesUbs) { // MODIFICADO
+    if (!modalUbs || !formularioUbs || !corpoTabelaUbs || !ubsCepInput || !modalDetalhesUbs) { 
         console.error('Elementos da aba UBS não encontrados.');
         return;
     }
+    corpoTabelaUbs.dataset.initialized = true; // Marca como inicializado
 
     document.getElementById('abrirModalAdicionarUbs').addEventListener('click', () => abrirModalUbs(null));
     formularioUbs.addEventListener('submit', salvarUbs);
-    document.getElementById('buscaUbs').addEventListener('input', renderizarUbs); // ADICIONADO (RF03.1)
+    document.getElementById('buscaUbs').addEventListener('input', renderizarUbs); 
 
-    // MODIFICADO: Adiciona listeners de CEP
     ubsCepInput.addEventListener('input', () => formatarCep(ubsCepInput));
     ubsCepInput.addEventListener('blur', () => validarCep(ubsCepInput, ubsCepValidacao));
     ubsCepInput.addEventListener('focus', () => {
@@ -257,7 +251,6 @@ export function initAdminUbs() {
     });
 
     corpoTabelaUbs.addEventListener('click', (e) => {
-        // ADICIONADO (RF03.1)
         if (e.target.classList.contains('btn-detalhes-ubs')) {
             abrirModalDetalhesUbs(JSON.parse(e.target.dataset.ubs));
         }
@@ -269,5 +262,5 @@ export function initAdminUbs() {
         }
     });
 
-    carregarUbs();
+    // REMOVIDO: carregarUbs() será chamado pelo Admin.js
 }

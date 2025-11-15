@@ -102,7 +102,49 @@ CREATE TABLE itens_receitas (
 );
 
 -- ============================================
--- RF08.4: Auditoria de Ações (NOVA TABELA)
+-- RF5.6: REGISTRAR RETIRADA 
+-- ============================================
+CREATE TABLE retiradas (
+    id_retirada INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL, -- Paciente que retirou
+    id_ubs INT NOT NULL, -- UBS onde foi retirado
+    id_farmaceutico INT NOT NULL, -- Farmacêutico que dispensou (usuário admin logado)
+    data_retirada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- id_receita INT NULL, -- (Opcional, se a retirada estiver vinculada a uma receita)
+    -- FOREIGN KEY (id_receita) REFERENCES receitas(id_receita),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_ubs) REFERENCES ubs(id_ubs),
+    FOREIGN KEY (id_farmaceutico) REFERENCES usuarios(id) -- Farmacêutico é um usuário do sistema
+);
+
+CREATE TABLE itens_retiradas (
+    id_item_retirada INT AUTO_INCREMENT PRIMARY KEY,
+    id_retirada INT NOT NULL,
+    id_medicamento INT NOT NULL,
+    id_estoque INT NOT NULL, -- Referencia o lote específico de onde saiu
+    quantidade INT NOT NULL,
+    FOREIGN KEY (id_retirada) REFERENCES retiradas(id_retirada) ON DELETE CASCADE,
+    FOREIGN KEY (id_medicamento) REFERENCES medicamentos(id_medicamento),
+    FOREIGN KEY (id_estoque) REFERENCES estoque(id_estoque)
+);
+
+-- ============================================
+-- RF6.3: LOG DE BUSCAS 
+-- ============================================
+CREATE TABLE log_buscas (
+    id_busca INT AUTO_INCREMENT PRIMARY KEY,
+    termo_buscado VARCHAR(255),
+    id_medicamento_encontrado INT NULL, -- (Opcional, para estatísticas)
+    data_busca TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    teve_resultados BOOLEAN NOT NULL,
+    id_usuario INT NULL, -- Usuário que buscou (pode ser nulo se não logado)
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE SET NULL,
+    FOREIGN KEY (id_medicamento_encontrado) REFERENCES medicamentos(id_medicamento) ON DELETE SET NULL
+);
+
+
+-- ============================================
+-- RF08.4: Auditoria de Ações 
 -- ============================================
 CREATE TABLE auditoria (
     id_auditoria INT AUTO_INCREMENT PRIMARY KEY,
