@@ -73,11 +73,15 @@ public class RelatorioController {
             dashboard.put("maisPesquisados", maisPesquisados);
 
             // 3. Projeção de Demanda (Retiradas nos últimos 30 dias) - Depende da RF5.6 (retiradas)
-            String sqlDemanda = "SELECT DATE(data_retirada) as dia, COUNT(DISTINCT id_retirada) as total_retiradas, SUM(ir.quantidade) as total_itens " +
+            
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            // CORREÇÃO: "COUNT(DISTINCT id_retirada)" era ambíguo. Trocado para "COUNT(DISTINCT r.id_retirada)"
+            String sqlDemanda = "SELECT DATE(data_retirada) as dia, COUNT(DISTINCT r.id_retirada) as total_retiradas, SUM(ir.quantidade) as total_itens " +
                                 "FROM retiradas r " +
                                 "JOIN itens_retiradas ir ON r.id_retirada = ir.id_retirada " +
                                 "WHERE r.data_retirada >= CURDATE() - INTERVAL 30 DAY " +
-                                "GROUP BY dia ORDER BY dia ASC";
+                                "GROUP BY DATE(data_retirada) ORDER BY DATE(data_retirada) ASC";
+            // --- FIM DA MODIFICAÇÃO ---
             
             List<Map<String, Object>> projecaoDemanda = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement(sqlDemanda); ResultSet rs = ps.executeQuery()) {
