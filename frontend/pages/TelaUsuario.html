@@ -10,11 +10,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/TelaUsuario.css">
-</head>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        /* CSS MÍNIMO PARA O MAPA (Pode ser movido para TelaUsuario.css se preferir) */
+        #mapaUbs {
+            width: 100%;
+            height: 400px; /* Altura definida para o mapa */
+            margin-top: 24px;
+            border-radius: 8px;
+            display: none; /* O JS controla a visibilidade após o cálculo GPS */
+        }
+    </style>
+    </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="flex h-screen bg-gray-100 font-sans">
-        <!-- Barra Lateral -->
         <aside class="w-96 bg-white shadow-lg flex flex-col">
             <a href="Home.html" class="p-4 border-b flex items-center space-x-2 hover:bg-gray-50 transition">
                 <h1 class="text-2xl font-bold texto-logo">MedControl</h1>
@@ -47,15 +59,12 @@
             </nav>
 
             <div class="p-4 border-t">
-                <!-- Conteúdo preenchido pelo auth.js/TelaUsuario.js -->
                 <div id="userInfoSidebar" class="text-lg"></div>
                 <button id="btnSair" class="w-full mt-2 text-left text-lg text-gray-500 hover:text-red-600">Sair</button>
             </div>
         </aside>
 
-        <!-- Conteúdo Principal -->
         <main class="flex-1 p-6 sm:p-8 lg:p-12 overflow-y-auto">
-            <!-- Aba Buscar (Módulo: usuario-busca.js) -->
             <div id="conteudo-buscar" class="conteudo-principal">
                 <div class="bg-white p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
                     <h2 class="text-3xl font-bold text-gray-800">Consulte um medicamento</h2>
@@ -64,19 +73,30 @@
                         <input type="text" id="nomeMedicamento" placeholder="Ex: Paracetamol" class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 text-lg">
                         <button type="submit" class="btn-primario py-3 px-8 rounded-lg font-semibold whitespace-nowrap text-base">Buscar</button>
                     </form>
-                </div>
+                    
+                    <div id="containerBuscaGpsUsuario" class="mt-6">
+                        <button 
+                            type="button"
+                            id="btnBuscarGpsUsuario" 
+                            class="bg-green-600 hover:bg-green-700 text-white w-full py-3 rounded-lg font-semibold"
+                            style="display: none;"> 
+                            Ordenar pela localização (GPS)
+                        </button>
+                    </div>
+                    </div>
                 <div id="resultados" class="mt-12 max-w-5xl mx-auto">
                     <div id="mensagemStatus" class="text-center text-gray-600 text-lg"></div>
-                    <div id="containerResultados" class="space-y-4"></div>
-                </div>
+                    
+                    <div id="containerResultados" class="space-y-4">
+                         </div>
+                    <div id="mapaUbs">
+                         </div>
+                    </div>
             </div>
 
-            <!-- Aba Perfil (Módulo: usuario-perfil.js) -->
             <div id="conteudo-perfil" class="conteudo-principal hidden max-w-5xl mx-auto">
-                <!-- Conteúdo renderizado pelo usuario-perfil.js -->
-            </div>
+                </div>
             
-            <!-- Outras Abas (Placeholders) -->
             <div id="conteudo-reservas" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
             <div id="conteudo-favoritos" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
             <div id="conteudo-historico" class="conteudo-principal hidden max-w-5xl mx-auto"></div>
@@ -84,9 +104,6 @@
         </main>
     </div>
 
-    <!-- Modals (Gerenciados pelo usuario-perfil.js) -->
-    
-    <!-- Modal Editar Perfil -->
     <div id="modalEditarPerfil" class="modal">
         <div class="bg-white w-full max-w-lg p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
@@ -128,7 +145,6 @@
         </div>
     </div>
     
-    <!-- Modal Redefinir Senha -->
     <div id="modalRedefinirSenha" class="modal">
         <div class="bg-white w-full max-w-lg p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
@@ -148,7 +164,7 @@
                         <p id="erroRedefinirConfirmarNovaSenha" class="error-message"></p>
                     </div>
                 </div>
-                 <div id="passo2Redefinir" style="display: none;">
+                   <div id="passo2Redefinir" style="display: none;">
                     <p class="text-center text-gray-600 mb-4">Para confirmar, digite sua senha atual.</p>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Senha Atual</label>
@@ -164,7 +180,6 @@
         </div>
     </div>
 
-    <!-- Modal de Verificação de E-mail (Edição) -->
     <div id="modalVerificacaoEmailEdicao" class="modal">
         <div class="conteudo-modal-verificacao">
             <h2 id="tituloModalVerificacaoEdicao">Verifique seu novo E-mail</h2>
@@ -183,7 +198,6 @@
         </div>
     </div>
 
-    <!-- Modal Escolha Excluir/Desativar Conta -->
     <div id="modalEscolhaAcaoConta" class="modal">
         <div class="bg-white w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl m-4 text-center">
             <h3 class="text-xl font-bold">Gerenciar Conta</h3>
@@ -211,7 +225,6 @@
         </div>
     </div>
 
-    <!-- Modal Confirmação de Senha do Usuário -->
     <div id="modalConfirmarSenhaUsuario" class="modal">
         <div class="bg-white w-full max-w-sm p-6 sm:p-8 rounded-xl shadow-2xl m-4">
              <h3 class="text-xl font-bold text-center">Confirmação de Segurança</h3>
@@ -230,10 +243,8 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação Genérico (Não utilizado neste fluxo, mas mantido) -->
     <div id="modalConfirmacao" class="modal"><div class="bg-white w-full max-w-sm p-8 rounded-xl shadow-2xl m-4 text-center"><h3 id="tituloConfirmacao" class="text-xl font-bold"></h3><p id="mensagemConfirmacao" class="text-gray-600 mt-2"></p><div class="mt-6 flex gap-4"><button id="btnCancelarConfirmacao" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button><button id="btnConfirmarAcao" class="w-full btn-perigo py-2 px-4 rounded-lg"></button></div></div></div>
 
-    <!-- ALTERADO: Script agora é do tipo "module" -->
     <script src="../scripts/TelaUsuario.js" type="module"></script>
 </body>
 </html>
