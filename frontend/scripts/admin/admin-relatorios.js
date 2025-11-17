@@ -223,30 +223,62 @@ async function buscarRelatorioEstoque(ubs_id) {
  */
 async function buscarRelatorioDemanda(inicio, fim) {
     if (!tabelaRelatorioDemandaCorpo) return;
-    tabelaRelatorioDemandaCorpo.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+    // --- INÍCIO DA MODIFICAÇÃO ---
+    tabelaRelatorioDemandaCorpo.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
+    // --- FIM DA MODIFICAÇÃO ---
 
     try {
         const dados = await api.getRelatorioDemanda(inicio, fim);
         
         tabelaRelatorioDemandaCorpo.innerHTML = '';
         if (dados.length === 0) {
-            tabelaRelatorioDemandaCorpo.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma retirada encontrada no período.</td></tr>';
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            tabelaRelatorioDemandaCorpo.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma retirada encontrada no período.</td></tr>';
+            // --- FIM DA MODIFICAÇÃO ---
             return;
         }
 
         dados.forEach(item => {
+            // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DATA INVÁLIDA) ---
+            let dataRetirada = 'N/A';
+            // O backend agora envia "YYYY-MM-DD" como string ou null.
+            if (item.dia_retirada && typeof item.dia_retirada === 'string') {
+                try {
+                    // `item.dia_retirada` está no formato "YYYY-MM-DD".
+                    // `new Date("YYYY-MM-DD")` pode interpretar como UTC (meia-noite).
+                    // `new Date("YYYY/MM/DD")` interpreta como data local.
+                    // Substituir hífens por barras resolve o problema de fuso horário.
+                    const dataObj = new Date(item.dia_retirada.replace(/-/g, '/')); 
+                    
+                    if (isNaN(dataObj.getTime())) {
+                        dataRetirada = 'Inválida'; // Fallback caso a string seja "0000-00-00" etc.
+                    } else {
+                        dataRetirada = dataObj.toLocaleDateString('pt-BR');
+                    }
+                } catch (e) {
+                    console.error("Erro ao formatar data de retirada:", item.dia_retirada, e);
+                    dataRetirada = 'Inválida';
+                }
+            }
+            // Se item.dia_retirada for null, continua como 'N/A'.
+            // --- FIM DA MODIFICAÇÃO (CORREÇÃO DATA INVÁLIDA) ---
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
+                <td class="p-3 font-medium whitespace-nowrap">${dataRetirada}</td>
                 <td class="p-3">${item.nome_comercial}</td>
                 <td class="p-3 text-gray-600">${item.principio_ativo}</td>
                 <td class="p-3 font-medium">${item.total_retirado}</td>
             `;
+            // --- FIM DA MODIFICAÇÃO ---
             tabelaRelatorioDemandaCorpo.appendChild(tr);
         });
 
     } catch (erro) {
         exibirToast(`Erro ao carregar relatório de demanda: ${erro.message}`, true);
-        tabelaRelatorioDemandaCorpo.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">${erro.message}</td></tr>`;
+        // --- INÍCIO DA MODIFICAÇÃO ---
+        tabelaRelatorioDemandaCorpo.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${erro.message}</td></tr>`;
+        // --- FIM DA MODIFICAÇÃO ---
     }
 }
 

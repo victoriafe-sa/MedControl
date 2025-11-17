@@ -184,7 +184,9 @@ public class RelatorioController {
         
         // SQL para medicamentos mais retirados
         StringBuilder sqlBuilder = new StringBuilder(
-            "SELECT m.nome_comercial, m.principio_ativo, SUM(ir.quantidade) as total_retirado " +
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            "SELECT DATE(r.data_retirada) as dia_retirada, m.nome_comercial, m.principio_ativo, SUM(ir.quantidade) as total_retirado " +
+            // --- FIM DA MODIFICAÇÃO ---
             "FROM retiradas r " +
             "JOIN itens_retiradas ir ON r.id_retirada = ir.id_retirada " +
             "JOIN medicamentos m ON ir.id_medicamento = m.id_medicamento "
@@ -198,8 +200,10 @@ public class RelatorioController {
             params.add(dataFim);
         }
 
-        sqlBuilder.append("GROUP BY m.id_medicamento, m.nome_comercial, m.principio_ativo ");
-        sqlBuilder.append("ORDER BY total_retirado DESC");
+        // --- INÍCIO DA MODIFICAÇÃO ---
+        sqlBuilder.append("GROUP BY DATE(r.data_retirada), m.id_medicamento, m.nome_comercial, m.principio_ativo ");
+        sqlBuilder.append("ORDER BY dia_retirada DESC, total_retirado DESC");
+        // --- FIM DA MODIFICAÇÃO ---
 
         try (Connection conn = DB.getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlBuilder.toString())) {
@@ -210,11 +214,15 @@ public class RelatorioController {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DATA INVÁLIDA) ---
                     relatorioDemanda.add(Map.of(
+                        // CORREÇÃO: Mudar de getDate para getString para garantir o formato YYYY-MM-DD
+                        "dia_retirada", rs.getString("dia_retirada"), // Modificado
                         "nome_comercial", rs.getString("nome_comercial"),
                         "principio_ativo", rs.getString("principio_ativo"),
                         "total_retirado", rs.getInt("total_retirado")
                     ));
+                    // --- FIM DA MODIFICAÇÃO (CORREÇÃO DATA INVÁLIDA) ---
                 }
             }
             ctx.json(relatorioDemanda);
