@@ -2,12 +2,14 @@ package br.com.medcontrol;
 
 import br.com.medcontrol.controlador.AutenticacaoController;
 import br.com.medcontrol.controlador.UsuarioController;
-import br.com.medcontrol.controlador.UBSController; 
-import br.com.medcontrol.controlador.MedicamentoController; 
+import br.com.medcontrol.controlador.UBSController;
+import br.com.medcontrol.controlador.MedicamentoController;
 import br.com.medcontrol.controlador.EstoqueController;
-import br.com.medcontrol.controlador.AuditoriaController; 
+import br.com.medcontrol.controlador.AuditoriaController;
 import br.com.medcontrol.controlador.RelatorioController; // <-- ADICIONADO RF09
 import br.com.medcontrol.controlador.RetiradaController; // <-- ADICIONADO RF6.3
+import br.com.medcontrol.controlador.FarmaceuticoController; // <-- ADICIONADO RF5
+import br.com.medcontrol.controlador.ReceitaController; // <-- ADICIONADO RF5
 import br.com.medcontrol.servicos.CepServico;
 import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
@@ -25,35 +27,36 @@ public class ApiServer {
         }).start(7071);
 
         System.out.println("Servidor MedControl iniciado na porta 7071.");
-        
+
         // --- INSTÂNCIA DE SERVIÇOS ---
         EmailServico emailServico = new EmailServico();
         CepServico cepServico = new CepServico();
-        
+
         // --- INSTÂNCIA DE CONTROLADORES ---
         // CORREÇÃO: Removida injeção de CepServico
         AutenticacaoController autenticacaoController = new AutenticacaoController(emailServico);
         UsuarioController usuarioController = new UsuarioController(); // CORREÇÃO
-        UBSController ubsController = new UBSController(); 
-        MedicamentoController medicamentoController = new MedicamentoController(); 
-        EstoqueController estoqueController = new EstoqueController(); 
+        UBSController ubsController = new UBSController();
+        MedicamentoController medicamentoController = new MedicamentoController();
+        EstoqueController estoqueController = new EstoqueController();
         AuditoriaController auditoriaController = new AuditoriaController(); // <-- ADICIONADO rf08
         RetiradaController retiradaController = new RetiradaController(); // <-- ADICIONADO RF6.3
         RelatorioController relatorioController = new RelatorioController(); // <-- ADICIONADO RF09
-
+        FarmaceuticoController farmaceuticoController = new FarmaceuticoController();
+        ReceitaController receitaController = new ReceitaController();
+        
         // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
         app.post("/api/login", autenticacaoController::login);
         app.post("/api/register", autenticacaoController::registrar);
         app.post("/api/usuarios/enviar-codigo-verificacao", autenticacaoController::enviarCodigoVerificacao);
         app.post("/api/usuarios/verificar-codigo", autenticacaoController::verificarCodigo);
         app.post("/api/usuarios/verificar-existencia", autenticacaoController::verificarExistencia);
-        app.delete("/api/estoque/{id}", estoqueController::excluirEstoque); //RF08
-        
+        app.delete("/api/estoque/{id}", estoqueController::excluirEstoque); // RF08
 
         // --- ROTAS PARA RECUPERAÇÃO DE SENHA ---
         app.post("/api/password-reset/check-email", autenticacaoController::verificarEmail);
         app.post("/api/password-reset/update", autenticacaoController::atualizarSenha);
-        
+
         // --- ROTA PARA REDEFINIÇÃO DE SENHA (LOGADO) ---
         app.post("/api/users/{id}/redefine-password", usuarioController::redefinirSenha);
 
@@ -61,7 +64,8 @@ public class ApiServer {
         app.get("/api/users", usuarioController::listarTodos);
         app.post("/api/users", autenticacaoController::registrarAdmin);
         app.put("/api/users/{id}", usuarioController::atualizar); // Atualização sem verificação
-        app.put("/api/users/{id}/update-verified", autenticacaoController::atualizarComVerificacao); // Atualização COM verificação
+        app.put("/api/users/{id}/update-verified", autenticacaoController::atualizarComVerificacao); // Atualização COM
+                                                                                                     // verificação
         app.put("/api/users/{id}/status", usuarioController::alterarStatus);
         app.delete("/api/users/{id}", usuarioController::excluir);
         app.post("/api/admin/verify-password", usuarioController::verificarSenhaAdmin);
@@ -98,17 +102,28 @@ public class ApiServer {
         app.put("/api/estoque/{id}", estoqueController::atualizarEstoque);
         app.post("/api/estoque/verificar-lote", estoqueController::verificarLote);
 
+        // --- INÍCIO DA MODIFIFCAÇÃO RF05 ---
+        // --- RF05.1-RF05.4: ROTAS DE GERENCIAMENTO DE FARMACÊUTICOS ---
+        app.get("/api/farmaceuticos", farmaceuticoController::listar);
+        app.post("/api/farmaceuticos", farmaceuticoController::cadastrar);
+        app.put("/api/farmaceuticos/{id}", farmaceuticoController::atualizar);
+        app.delete("/api/farmaceuticos/{id}", farmaceuticoController::excluir);
+
+        // --- RF05.5: ROTA DE VALIDAÇÃO DE RECEITA ---
+        app.get("/api/receitas/validar/{codigo}", receitaController::validarReceita);
+        // --- FIM DA MODIFIFCAÇÃO RF05 ---
+
         // --- RF6.3: ROTA DE REGISTRO DE RETIRADA ---
         app.post("/api/retiradas", retiradaController::registrarRetirada);
-        
+
         // --- RF08.4: ROTA DE AUDITORIA ---
         app.get("/api/auditoria", auditoriaController::listarLogs);
-        
+
         // --- RF09: ROTAS DE RELATÓRIOS E DASHBOARD ---
         app.get("/api/relatorios/estoque", relatorioController::getRelatorioEstoque);
         app.get("/api/relatorios/demanda", relatorioController::getRelatorioDemanda);
         app.get("/api/dashboard/indicadores", relatorioController::getIndicadoresDashboard);
-        
+
         // --- ROTAS PÚBLICAS (MOCK) ---
         // MODIFICADO RF5.6: Rota movida de MOCK para o controlador
         app.get("/api/medicamentos/search", medicamentoController::buscarMedicamento);

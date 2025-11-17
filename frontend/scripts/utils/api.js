@@ -206,6 +206,15 @@ export const api = {
    // MODIFICAÇÃO 1: Adicionada função de verificação de lote
     verificarLote: (dados) => fetchApi('/estoque/verificar-lote', defaultPostOptions(dados)),
 
+    // --- FUNÇÕES RF05.1-RF05.4 (Farmacêuticos) ---
+    listarFarmaceuticos: () => fetchApi('/farmaceuticos'),
+    cadastrarFarmaceutico: (dados) => fetchApi('/farmaceuticos', defaultPostOptions(dados)),
+    atualizarFarmaceutico: (id, dados) => fetchApi(`/farmaceuticos/${id}`, defaultPutOptions(dados)),
+    excluirFarmaceutico: (id) => fetchApi(`/farmaceuticos/${id}`, { method: 'DELETE' }),
+
+    // --- FUNÇÃO RF05.5 (Validar Receita) ---
+    validarReceita: (codigo) => fetchApi(`/receitas/validar/${codigo}`),
+    
     // --- RF08.4: AUDITORIA ---
     listarLogsAuditoria: () => fetchApi('/auditoria'),
     

@@ -17,6 +17,10 @@ let selectUsuario, selectUbs, selectMedicamento, inputQuantidade,
     btnAdicionarItem, tabelaCestaCorpo, btnConfirmarRetirada,
     containerValidacao;
 
+// --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
+let inputCodigoReceita, btnValidarReceita, resultadoValidacaoReceita;
+// --- FIM DA MODIFICAÇÃO RF05.5 ---
+
 /**
  * Carrega dados essenciais para os dropdowns.
  * MODIFICADO: Função exportada para ser chamada pelo Admin.js
@@ -45,6 +49,15 @@ export async function carregarDadosValidacao() {
         cestaDeRetirada = [];
         renderizarCesta();
         carregarEstoqueDaUbs(); // Limpa o select de medicamentos
+
+        // --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
+        // Limpa o validador de receita
+        if (inputCodigoReceita) inputCodigoReceita.value = '';
+        if (resultadoValidacaoReceita) {
+            resultadoValidacaoReceita.innerHTML = '';
+            resultadoValidacaoReceita.style.display = 'none';
+        }
+        // --- FIM DA MODIFICAÇÃO RF05.5 ---
 
     } catch (erro) {
         exibirToast(`Erro ao carregar dados: ${erro.message}`, true);
@@ -75,6 +88,62 @@ function carregarEstoqueDaUbs() {
 
     popularSelect(selectMedicamento, estoqueFormatado, 'id_estoque', 'nomeExibicao', 'Selecione um medicamento...');
 }
+
+// --- INÍCIO DAS FUNÇÕES RF05.5 ---
+
+/**
+ * Handler para o clique no botão "Validar Receita".
+ */
+async function handleValidarReceita() {
+    const codigo = inputCodigoReceita.value.trim();
+    if (!codigo) {
+        exibirToast('Digite um código de receita.', true);
+        return;
+    }
+
+    resultadoValidacaoReceita.style.display = 'none';
+    resultadoValidacaoReceita.className = 'resultado-validacao'; // Limpa classes
+    btnValidarReceita.disabled = true;
+    btnValidarReceita.textContent = 'Validando...';
+
+    try {
+        const resultado = await api.validarReceita(codigo);
+        // Sucesso na validação (status 200)
+        exibirResultadoValidacao(resultado.mensagem, resultado.status);
+    } catch (erro) {
+        // Erro (404, 409, 410, 500)
+        const data = erro.data || { mensagem: erro.message, status: 'erro' };
+        exibirResultadoValidacao(data.mensagem, data.status || 'invalida');
+    } finally {
+        btnValidarReceita.disabled = false;
+        btnValidarReceita.textContent = 'Validar';
+    }
+}
+
+/**
+ * Exibe o resultado da validação da receita na UI.
+ * @param {string} mensagem
+ * @param {string} status ('valida', 'invalida', 'aviso', 'erro')
+ */
+function exibirResultadoValidacao(mensagem, status) {
+    if (!resultadoValidacaoReceita) return;
+
+    resultadoValidacaoReceita.textContent = mensagem;
+    resultadoValidacaoReceita.className = 'resultado-validacao'; // Reseta
+
+    if (status === 'valida') {
+        resultadoValidacaoReceita.classList.add('valida');
+    } else if (status === 'aviso') {
+        resultadoValidacaoReceita.classList.add('aviso');
+    } else {
+        resultadoValidacaoReceita.classList.add('invalida');
+    }
+
+    resultadoValidacaoReceita.style.display = 'block';
+}
+
+// --- FIM DAS FUNÇÕES RF05.5 ---
+
 
 /**
  * Adiciona o item selecionado à cesta de retirada.
@@ -239,7 +308,7 @@ export function initAdminValidacao(usuario) {
     
     usuarioLogado = usuario;
     
-    // Mapeamento dos elementos
+    // Mapeamento dos elementos (RF05.6)
     containerValidacao = document.getElementById('containerValidacao');
     selectUsuario = document.getElementById('validacaoSelectUsuario');
     selectUbs = document.getElementById('validacaoSelectUbs');
@@ -249,6 +318,13 @@ export function initAdminValidacao(usuario) {
     tabelaCestaCorpo = document.getElementById('validacaoTabelaCestaCorpo');
     btnConfirmarRetirada = document.getElementById('validacaoBtnConfirmar');
 
+    // --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
+    // Mapeamento dos elementos (RF05.5)
+    inputCodigoReceita = document.getElementById('inputCodigoReceita');
+    btnValidarReceita = document.getElementById('btnValidarReceita');
+    resultadoValidacaoReceita = document.getElementById('resultadoValidacaoReceita');
+    // --- FIM DA MODIFICAÇÃO RF05.5 ---
+
     if (!containerValidacao || !selectUsuario || !selectUbs || !selectMedicamento) {
         console.warn('Elementos da aba Validação ainda não estão no DOM.');
         return;
@@ -257,7 +333,7 @@ export function initAdminValidacao(usuario) {
 
     // REMOVIDO: carregarDadosIniciais() será chamado pelo Admin.js
 
-    // Adicionar Listeners
+    // Adicionar Listeners (RF05.6)
     selectUbs.addEventListener('change', carregarEstoqueDaUbs);
     btnAdicionarItem.addEventListener('click', adicionarItemCesta);
     btnConfirmarRetirada.addEventListener('click', confirmarRetirada);
@@ -268,4 +344,9 @@ export function initAdminValidacao(usuario) {
             removerItemCesta(idEstoque);
         }
     });
+
+    // --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
+    // Adicionar Listener (RF05.5)
+    btnValidarReceita.addEventListener('click', handleValidarReceita);
+    // --- FIM DA MODIFICAÇÃO RF05.5 ---
 }

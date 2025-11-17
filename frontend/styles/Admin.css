@@ -232,3 +232,28 @@ select:focus {
     cursor: not-allowed;
     opacity: 0.7;
 }
+
+/* --- INÍCIO DA MODIFICAÇÃO RF05.5 --- */
+.resultado-validacao {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    text-align: center;
+}
+.resultado-validacao.valida {
+    background-color: #dcfce7; /* green-100 */
+    color: #16a34a; /* green-700 */
+    border: 1px solid #16a34a;
+}
+.resultado-validacao.invalida {
+    background-color: #fee2e2; /* red-100 */
+    color: #dc2626; /* red-700 */
+    border: 1px solid #dc2626;
+}
+.resultado-validacao.aviso {
+    background-color: #fef3c7; /* yellow-100 */
+    color: #d97706; /* yellow-700 */
+    border: 1px solid #d97706;
+}
+/* --- FIM DA MODIFICAÇÃO RF05.5 --- */

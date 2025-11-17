@@ -5,6 +5,7 @@ import { fecharTodosModais } from './utils/ui.js';
 import { initAdminUsuarios, carregarUsuarios } from './admin/admin-usuarios.js';
 import { initAdminPerfil } from './admin/admin-perfil.js';
 import { initAdminUbs, carregarUbs } from './admin/admin-ubs.js';
+import { initAdminFarmaceuticos, carregarFarmaceuticos } from './admin/admin-farmaceuticos.js';
 import { initAdminMedicamentos, carregarDadosMedicamentos } from './admin/admin-medicamentos.js';
 import { initAdminAuditoria, carregarLogs } from './admin/admin-auditoria.js';
 import { initAdminValidacao, carregarDadosValidacao } from './admin/admin-validacao.js';
@@ -15,6 +16,7 @@ const funcoesInitAba = {
     'usuarios': initAdminUsuarios,
     'medicamentos': initAdminMedicamentos,
     'ubs': initAdminUbs,
+    'farmaceuticos': initAdminFarmaceuticos,
     'validacao': initAdminValidacao,
     'relatorios': initAdminRelatorios,
     'auditoria': initAdminAuditoria,
@@ -25,6 +27,7 @@ const funcoesRecarregarAba = {
     'usuarios': carregarUsuarios,
     'medicamentos': carregarDadosMedicamentos,
     'ubs': carregarUbs,
+    'farmaceuticos': carregarFarmaceuticos,
     'validacao': carregarDadosValidacao,
     'relatorios': carregarTodosRelatorios,
     'auditoria': carregarLogs,
@@ -45,16 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
             'usuarios': document.querySelector('[data-aba="usuarios"]'),
             'medicamentos': document.querySelector('[data-aba="medicamentos"]'),
             'ubs': document.querySelector('[data-aba="ubs"]'),
+            'farmaceuticos': document.querySelector('[data-aba="farmaceuticos"]'),
             'validacao': document.querySelector('[data-aba="validacao"]'),
             'relatorios': document.querySelector('[data-aba="relatorios"]'),
             'auditoria': document.querySelector('[data-aba="auditoria"]')
         };
 
         const permissoes = {
-            'admin': ['usuarios', 'medicamentos', 'ubs', 'validacao', 'relatorios', 'auditoria'],
-            'farmaceutico': ['validacao'],
+            // --- INÍCIO DA MODIFICAÇÃO RF05/RF08 ---
+            'admin': ['usuarios', 'medicamentos', 'ubs', 'farmaceuticos', 'validacao', 'relatorios', 'auditoria'],
+            'farmaceutico': ['validacao'], // Pode validar receita (RF05.5) e registrar retirada (RF05.6)
             'gestor_estoque': ['medicamentos'], // Pode ver medicamentos/estoque
             'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios'] // Modificado RF09 e RF5.6
+            // --- FIM DA MODIFICAÇÃO RF05/RF08 ---
         };
 
         // Esconde todas as abas e conteúdos primeiro

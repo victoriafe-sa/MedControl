@@ -35,6 +35,9 @@
                 <button data-aba="usuarios" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Usuários</button>
                 <button data-aba="medicamentos" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Medicamentos</button>
                 <button data-aba="ubs" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">UBS</button>
+                <!-- INÍCIO DA MODIFICAÇÃO RF05 -->
+                <button data-aba="farmaceuticos" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Farmacêuticos</button>
+                <!-- FIM DA MODIFICAÇÃO RF05 -->
                 <button data-aba="validacao" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Validação/Retirada</button>
                 <button data-aba="relatorios" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Relatórios</button>
                 <button data-aba="auditoria" class="btn-aba py-4 px-1 border-b-2 border-transparent text-gray-600 hover:border-gray-400">Auditoria</button>
@@ -132,12 +135,49 @@
                 </div>
             </div>
 
-            <!-- MODIFICADO RF5.6: Aba de Validação/Retirada -->
+            <!-- INÍCIO DA MODIFICAÇÃO RF05: NOVO CONTEÚDO FARMACÊUTICOS -->
+            <div id="conteudo-farmaceuticos" class="conteudo-aba">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold">Gerenciar Farmacêuticos</h3>
+                    <button id="abrirModalAdicionarFarmaceutico" class="btn-primario py-2 px-4 rounded-lg font-semibold">Adicionar Farmacêutico</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-100"><tr>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Nome</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">CRF</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Especialidade</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Status</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Ações</th>
+                        </tr></thead>
+                        <tbody id="corpoTabelaFarmaceuticos">
+                            <!-- Conteúdo será preenchido por admin-farmaceuticos.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- FIM DA MODIFICAÇÃO RF05 -->
+
+
+            <!-- MODIFICADO RF05: Aba de Validação/Retirada -->
             <div id="conteudo-validacao" class="conteudo-aba">
+                <!-- INÍCIO DA MODIFICAÇÃO RF05.5: Validador de Receita -->
+                <div id="containerValidarReceita" class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h3 class="text-xl font-semibold mb-4">Validar Receita (RF05.5)</h3>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="text" id="inputCodigoReceita" placeholder="Insira o código da receita" class="flex-grow mt-1 block w-full">
+                        <button id="btnValidarReceita" class="btn-primario py-2 px-6 rounded-lg font-semibold">Validar</button>
+                    </div>
+                    <div id="resultadoValidacaoReceita" class="mt-4" style="display: none;">
+                        <!-- O resultado da validação aparecerá aqui -->
+                    </div>
+                </div>
+                <!-- FIM DA MODIFICAÇÃO RF05.5 -->
+
                 <div id="containerValidacao" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Coluna de Formulário -->
                     <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md">
-                        <h3 class="text-xl font-semibold mb-4">Registrar Retirada</h3>
+                        <h3 class="text-xl font-semibold mb-4">Registrar Retirada (RF05.6)</h3>
                         <div class="space-y-4">
                             <div>
                                 <label for="validacaoSelectUsuario" class="block text-sm font-medium text-gray-700">Paciente</label>
@@ -192,7 +232,7 @@
                 <div class="space-y-8">
                     <!-- Filtros -->
                     <div class="bg-white p-4 rounded-xl shadow-md">
-                        <div class_ ="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
                                 <label for="filtroRelatorioUBS" class="block text-sm font-medium text-gray-700">Filtrar por UBS</label>
                                 <select id="filtroRelatorioUBS" class="mt-1 block w-full"></select>
@@ -288,7 +328,43 @@
     </main>
 
 
-    <!-- ... Modais (sem alteração) ... -->
+    <!-- ... Modais ... -->
+
+    <!-- INÍCIO DA MODIFICAÇÃO RF05: NOVO MODAL FARMACÊUTICO -->
+    <div id="modalFarmaceutico" class="modal">
+        <div class="bg-white w-full max-w-lg p-6 sm:p-8 rounded-xl shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-6">
+                 <h3 id="tituloModalFarmaceutico" class="text-xl font-bold">Adicionar Farmacêutico</h3>
+                 <button class="fechar-modal text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            </div>
+            <form id="formularioFarmaceutico" novalidate>
+                <input type="hidden" id="idFarmaceuticoForm">
+                <div class="space-y-4 corpo-modal">
+                    <div>
+                        <label for="farmNome" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="farmNome" class="mt-1 block w-full" required>
+                        <p id="erroFarmNome" class="error-message"></p>
+                    </div>
+                    <div>
+                        <label for="farmCrf" class="block text-sm font-medium text-gray-700">CRF</label>
+                        <input type="text" id="farmCrf" class="mt-1 block w-full" placeholder="Ex: CRF-DF 12345" required>
+                        <p id="erroFarmCrf" class="error-message"></p>
+                    </div>
+                    <div>
+                        <label for="farmEspecialidade" class="block text-sm font-medium text-gray-700">Especialidade (Opcional)</label>
+                        <input type="text" id="farmEspecialidade" class="mt-1 block w-full">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button type="button" class="fechar-modal bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-semibold">Cancelar</button>
+                    <button type="submit" class="btn-primario py-2 px-4 rounded-lg font-semibold">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- FIM DA MODIFICAÇÃO RF05 -->
+
+
     <div id="modalUbs" class="modal">
         <div class="bg-white w-full max-w-lg p-6 sm:p-8 rounded-xl shadow-2xl m-4">
             <div class="flex justify-between items-center mb-6">
