@@ -232,7 +232,10 @@
                 <div class="space-y-8">
                     <!-- Filtros -->
                     <div class="bg-white p-4 rounded-xl shadow-md">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <!-- ***** MODIFICAÇÃO ***** -->
+                        <!-- Alterado para 5 colunas e adicionado botão de download -->
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                        <!-- ***** FIM DA MODIFICAÇÃO ***** -->
                             <div>
                                 <label for="filtroRelatorioUBS" class="block text-sm font-medium text-gray-700">Filtrar por UBS</label>
                                 <select id="filtroRelatorioUBS" class="mt-1 block w-full"></select>
@@ -246,6 +249,8 @@
                                 <input type="date" id="filtroDataFim" class="mt-1 block w-full">
                             </div>
                             <button id="btnAplicarFiltros" class="w-full md:w-auto btn-primario py-2 px-6 rounded-lg font-semibold">Aplicar Filtros</button>
+                            <!-- ***** BOTÃO ADICIONADO ***** -->
+                            <button id="btnBaixarRelatorio" class="w-full md:w-auto btn-sucesso py-2 px-6 rounded-lg font-semibold">Baixar Relatório</button>
                         </div>
                     </div>
 

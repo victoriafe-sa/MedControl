@@ -319,8 +319,12 @@ export function initAdminRelatorios(usuarioLogado) {
     tabelaRelatorioDemandaCorpo = document.getElementById('tabelaRelatorioDemandaCorpo');
     containerDashboardIndicadores = document.getElementById('containerDashboardIndicadores');
     canvasGraficoDemanda = document.getElementById('graficoDemanda');
+    
+    // ***** INÍCIO DA MODIFICAÇÃO *****
+    const btnBaixarRelatorio = document.getElementById('btnBaixarRelatorio');
+    // ***** FIM DA MODIFICAÇÃO *****
 
-    if (!tabelaRelatorioEstoqueCorpo || !canvasGraficoDemanda) {
+    if (!tabelaRelatorioEstoqueCorpo || !canvasGraficoDemanda || !btnBaixarRelatorio) { // Modificado
         console.warn('Elementos da aba Relatórios ainda não estão no DOM.');
         return;
     }
@@ -333,4 +337,156 @@ export function initAdminRelatorios(usuarioLogado) {
 
     // Adicionar Listeners
     document.getElementById('btnAplicarFiltros').addEventListener('click', carregarTodosRelatorios);
+    
+    // ***** INÍCIO DA MODIFICAÇÃO *****
+    btnBaixarRelatorio.addEventListener('click', baixarRelatorioHTML);
+    // ***** FIM DA MODIFICAÇÃO *****
 }
+
+// ***** INÍCIO DA MODIFICAÇÃO *****
+/**
+ * Gera um arquivo HTML auto-contido com os dados atuais da aba de relatórios e
+ * inicia o download no navegador.
+ */
+function baixarRelatorioHTML() {
+    // 1. Obter os dados atuais dos filtros e relatórios
+    const dataFiltro = new Date().toLocaleString('pt-BR');
+    const ubsFiltro = filtroRelatorioUBS.options[filtroRelatorioUBS.selectedIndex].text;
+    const dataInicioFiltro = filtroDataInicio.value ? new Date(filtroDataInicio.value.replace(/-/g, '/')).toLocaleDateString('pt-BR') : 'N/A';
+    const dataFimFiltro = filtroDataFim.value ? new Date(filtroDataFim.value.replace(/-/g, '/')).toLocaleDateString('pt-BR') : 'N/A';
+
+    // 2. Obter HTML dos relatórios
+    const dashboardIndicadoresHTML = containerDashboardIndicadores.innerHTML;
+    // Pega o HTML do container .bg-white que envolve o relatório
+    const relatorioEstoqueHTML = document.getElementById('tabelaRelatorioEstoqueCorpo').closest('.bg-white').innerHTML;
+    const relatorioDemandaHTML = document.getElementById('tabelaRelatorioDemandaCorpo').closest('.bg-white').innerHTML;
+    
+    // 3. Obter imagem do gráfico como Base64
+    let graficoImgSrc = '';
+    try {
+        if (meuGraficoDemanda) {
+            // toBase64Image() é um método do Chart.js para exportar o canvas
+            graficoImgSrc = meuGraficoDemanda.toBase64Image('image/png');
+        }
+    } catch (e) {
+        console.error("Erro ao converter gráfico para imagem:", e);
+        graficoImgSrc = ''; // Continua sem o gráfico se falhar
+    }
+
+    // 4. Montar o HTML final do arquivo
+    // Inclui a CDN do Tailwind e estilos básicos para garantir a formatação
+    const htmlCompleto = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório MedControl</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .bg-white { background-color: #ffffff; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .mb-4 { margin-bottom: 1rem; }
+        .text-xl { font-size: 1.25rem; }
+        .font-semibold { font-weight: 600; }
+        .text-gray-800 { color: #1f2937; }
+        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .lg\\:grid-cols-3 { @media (min-width: 1024px) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        .lg\\:col-span-1 { @media (min-width: 1024px) { grid-column: span 1 / span 1; } }
+        .lg\\:col-span-2 { @media (min-width: 1024px) { grid-column: span 2 / span 2; } }
+        .gap-6 { gap: 1.5rem; }
+        .h-full { height: 100%; }
+        .w-full { width: 100%; }
+        .text-lg { font-size: 1.125rem; }
+        .text-red-600 { color: #dc2626; }
+        .text-blue-600 { color: #2563eb; }
+        .mt-2 { margin-top: 0.5rem; }
+        .list-disc { list-style-type: disc; }
+        .pl-5 { padding-left: 1.25rem; }
+        .text-sm { font-size: 0.875rem; }
+        .overflow-x-auto { overflow-x: auto; }
+        .table-auto { table-layout: auto; }
+        .text-left { text-align: left; }
+        .bg-gray-100 { background-color: #f3f4f6; }
+        .text-gray-600 { color: #4b5563; }
+        .p-3 { padding: 0.75rem; }
+        .font-medium { font-weight: 500; }
+        .text-red-700 { color: #b91c1c; }
+        .bg-red-100 { background-color: #fee2e2; }
+        .font-bold { font-weight: 700; }
+        .text-yellow-600 { color: #d97706; }
+        .text-green-600 { color: #16a34a; }
+        .whitespace-nowrap { white-space: nowrap; }
+        .border-b { border-bottom-width: 1px; }
+        .border-gray-200 { border-color: #e5e7eb; }
+        .text-center { text-align: center; }
+        .text-gray-500 { color: #6b7280; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: #1e3a8a; }
+        h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+        h4 { font-size: 1.25rem; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem; border: 1px solid #e5e7eb; text-align: left; }
+        thead { background-color: #f3f4f6; }
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .shadow-md, .shadow { box-shadow: none; }
+            .bg-gray-100 { background-color: #f3f4f6 !important; }
+            .btn-sucesso, .btn-primario { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Relatório de Gestão MedControl</h1>
+        
+        <div class="bg-white p-4 rounded-xl shadow-md mb-8">
+            <h3 class="text-lg font-semibold mb-2">Filtros Aplicados (em ${dataFiltro})</h3>
+            <p><strong>UBS:</strong> ${ubsFiltro}</p>
+            <p><strong>Data Início Demanda:</strong> ${dataInicioFiltro}</p>
+            <p><strong>Data Fim Demanda:</strong> ${dataFimFiltro}</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mb-4">Dashboard de Gestão</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-1 space-y-4">
+                ${dashboardIndicadoresHTML}
+            </div>
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md" style="height: 400px;">
+                <h4 class="font-semibold text-lg mb-4">Projeção de Demanda (Últimos 30 dias)</h4>
+                ${graficoImgSrc ? `<img src="${graficoImgSrc}" alt="Gráfico de Demanda" class="w-full h-full" style="object-fit: contain;">` : '<p class="text-gray-500">Gráfico não pôde ser carregado.</p>'}
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                ${relatorioEstoqueHTML}
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                ${relatorioDemandaHTML}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+
+    // 5. Criar e acionar o link de download
+    const blob = new Blob([htmlCompleto], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Relatorio_MedControl_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    exibirToast("Relatório baixado com sucesso!");
+}
+// ***** FIM DA MODIFICAÇÃO *****

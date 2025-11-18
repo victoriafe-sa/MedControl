@@ -15,7 +15,7 @@ public class DB {
     private static final String PORT = "3306";
     private static final String DATABASE = "medcontrol_db";
     private static final String USER = "root";
-    private static final String PASSWORD = "SUASENHA"; // Mantenha sua senha
+    private static final String PASSWORD = "SUA-SENHA"; // Mantenha sua senha
     private static final String URL = String.format("jdbc:mysql://%s:%s/%s", HOST, PORT, DATABASE);
 
     // --- REMOVA A CONEXÃO ESTÁTICA ---
