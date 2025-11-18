@@ -142,6 +142,22 @@ CREATE TABLE log_buscas (
     FOREIGN KEY (id_medicamento_encontrado) REFERENCES medicamentos(id_medicamento) ON DELETE SET NULL
 );
 
+-- ============================================
+-- RF07: RESERVA E AGENDAMENTO
+-- ============================================
+CREATE TABLE reservas (
+    id_reserva INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_medicamento INT NOT NULL,
+    id_ubs INT NOT NULL,
+    data_hora_reserva DATETIME NOT NULL,
+    quantidade_reservada INT NOT NULL,
+    status ENUM('ATIVA', 'RETIRADA', 'CANCELADA', 'EXPIRADA') NOT NULL DEFAULT 'ATIVA',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_medicamento) REFERENCES medicamentos(id_medicamento),
+    FOREIGN KEY (id_ubs) REFERENCES ubs(id_ubs)
+);
 
 -- ============================================
 -- RF08.4: Auditoria de Ações 

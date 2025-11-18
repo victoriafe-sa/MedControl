@@ -193,7 +193,6 @@ export const api = {
     cadastrarMedicamento: (dados) => fetchApi('/medicamentos', defaultPostOptions(dados)),
     atualizarMedicamento: (id, dados) => fetchApi(`/medicamentos/${id}`, defaultPutOptions(dados)),
     excluirMedicamento: (id) => fetchApi(`/medicamentos/${id}`, { method: 'DELETE' }),
-    // MODIFICADO (Item 2): Adicionada função de status
     alterarStatusMedicamento: (id, novoStatus) => {
         return fetchApi(`/medicamentos/${id}/status`, defaultPutOptions({ ativo: novoStatus }));
     },
@@ -203,7 +202,6 @@ export const api = {
     cadastrarEstoque: (dados) => fetchApi('/estoque', defaultPostOptions(dados)),
     atualizarEstoque: (id, dados) => fetchApi(`/estoque/${id}`, defaultPutOptions(dados)),
     excluirEstoque: (id) => fetchApi(`/estoque/${id}`, { method: 'DELETE' }),
-   // MODIFICAÇÃO 1: Adicionada função de verificação de lote
     verificarLote: (dados) => fetchApi('/estoque/verificar-lote', defaultPostOptions(dados)),
 
     // --- FUNÇÕES RF05.1-RF05.4 (Farmacêuticos) ---
@@ -228,4 +226,45 @@ export const api = {
     getRelatorioEstoque: (ubs_id) => fetchApi(`/relatorios/estoque?ubs_id=${ubs_id}`),
     getRelatorioDemanda: (inicio, fim) => fetchApi(`/relatorios/demanda?inicio=${inicio}&fim=${fim}`),
     getIndicadoresDashboard: () => fetchApi('/dashboard/indicadores'),
+
+    // --- INÍCIO DA ADIÇÃO (RF07) ---
+    // Adiciona os 4 métodos necessários para o RF07
+    
+    /**
+     * Cria uma nova reserva. (RF07.1) [cite_start][cite: 878-883]
+     * POST /api/reservas
+     * @param {object} dadosReserva - { id_medicamento, id_ubs, quantidadeReservada, dataHoraReserva }
+     */
+    criarReserva: (dadosReserva) => {
+        return fetchApi('/reservas', defaultPostOptions(dadosReserva));
+    },
+
+    /**
+     * Busca as reservas do usuário logado. (RF07.2) [cite_start][cite: 884-886]
+     * GET /api/usuarios/me/reservas
+     */
+    consultarReservas: () => {
+        return fetchApi('/usuarios/me/reservas');
+    },
+
+    /**
+     * Cancela uma reserva ativa. (RF07.3) [cite_start][cite: 887-890]
+     * PUT /api/reservas/{id}/cancelar
+     * @param {string|number} id 
+     */
+    cancelarReserva: (id) => {
+        // Envia um PUT sem corpo
+        return fetchApi(`/reservas/${id}/cancelar`, { method: 'PUT' });
+    },
+
+    /**
+     * Reagenda uma reserva ativa. (RF07.4) [cite_start][cite: 891-894]
+     * PUT /api/reservas/{id}/reagendar
+     * @param {string|number} id 
+     * @param {object} dadosReagendamento - { novaDataHora: "YYYY-MM-DDTHH:MM" }
+     */
+    reagendarReserva: (id, dadosReagendamento) => {
+        return fetchApi(`/reservas/${id}/reagendar`, defaultPutOptions(dadosReagendamento));
+    }
+    // --- FIM DA ADIÇÃO (RF07) ---
 };

@@ -10,6 +10,7 @@ import br.com.medcontrol.controlador.RelatorioController; // <-- ADICIONADO RF09
 import br.com.medcontrol.controlador.RetiradaController; // <-- ADICIONADO RF6.3
 import br.com.medcontrol.controlador.FarmaceuticoController; // <-- ADICIONADO RF5
 import br.com.medcontrol.controlador.ReceitaController; // <-- ADICIONADO RF5
+import br.com.medcontrol.controlador.ReservaController; // <-- ADICIONADO RF07
 import br.com.medcontrol.servicos.CepServico;
 import br.com.medcontrol.servicos.EmailServico;
 import io.javalin.Javalin;
@@ -44,7 +45,10 @@ public class ApiServer {
         RelatorioController relatorioController = new RelatorioController(); // <-- ADICIONADO RF09
         FarmaceuticoController farmaceuticoController = new FarmaceuticoController();
         ReceitaController receitaController = new ReceitaController();
-        
+        // --- INÍCIO DA ADIÇÃO (RF07) ---
+        // 2. Instancia o novo controlador de Reservas.
+        ReservaController reservaController = new ReservaController();
+        // --- FIM DA ADIÇÃO (RF07) ---
         // --- ROTAS DE AUTENTICAÇÃO E REGISTRO ---
         app.post("/api/login", autenticacaoController::login);
         app.post("/api/register", autenticacaoController::registrar);
@@ -58,7 +62,7 @@ public class ApiServer {
         app.post("/api/password-reset/update", autenticacaoController::atualizarSenha);
 
         // --- ROTA PARA REDEFINIÇÃO DE SENHA (LOGADO) ---
-        app.post("/api/users/{id}/redefine-password", usuarioController::redefinirSenha);
+        app.post("/api/users/{id}/redefine-password", ctx -> usuarioController.redefineSenha(ctx));
 
         // --- ROTAS PARA GERENCIAMENTO DE USUÁRIOS (ADMIN) ---
         app.get("/api/users", usuarioController::listarTodos);
@@ -123,7 +127,18 @@ public class ApiServer {
         app.get("/api/relatorios/estoque", relatorioController::getRelatorioEstoque);
         app.get("/api/relatorios/demanda", relatorioController::getRelatorioDemanda);
         app.get("/api/dashboard/indicadores", relatorioController::getIndicadoresDashboard);
-
+       
+        // --- INÍCIO DA ADIÇÃO (RF07) ---
+        // 3. Define os novos endpoints para o RF07 [cite: 874-895], apontando para o novo controlador.
+        // [cite: 878-883] RF07.1
+        app.post("/api/reservas", reservaController::criarReserva); 
+        // [cite: 884-886] RF07.2
+        app.get("/api/usuarios/me/reservas", reservaController::consultarReservas); 
+        // [cite: 887-890] RF07.3
+        app.put("/api/reservas/{id}/cancelar", reservaController::cancelarReserva); 
+        // [cite: 891-894] RF07.4
+        app.put("/api/reservas/{id}/reagendar", reservaController::reagendarReserva);
+        // --- FIM DA ADIÇÃO (RF07) ---
         // --- ROTAS PÚBLICAS (MOCK) ---
         // MODIFICADO RF5.6: Rota movida de MOCK para o controlador
         app.get("/api/medicamentos/search", medicamentoController::buscarMedicamento);

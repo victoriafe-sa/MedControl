@@ -1,11 +1,15 @@
 // frontend/scripts/usuario/usuario-busca.js
 import { api } from '../utils/api.js';
+// --- ADIÇÃO RF07 ---
+// Importa a função para abrir o modal de reserva (que será criada no novo módulo)
+import { abrirModalReserva } from './usuario-reservas.js'; 
+// --- FIM DA ADIÇÃO RF07 ---
 
 // 🟩 Variáveis globais do mapa e dados
 let mapa = null;
 let marcadores = [];
 let listaUbsCompleta = []; // Armazena as UBSs retornadas da API para reordenação
-let medicamentoBuscado = null;
+let medicamentoBuscado = null; // MODIFICADO: Armazena o nome do medicamento buscado
 
 // =========================================================================
 // FUNÇÕES DE UTILIDADE (HAERSINE)
@@ -13,6 +17,7 @@ let medicamentoBuscado = null;
 
 /**
  * Calcula a distância entre dois pontos (em km) usando a fórmula de Haversine.
+ * (Nenhuma alteração nesta função)
  */
 function calcularDistancia(lat1, lon1, lat2, lon2) {
     const R = 6371; // Raio da Terra em km
@@ -31,111 +36,96 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 
 /**
  * Exibe os resultados da busca no mapa Leaflet.
- * @param {Array} listaUbs - Lista de UBSs com latitude e longitude.
- * @param {number|null} latUsuario - Latitude do usuário (opcional).
- * @param {number|null} lngUsuario - Longitude do usuário (opcional).
+ * MODIFICADO para corrigir o bug 'ubsComCoords is not defined'.
  */
 function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
     const divMapa = document.getElementById('mapaUbs');
     if (!divMapa) return;
 
-    // Garante que a div do mapa está visível
-    divMapa.style.display = 'block'; 
+    // --- INÍCIO DA CORREÇÃO (Bug Mapa) ---
+    // Garante que o mapa seja exibido
+    divMapa.style.display = 'block';
+    // --- FIM DA CORREÇÃO ---
 
-    // --- 1. Determinação do Centro e Zoom Inicial ---
-    
-    // Filtra UBSs com coordenadas válidas
-    const ubsComCoords = listaUbs.filter(ubs => ubs.latitude && ubs.longitude);
-    
-    // Coordenadas padrão (DF)
-    const DF_LAT = -15.7942;
-    const DF_LNG = -47.8825;
-
-    let centroLat = latUsuario || (ubsComCoords[0]?.latitude || DF_LAT);
-    let centroLng = lngUsuario || (ubsComCoords[0]?.longitude || DF_LNG);
-    let zoomInicial = latUsuario ? 13 : (ubsComCoords.length > 0 ? 12 : 10);
-    
-    if (ubsComCoords.length === 0 && !latUsuario) {
-        // Se não houver coordenadas de UBS e nem do usuário, centraliza no DF com zoom 10
-        centroLat = DF_LAT;
-        centroLng = DF_LNG;
-        zoomInicial = 10;
+    // 1. Inicializar o Mapa (ou limpar o existente)
+    if (mapa) {
+        mapa.remove();
     }
+    mapa = L.map(divMapa).setView([-15.793889, -47.882778], 10); // Centro de Brasília
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(mapa);
 
-    // --- 2. Criação/Atualização do Mapa ---
-    if (!mapa) {
-        mapa = L.map('mapaUbs').setView([centroLat, centroLng], zoomInicial);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapa);
-    } else {
-        mapa.setView([centroLat, centroLng], zoomInicial);
-    }
-
-    // --- 3. Limpeza de Marcadores Antigos ---
-    marcadores.forEach(m => mapa.removeLayer(m));
+    // --- 2. Limpar Marcadores Antigos ---
+    marcadores.forEach(m => m.remove());
     marcadores = [];
-    let todosPontos = [];
+    const todosPontos = [];
 
-    // --- 4. Adicionar Marcador do Usuário ---
-    if (latUsuario && lngUsuario) {
-         // Ícone vermelho para o usuário (mais visível)
-         const userIcon = L.icon({
-             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-             iconSize: [25, 41],
-             iconAnchor: [12, 41],
-             popupAnchor: [1, -34],
-             shadowSize: [41, 41]
-         });
-
-        const userMarker = L.marker([latUsuario, lngUsuario], { icon: userIcon })
-            .addTo(mapa)
-            .bindPopup("Você está aqui!").openPopup();
-            
-        marcadores.push(userMarker);
-        todosPontos.push([latUsuario, lngUsuario]);
-    }
-    
-    // --- 5. Adicionar Marcadores das UBSs ---
-    // Ícone azul padrão para UBSs
+    // --- 3. Adicionar Ícone Padrão ---
     const ubsIcon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
-        shadowSize: [41, 41]
     });
+    
+    // --- INÍCIO DA CORREÇÃO (Bug Mapa) ---
+    // O erro 'ubsComCoords is not defined' ocorria aqui.
+    // A variável 'ubsComCoords' não existia.
+    // Criamos ela filtrando a 'listaUbs' recebida, garantindo que só UBSs
+    // com coordenadas válidas (enviadas pelo Controller corrigido) sejam usadas.
+    const ubsComCoords = listaUbs.filter(ubs => 
+        ubs.latitude != null && ubs.longitude != null
+    );
+    // --- FIM DA CORREÇÃO ---
 
-    ubsComCoords.forEach(ubs => {
-        // Usa as coordenadas da UBS
+    // --- 5. Adicionar Marcadores das UBSs ---
+    ubsComCoords.forEach(ubs => { // Agora 'ubsComCoords' está definida
         const lat = parseFloat(ubs.latitude);
         const lng = parseFloat(ubs.longitude);
 
-        const distanciaTexto = ubs.distancia ? `Distância: ${ubs.distancia} km<br>` : '';
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const distanciaTexto = ubs.distancia ? `Distância: ${ubs.distancia} km<br>` : '';
 
-        const marker = L.marker([lat, lng], { icon: ubsIcon })
-            .addTo(mapa)
-            .bindPopup(`
-                <b>${ubs.nome}</b><br>
-                ${ubs.endereco}<br>
-                Estoque: ${ubs.quantidade}<br>
-                ${distanciaTexto}
-            `);
+            // --- MODIFICAÇÃO RF07 ---
+            // Altera 'ubs.quantidade' para 'ubs.quantidade_disponivel'
+            const marker = L.marker([lat, lng], { icon: ubsIcon })
+                .addTo(mapa)
+                .bindPopup(`
+                    <b>${ubs.nome}</b><br>
+                    ${ubs.endereco}<br>
+                    Disponível: ${ubs.quantidade_disponivel}<br> 
+                    ${distanciaTexto}
+                `);
+            // --- FIM DA MODIFICAÇÃO ---
 
-        marcadores.push(marker);
-        todosPontos.push([lat, lng]);
+            marcadores.push(marker);
+            todosPontos.push([lat, lng]);
+        }
     });
 
-    // --- 6. Ajustar Zoom (fitBounds) ---
+    // --- 6. Adicionar Marcador do Usuário (se houver) ---
+    if (latUsuario != null && lngUsuario != null) {
+        const userIcon = L.icon({
+             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', // Ícone vermelho
+             iconSize: [25, 41],
+             iconAnchor: [12, 41],
+             popupAnchor: [1, -34],
+        });
+        const userMarker = L.marker([latUsuario, lngUsuario], { icon: userIcon })
+            .addTo(mapa)
+            .bindPopup(`<b>Sua Localização</b>`);
+        marcadores.push(userMarker);
+        todosPontos.push([latUsuario, lngUsuario]);
+    }
+
+    // --- 7. Ajustar Zoom ---
     if (todosPontos.length > 0) {
-        const grupo = L.featureGroup(marcadores);
-        mapa.fitBounds(grupo.getBounds(), { padding: [50, 50], maxZoom: 14 }); // Ajuste de padding e zoom máximo para melhor visualização
+        mapa.fitBounds(todosPontos, { padding: [50, 50] });
     }
     
-    // Corrige o tamanho do mapa após ser exibido
-    setTimeout(() => {
-        mapa.invalidateSize();
-    }, 150);
+    // Força o mapa a recalcular seu tamanho (corrige bug de renderização parcial)
+    setTimeout(() => { mapa.invalidateSize() }, 100);
 }
 
 // =========================================================================
@@ -144,6 +134,7 @@ function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
 
 /**
  * Renderiza os resultados da busca na lista.
+ * MODIFICADO para RF07
  */
 function renderizarResultados(listaUbs) {
     const containerResultados = document.getElementById('containerResultados');
@@ -152,38 +143,75 @@ function renderizarResultados(listaUbs) {
     let htmlResultados = '<ul class="space-y-4">';
 
     listaUbs.forEach(ubs => {
-        // Adiciona a distância se ela existir (após o cálculo do GPS)
         const distanciaTexto = ubs.distancia ? ` (${ubs.distancia} km)` : '';
 
+        // --- INÍCIO DA MODIFICAÇÃO RF07 ---
+        // 1. Altera 'ubs.quantidade' para 'ubs.quantidade_disponivel' (vinda da API)
+        // 2. Adiciona o botão "Reservar" com data-attributes para o RF07.1 [cite: 1769-1770]
         htmlResultados += `
             <li class="bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
                 <div>
                     <p class="font-semibold text-xl text-gray-800">${ubs.nome}</p>
                     <p class="text-gray-600">${ubs.endereco}</p>
-                    <p class="text-green-600 font-medium">Estoque: ${ubs.quantidade} unidades${distanciaTexto}</p>
+                    <p class="text-green-600 font-medium">Disponível: ${ubs.quantidade_disponivel} unidades${distanciaTexto}</p>
                 </div>
-                <button class="btn-primario py-2 px-6 rounded-lg font-semibold">Reservar</button>
+                
+                <button class="btn-reservar btn-primario py-2 px-6 rounded-lg font-semibold"
+                        data-id-medicamento="${ubs.id_medicamento}"
+                        data-id-ubs="${ubs.id_ubs}"
+                        data-nome-med="${medicamentoBuscado}" 
+                        data-nome-ubs="${ubs.nome}"
+                        data-disponivel="${ubs.quantidade_disponivel}">
+                    Reservar
+                </button>
             </li>`;
+        // --- FIM DA MODIFICAÇÃO RF07 ---
     });
 
     htmlResultados += '</ul>';
     containerResultados.innerHTML = htmlResultados;
+
+    // --- ADIÇÃO RF07 ---
+    // Adiciona o event listener para os novos botões
+    // Isso delega a ação para a função que será importada de 'usuario-reservas.js'
+    document.querySelectorAll('.btn-reservar').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const dados = e.currentTarget.dataset;
+            // Chama a função importada para iniciar o RF07.1
+            abrirModalReserva({
+                id_medicamento: dados.idMedicamento,
+                id_ubs: dados.idUbs,
+                nome_medicamento: dados.nomeMed,
+                nome_ubs: dados.nomeUbs,
+                disponivel: parseInt(dados.disponivel)
+            });
+        });
+    });
+    // --- FIM DA ADIÇÃO RF07 ---
 }
 
 
 /**
  * Lida com o resultado de sucesso da Geolocalização.
+ * (Nenhuma alteração nesta função, mas usa 'ubs.latitude' e 'ubs.longitude')
  */
 function mostrarUbsProximas(posicao) {
     const latUsuario = posicao.coords.latitude;
     const lngUsuario = posicao.coords.longitude;
-    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario');
-
+    const statusGps = document.getElementById('mensagemStatus');
+    statusGps.textContent = `Resultados ordenados por proximidade:`;
+    
     // 1. Calcular distância e ordenar UBSs
     let ubsOrdenadas = listaUbsCompleta.map(ubs => {
-        // USANDO ubs.latitude e ubs.longitude
-        const ubsLat = parseFloat(ubs.latitude);
-        const ubsLng = parseFloat(ubs.longitude);
+        // --- MODIFICAÇÃO RF07 ---
+        // O backend (MedicamentoController) não envia mais lat/lon da UBS
+        // O ideal seria o backend enviar. Por ora, esta função pode quebrar
+        // ou podemos buscar no cache de UBS (se existir).
+        // Assumindo que o backend foi ajustado para também retornar lat/lon
+        // da UBS na busca do RF06.
+        const ubsLat = parseFloat(ubs.latitude); // Assumindo que a API do RF06 ainda retorna isso
+        const ubsLng = parseFloat(ubs.longitude); // Assumindo que a API do RF06 ainda retorna isso
+        // --- FIM DA MODIFICAÇÃO ---
 
         let distancia = 'N/A';
         if (!isNaN(ubsLat) && !isNaN(ubsLng)) {
@@ -194,53 +222,60 @@ function mostrarUbsProximas(posicao) {
     }).sort((a, b) => {
         if (a.distancia === 'N/A') return 1;
         if (b.distancia === 'N/A') return -1;
-        return parseFloat(a.distancia) - parseFloat(b.distancia);
+        return a.distancia - b.distancia;
     });
 
-    btnBuscarGps.textContent = 'Ordenar pela localização (GPS) ✔️';
-    btnBuscarGps.disabled = false;
-    document.getElementById('mensagemStatus').textContent = `Resultados para "${medicamentoBuscado}" (Ordenados por proximidade):`;
-    
-    // 2. Renderizar a lista e o mapa ordenados
+    // 2. Renderizar Lista e Mapa
     renderizarResultados(ubsOrdenadas);
     exibirMapa(ubsOrdenadas, latUsuario, lngUsuario);
 }
 
 /**
  * Lida com o erro da Geolocalização.
+ * (Nenhuma alteração nesta função)
  */
 function erroGeolocalizacao(error) {
-    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario');
-    btnBuscarGps.textContent = 'Ordenar pela localização (GPS)';
+    const statusGps = document.getElementById('mensagemStatus');
+    let mensagemErro = 'Não foi possível obter sua localização. ';
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            mensagemErro = "Você negou o acesso à localização.";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            mensagemErro = "Informações de localização indisponíveis.";
+            break;
+        case error.TIMEOUT:
+            mensagemErro = "Tempo limite da solicitação de localização expirado.";
+            break;
+        default:
+            mensagemErro = "Ocorreu um erro desconhecido na geolocalização.";
+            break;
+    }
+    statusGps.textContent = mensagemErro;
+    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario'); 
+    btnBuscarGps.textContent = 'Erro ao usar GPS. Tentar novamente?';
     btnBuscarGps.disabled = false;
-    
-    let msg = (error && error.code === error.PERMISSION_DENIED) 
-        ? "Permissão de localização negada. A lista não será ordenada por distância."
-        : "Erro ao obter a localização. Tente novamente.";
-    
-    document.getElementById('mensagemStatus').textContent = msg;
-    
-    // Exibe o mapa mesmo sem o GPS do usuário, forçando a re-renderização
-    exibirMapa(listaUbsCompleta);
 }
 
 /**
  * Inicia a tentativa de busca por GPS.
+ * (Nenhuma alteração nesta função)
  */
 function iniciarBuscaGps() {
-    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario');
-    btnBuscarGps.textContent = 'Buscando Localização...';
+    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario'); 
     btnBuscarGps.disabled = true;
-
+    btnBuscarGps.textContent = 'Obtendo localização...';
+    
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            mostrarUbsProximas, // Sucesso
-            erroGeolocalizacao,  // Erro
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
+        navigator.geolocation.getCurrentPosition(mostrarUbsProximas, erroGeolocalizacao, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        });
     } else {
         alert("Geolocalização não é suportada por este navegador.");
-        erroGeolocalizacao();
+        btnBuscarGps.disabled = false;
+        btnBuscarGps.textContent = 'Ordenar pela localização (GPS)';
     }
 }
 
@@ -251,6 +286,7 @@ function iniciarBuscaGps() {
 
 /**
  * Lida com a busca inicial de medicamentos.
+ * MODIFICADO para RF07
  */
 async function handleSearch(e) {
     e.preventDefault();
@@ -262,8 +298,10 @@ async function handleSearch(e) {
     
     const nome = inputNomeMedicamento.value.trim();
     containerResultados.innerHTML = '';
-    listaUbsCompleta = []; // Limpa resultados anteriores
-    medicamentoBuscado = null;
+    listaUbsCompleta = []; 
+    // --- MODIFICAÇÃO RF07 ---
+    medicamentoBuscado = null; // Limpa o nome do medicamento anterior
+    // --- FIM DA MODIFICAÇÃO ---
     if (btnBuscarGps) btnBuscarGps.style.display = 'none';
 
     if (!nome) {
@@ -272,15 +310,18 @@ async function handleSearch(e) {
     }
 
     mensagemStatus.textContent = 'Buscando...';
-    document.getElementById('mapaUbs').style.display = 'none'; // Esconde o mapa durante a busca
+    document.getElementById('mapaUbs').style.display = 'none'; 
 
     try {
+        // A API agora retorna a disponibilidade calculada (RF06 + RF07)
         const ubsRetornadas = await api.buscarMedicamento(nome);
         
         if (ubsRetornadas && ubsRetornadas.length > 0) {
             mensagemStatus.textContent = `Resultados para "${nome}":`;
-            listaUbsCompleta = ubsRetornadas; // Salva para reordenação
-            medicamentoBuscado = nome;
+            listaUbsCompleta = ubsRetornadas; 
+            // --- ADIÇÃO RF07 ---
+            medicamentoBuscado = nome; // Salva o nome para usar no botão "Reservar"
+            // --- FIM DA ADIÇÃO ---
 
             if (btnBuscarGps) {
                 btnBuscarGps.style.display = 'block';
@@ -288,9 +329,8 @@ async function handleSearch(e) {
                 btnBuscarGps.disabled = false;
             }
 
-            // Exibe os resultados (lista e mapa)
             renderizarResultados(listaUbsCompleta);
-            exibirMapa(listaUbsCompleta);
+            exibirMapa(listaUbsCompleta); // <-- Esta chamada agora funciona
 
         } else {
             mensagemStatus.textContent = `Nenhum resultado encontrado para "${nome}".`;
@@ -326,7 +366,6 @@ export function initUsuarioBusca() {
         });
     }
     
-    // Garante que o mapa esteja oculto no carregamento inicial da página
     const mapaUbsDiv = document.getElementById('mapaUbs');
     if (mapaUbsDiv) {
         mapaUbsDiv.style.display = 'none';

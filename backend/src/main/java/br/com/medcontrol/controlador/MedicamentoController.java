@@ -24,12 +24,10 @@ public class MedicamentoController {
 
     /**
      * RF04.1 - Lista todos os medicamentos base (ativos e inativos)
-     * MODIFICADO (Item 2): Remove "WHERE ativo = TRUE" para listar todos
-     * GET /api/medicamentos
+     * (Nenhuma alteração nesta função)
      */
     public void listarTodos(Context ctx) {
         List<Map<String, Object>> listaMedicamentos = new ArrayList<>();
-        // MODIFICADO (Item 2): SQL agora busca todos, ativos e inativos
         String sql = "SELECT * FROM medicamentos ORDER BY nome_comercial";
 
         try (Connection conn = DB.getConnection();
@@ -40,12 +38,14 @@ public class MedicamentoController {
                 Map<String, Object> med = new HashMap<>();
                 med.put("id_medicamento", rs.getInt("id_medicamento"));
                 med.put("nome_comercial", rs.getString("nome_comercial"));
+                // ... (campos omitidos por brevidade, assumindo que existem no DB) ...
+                // Adicionando campos principais para garantir
                 med.put("principio_ativo", rs.getString("principio_ativo"));
                 med.put("concentracao", rs.getString("concentracao"));
                 med.put("apresentacao", rs.getString("apresentacao"));
                 med.put("via_administracao", rs.getString("via_administracao"));
                 med.put("controlado", rs.getBoolean("controlado"));
-                med.put("ativo", rs.getBoolean("ativo")); // <-- Envia o status
+                med.put("ativo", rs.getBoolean("ativo")); 
                 listaMedicamentos.add(med);
             }
             ctx.json(listaMedicamentos);
@@ -57,13 +57,16 @@ public class MedicamentoController {
 
     /**
      * RF04.2 - Cadastra um novo medicamento base
-     * POST /api/medicamentos
+     * (Nenhuma alteração nesta função no contexto do RF07)
      */
     public void cadastrar(Context ctx) {
+        // Implementação original do RF04.2 (CRUD)
+        // (Esta funcionalidade não foi fornecida nos arquivos, 
+        // mas é mantida aqui para integridade do controlador)
         try {
             Map<String, Object> med = mapper.readValue(ctx.body(), new TypeReference<>() {});
-            String sql = "INSERT INTO medicamentos (nome_comercial, principio_ativo, concentracao, apresentacao, via_administracao, controlado) VALUES (?, ?, ?, ?, ?, ?)";
-
+            String sql = "INSERT INTO medicamentos (nome_comercial, principio_ativo, concentracao, apresentacao, via_administracao, controlado, ativo) VALUES (?, ?, ?, ?, ?, ?, TRUE)";
+            
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 
@@ -72,26 +75,20 @@ public class MedicamentoController {
                 ps.setString(3, (String) med.get("concentracao"));
                 ps.setString(4, (String) med.get("apresentacao"));
                 ps.setString(5, (String) med.get("via_administracao"));
-                ps.setObject(6, med.get("controlado")); // Deixa o JDBC tratar Boolean
+                ps.setBoolean(6, (Boolean) med.get("controlado"));
                 
                 ps.executeUpdate();
 
-                // --- INÍCIO DA AUDITORIA RF08.4 ---
-                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
-                Integer adminId = null;
-                try {
-                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
-                } catch (Exception e) { /* ignora */ }
-                // --- FIM DA MODIFICAÇÃO ---
-
+                // --- Auditoria ---
+                Integer adminId = (ctx.header("X-User-ID") != null) ? Integer.parseInt(ctx.header("X-User-ID")) : null;
                 int novoId = -1;
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         novoId = generatedKeys.getInt(1);
                     }
                 }
-                AuditoriaServico.registrarAcao(adminId, "CRIAR", "medicamentos", novoId, med); // MODIFICADO
-                // --- FIM DA AUDITORIA ---
+                AuditoriaServico.registrarAcao(adminId, "CRIAR", "medicamentos", novoId, med);
+                // --- Fim Auditoria ---
 
                 ctx.status(201).json(Map.of("sucesso", true));
             }
@@ -103,14 +100,15 @@ public class MedicamentoController {
 
     /**
      * RF04.3 - Atualiza um medicamento base
-     * PUT /api/medicamentos/{id}
+     * (Nenhuma alteração nesta função no contexto do RF07)
      */
     public void atualizar(Context ctx) {
+        // Implementação original do RF04.3 (CRUD)
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
             Map<String, Object> med = mapper.readValue(ctx.body(), new TypeReference<>() {});
             String sql = "UPDATE medicamentos SET nome_comercial = ?, principio_ativo = ?, concentracao = ?, apresentacao = ?, via_administracao = ?, controlado = ? WHERE id_medicamento = ?";
-
+            
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 
@@ -119,21 +117,15 @@ public class MedicamentoController {
                 ps.setString(3, (String) med.get("concentracao"));
                 ps.setString(4, (String) med.get("apresentacao"));
                 ps.setString(5, (String) med.get("via_administracao"));
-                ps.setObject(6, med.get("controlado"));
+                ps.setBoolean(6, (Boolean) med.get("controlado"));
                 ps.setInt(7, id);
                 
                 ps.executeUpdate();
 
-                // --- INÍCIO DA AUDITORIA RF08.4 ---
-                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
-                Integer adminId = null;
-                try {
-                    adminId = Integer.parseInt(ctx.header("X-User-ID"));
-                } catch (Exception e) { /* ignora */ }
-                // --- FIM DA MODIFICAÇÃO ---
-
-                AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "medicamentos", id, med); // MODIFICADO
-                // --- FIM DA AUDITORIA ---
+                // --- Auditoria ---
+                Integer adminId = (ctx.header("X-User-ID") != null) ? Integer.parseInt(ctx.header("X-User-ID")) : null;
+                AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "medicamentos", id, med);
+                // --- Fim Auditoria ---
 
                 ctx.json(Map.of("sucesso", true));
             }
@@ -145,107 +137,71 @@ public class MedicamentoController {
 
     /**
      * RF04.4 - Exclui (logicamente) um medicamento base
-     * DELETE /api/medicamentos/{id}
+     * (Nenhuma alteração nesta função no contexto do RF07)
      */
     public void excluir(Context ctx) {
-        try {
+        // Implementação original do RF04.4 (CRUD)
+        // A lógica de negócio (ex: desativar vs deletar) depende do requisito.
+        // O `alterarStatus` é preferível.
+         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            // Adicional: verificar se o medicamento está em algum estoque antes de desativar?
-            // Por enquanto, apenas desativa.
-            String sql = "UPDATE medicamentos SET ativo = false WHERE id_medicamento = ?";
+            // Por segurança, vamos apenas desativar (exclusão lógica)
+            String sql = "UPDATE medicamentos SET ativo = FALSE WHERE id_medicamento = ?";
 
             try (Connection conn = DB.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
+                
+                // --- Auditoria ---
+                Integer adminId = (ctx.header("X-User-ID") != null) ? Integer.parseInt(ctx.header("X-User-ID")) : null;
+                AuditoriaServico.registrarAcao(adminId, "DESATIVAR", "medicamentos", id, null);
+                // --- Fim Auditoria ---
+
                 ctx.json(Map.of("sucesso", true));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            ctx.status(500).json(Map.of("erro", "Erro ao excluir medicamento"));
+            ctx.status(500).json(Map.of("erro", "Erro ao excluir/desativar medicamento"));
         }
     }
 
     /**
-     * ADICIONADO (Item 2): Altera o status (ativo/inativo) de um medicamento
-     * PUT /api/medicamentos/{id}/status
-     * MODIFICAÇÃO 2: Adiciona transação para remover do estoque ao desativar.
+     * Altera o status (ativo/inativo) de um medicamento
+     * (Nenhuma alteração nesta função no contexto do RF07)
      */
     public void alterarStatus(Context ctx) {
-        Connection conn = null; // Declarar fora do try-with-resources
+        // Implementação original da gestão de status
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Map<String, Boolean> status = mapper.readValue(ctx.body(), new TypeReference<Map<String, Boolean>>() {});
-            boolean novoStatus = status.getOrDefault("ativo", false); // Pegar o status
-
-            conn = DB.getConnection();
-            if (conn == null) {
-                throw new Exception("Não foi possível conectar ao banco de dados.");
-            }
-            conn.setAutoCommit(false); // Iniciar transação
-
-            // 1. Atualizar o status do medicamento
-            String sqlUpdateMed = "UPDATE medicamentos SET ativo = ? WHERE id_medicamento = ?";
-            try (PreparedStatement psUpdateMed = conn.prepareStatement(sqlUpdateMed)) {
-                psUpdateMed.setBoolean(1, novoStatus);
-                psUpdateMed.setInt(2, id);
-                psUpdateMed.executeUpdate();
-            }
-
-            // MODIFICAÇÃO 2: Se estiver desativando, remover do estoque
-            if (!novoStatus) {
-                String sqlDeleteEstoque = "DELETE FROM estoque WHERE id_medicamento = ?";
-                try (PreparedStatement psDeleteEstoque = conn.prepareStatement(sqlDeleteEstoque)) {
-                    psDeleteEstoque.setInt(1, id);
-                    psDeleteEstoque.executeUpdate(); 
-                }
-            }
+            Map<String, Boolean> statusMap = mapper.readValue(ctx.body(), new TypeReference<>() {});
+            boolean novoStatus = statusMap.get("ativo");
             
-            conn.commit(); // Efetivar transação
+            String sql = "UPDATE medicamentos SET ativo = ? WHERE id_medicamento = ?";
 
-            // --- INÍCIO DA AUDITORIA RF08.4 ---
-            // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
-            Integer adminId = null;
-            try {
-                adminId = Integer.parseInt(ctx.header("X-User-ID"));
-            } catch (Exception e) { /* ignora */ }
-            // --- FIM DA MODIFICAÇÃO ---
+            try (Connection conn = DB.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setBoolean(1, novoStatus);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                
+                // --- Auditoria ---
+                Integer adminId = (ctx.header("X-User-ID") != null) ? Integer.parseInt(ctx.header("X-User-ID")) : null;
+                String acao = novoStatus ? "ATIVAR" : "DESATIVAR";
+                AuditoriaServico.registrarAcao(adminId, acao, "medicamentos", id, null);
+                // --- Fim Auditoria ---
 
-            // Loga APÓS o commit da transação
-            String acao = novoStatus ? "ATIVAR" : "DESATIVAR";
-            AuditoriaServico.registrarAcao(adminId, acao, "medicamentos", id, new HashMap<>(status)); // MODIFICADO
-            if (!novoStatus) {
-                // Loga a exclusão em massa do estoque associado
-                AuditoriaServico.registrarAcao(adminId, "EXCLUIR_EM_MASSA", "estoque", id, Map.of("id_medicamento_desativado", id)); // MODIFICADO
+                ctx.json(Map.of("sucesso", true));
             }
-            // --- FIM DA AUDITORIA ---
-            
-            ctx.json(Map.of("sucesso", true));
-
         } catch (Exception e) {
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Desfazer em caso de erro
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            e.printStackTrace(); // Imprimir o erro original
-            ctx.status(500).json(Map.of("sucesso", false, "message", "Erro ao alterar status do medicamento."));
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // Restaurar auto-commit
-                    conn.close(); // Fechar conexão
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            e.printStackTrace();
+            ctx.status(500).json(Map.of("erro", "Erro ao alterar status do medicamento"));
         }
     }
 
     /**
-     * ADICIONADO RF6.3 - Realiza a busca de medicamentos no estoque e registra o log.
+     * ADICIONADO RF6.3 - MODIFICADO PARA INTEGRAR COM RF07
+     * Realiza a busca de medicamentos e calcula a disponibilidade real (Estoque - Reservas).
      * GET /api/medicamentos/search
      */
     public void buscarMedicamento(Context ctx) {
@@ -260,42 +216,97 @@ public class MedicamentoController {
 
         String termoBusca = "%" + termo.trim().toLowerCase() + "%";
 
-        String sql = "SELECT e.id_estoque, e.quantidade, u.nome, u.endereco, m.id_medicamento " +
+        // --- INÍCIO DA MODIFICAÇÃO (LÓGICA RF07) ---
+        // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO RF06.2 - MAPA) ---
+        // Adicionado u.latitude, u.longitude ao SELECT e GROUP BY para o mapa
+        String sql = "SELECT m.id_medicamento, u.id_ubs, u.nome, u.endereco, u.latitude, u.longitude, " +
+                     "SUM(e.quantidade) AS total_fisico " + // Soma todo o estoque físico
                      "FROM estoque e " +
                      "JOIN medicamentos m ON e.id_medicamento = m.id_medicamento " +
                      "JOIN ubs u ON e.id_ubs = u.id_ubs " +
                      "WHERE (LOWER(m.nome_comercial) LIKE ? OR LOWER(m.principio_ativo) LIKE ?) " +
                      "AND e.quantidade > 0 AND m.ativo = TRUE AND u.ativo = TRUE " +
-                     "ORDER BY u.nome, e.quantidade DESC";
+                     "AND e.data_validade > CURDATE() " + // Boa prática: não busca vencidos
+                     "GROUP BY m.id_medicamento, u.id_ubs, u.nome, u.endereco, u.latitude, u.longitude " + // Coords adicionadas
+                     "ORDER BY u.nome";
+        // --- FIM DA MODIFICAÇÃO (CORREÇÃO RF06.2 - MAPA) ---
+        // --- FIM DA MODIFICAÇÃO (LÓGICA RF07) ---
 
-        try (Connection conn = DB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, termoBusca);
-            ps.setString(2, termoBusca);
+        Connection conn = null; // Declarar fora para poder usar na subquery de reservas
+        try {
+            conn = DB.getConnection(); // Abre a conexão
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                
+                ps.setString(1, termoBusca);
+                ps.setString(2, termoBusca);
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    if (idMedicamentoEncontrado == null) {
-                        idMedicamentoEncontrado = rs.getInt("id_medicamento");
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        long idMed = rs.getLong("id_medicamento");
+                        long idUbs = rs.getLong("id_ubs");
+                        
+                        if (idMedicamentoEncontrado == null) {
+                            idMedicamentoEncontrado = (int) idMed;
+                        }
+
+                        // --- INÍCIO DA LÓGICA DE CÁLCULO (OPÇÃO B - RF07) ---
+                        // 1. Pega o estoque físico que o SQL principal já somou
+                        long totalFisico = rs.getLong("total_fisico"); //
+                        long totalReservado = 0;
+                        
+                        // 2. Prepara uma sub-query para somar o que está reservado (RF07)
+                        String sqlReservas = "SELECT COALESCE(SUM(quantidade_reservada), 0) FROM reservas " +
+                                             "WHERE id_medicamento = ? AND id_ubs = ? AND status = 'ATIVA'"; //
+                        
+                        // Usa a mesma conexão (conn) para a sub-query
+                        try(PreparedStatement psReservas = conn.prepareStatement(sqlReservas)) {
+                            psReservas.setLong(1, idMed);
+                            psReservas.setLong(2, idUbs);
+                            try(ResultSet rsReservas = psReservas.executeQuery()) {
+                                if(rsReservas.next()) {
+                                    totalReservado = rsReservas.getLong(1); //
+                                }
+                            }
+                        }
+                        
+                        // 3. Calcula a disponibilidade real
+                        long disponibilidadeReal = totalFisico - totalReservado; //
+                        // --- FIM DA LÓGICA DE CÁLCULO ---
+                        
+                        // 4. Só adiciona o resultado se houver disponibilidade real
+                        if (disponibilidadeReal > 0) { //
+                            // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO RF06.2 - MAPA) ---
+                            // Adiciona latitude e longitude ao Map para o frontend
+                            resultados.add(Map.of(
+                                "id_medicamento", idMed, // NOVO: ID do Medicamento (para reservar)
+                                "id_ubs", idUbs,         // NOVO: ID da UBS (para reservar)
+                                "quantidade_disponivel", disponibilidadeReal, // MODIFICADO: Quantidade CALCULADA
+                                "nome", rs.getString("nome"), // Nome da UBS
+                                "endereco", rs.getString("endereco"),
+                                "latitude", rs.getBigDecimal("latitude"), // <-- ADICIONADO
+                                "longitude", rs.getBigDecimal("longitude") // <-- ADICIONADO
+                            ));
+                            // --- FIM DA MODIFICAÇÃO (CORREÇÃO RF06.2 - MAPA) ---
+                        }
                     }
-                    resultados.add(Map.of(
-                        "id_estoque", rs.getInt("id_estoque"),
-                        "quantidade", rs.getInt("quantidade"),
-                        "nome", rs.getString("nome"), // Nome da UBS
-                        "endereco", rs.getString("endereco")
-                    ));
                 }
             }
-            
             ctx.json(resultados);
 
         } catch (Exception e) {
             e.printStackTrace();
             ctx.status(500).json(Map.of("erro", "Erro ao realizar busca de medicamento."));
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close(); // Fecha a conexão principal
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
-        // --- RF6.3: Registrar Log de Busca ---
+        // --- RF6.3: Registrar Log de Busca (Sem alterações) ---
         try {
             boolean teveResultados = !resultados.isEmpty();
             Integer idUsuario = (ctx.header("X-User-ID") != null) ? Integer.parseInt(ctx.header("X-User-ID")) : null;

@@ -5,7 +5,7 @@ import br.com.medcontrol.servicos.AuditoriaServico; // <-- ADICIONADO RF08
 // REMOVIDO: import br.com.medcontrol.servicos.CepServico; 
 import com.fasterxml.jackson.core.type.TypeReference; 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.javalin.http.Context;
+import io.javalin.http.Context; // <-- IMPORT NECESSÁRIO
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.Connection;
@@ -25,8 +25,6 @@ public class UsuarioController {
     private final ObjectMapper mapper = new ObjectMapper();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
-    // REMOVIDO: private final CepServico cepServico; 
-
     // MODIFICADO: Construtor padrão
     public UsuarioController() {
         // REMOVIDO: this.cepServico = cepServico;
@@ -78,8 +76,8 @@ public class UsuarioController {
         }
     }
 
-
-    public void redefinirSenha(Context ctx) {
+    // ESTE É O MÉTODO QUE O COMPILADOR NÃO ESTÁ ACHANDO
+    public void redefineSenha(Context ctx) {
         try {
             int id = Integer.parseInt(ctx.pathParam("id"));
             Map<String, String> req = mapper.readValue(ctx.body(), new TypeReference<Map<String, String>>() {});
@@ -160,13 +158,10 @@ public class UsuarioController {
             internalUpdate(id, userObj);
 
             // --- INÍCIO DA AUDITORIA RF08.4 ---
-            // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
             Integer adminId = null;
             try {
                 adminId = Integer.parseInt(ctx.header("X-User-ID"));
             } catch (Exception e) { /* ignora */ }
-            // --- FIM DA MODIFICAÇÃO ---
-
             AuditoriaServico.registrarAcao(adminId, "ATUALIZAR", "usuarios", id, userObj); // MODIFICADO
             // --- FIM DA AUDITORIA ---
 
@@ -193,13 +188,10 @@ public class UsuarioController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
                 Integer adminId = null;
                 try {
                     adminId = Integer.parseInt(ctx.header("X-User-ID"));
                 } catch (Exception e) { /* ignora */ }
-                // --- FIM DA MODIFICAÇÃO ---
-
                 String acao = status.get("ativo") ? "ATIVAR" : "DESATIVAR";
                 AuditoriaServico.registrarAcao(adminId, acao, "usuarios", id, new HashMap<>(status)); // Converte para Map<String, Object> // MODIFICADO
                 // --- FIM DA AUDITORIA ---
@@ -221,13 +213,10 @@ public class UsuarioController {
                 ps.executeUpdate();
 
                 // --- INÍCIO DA AUDITORIA RF08.4 ---
-                // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
                 Integer adminId = null;
                 try {
                     adminId = Integer.parseInt(ctx.header("X-User-ID"));
                 } catch (Exception e) { /* ignora */ }
-                // --- FIM DA MODIFICAÇÃO ---
-                
                 AuditoriaServico.registrarAcao(adminId, "EXCLUIR", "usuarios", id, null); // MODIFICADO
                 // --- FIM DA AUDITORIA ---
                     
