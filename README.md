@@ -39,8 +39,6 @@ A escolha do **Javalin** em detrimento de frameworks mais pesados permitiu um co
 
 ## **📸 Demonstração do Sistema**
 
-## 📸 Demonstração do Sistema
-
 ### Ecrã Inicial e Busca
 
 ![Login/Cadastro](./screenshots/LoginCadastro.png)
@@ -71,5 +69,6 @@ Projeto desenvolvido na disciplina de **Laboratório de Inovação III** do **Se
 
 * **Victoria Ferreira** (Desenvolvedora Principal / Full Stack)  
 * Equipe: Bruno Nogueira, Iuri Carvalho, Kauã Oliveira, Leonardo Oliveira, Luis Otávio, Warley Kerlon.
+
 
 © 2025 MedControl \- Tecnologia ao serviço da Saúde Pública.
