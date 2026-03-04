@@ -67,8 +67,8 @@ Sugestão: Captura de ecrã da Home, do Painel de Stock e da Tela de Reserva.
 
 Projeto desenvolvido na disciplina de **Laboratório de Inovação III** do **Senac**, sob orientação do **Prof. MSc. Edilberto M. Silva**.
 
-* **Victoria Ferreira** (Desenvolvedora Principal / Full Stack)  
-* Equipe: Bruno Nogueira, Iuri Carvalho, Kauã Oliveira, Leonardo Oliveira, Luis Otávio, Warley Kerlon.
+* Equipe: Victoria Ferreira, Luis Otávio, Bruno Nogueira, Iuri Carvalho, Kauã Oliveira, Leonardo Oliveira, Warley
 
 
 © 2025 MedControl \- Tecnologia ao serviço da Saúde Pública.
+
