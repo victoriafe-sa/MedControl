@@ -2,14 +2,15 @@
 // Módulo para RF07 (Reservas)
 
 // Importa as funções de API
-import { api } from '../utils/api.js'; 
+import { api } from '../utils/api.js';
+import { formatarDataHoraBR } from '../utils/formatadores.js';
 // Importa as funções de UI, incluindo o novo modal de confirmação
 import { exibirToast, fecharTodosModais, abrirConfirmacao } from '../utils/ui.js';
 
 // Variável para guardar o container principal da aba "Minhas Reservas"
 let containerReservas;
 // Variável para injetar o modal de agendamento no DOM
-let containerModalReserva; 
+let containerModalReserva;
 
 /**
  * RF07.2 - Renderiza as reservas do usuário
@@ -21,8 +22,8 @@ export async function renderizarReservas() {
 
     try {
         // 1. Busca os dados da API (GET /api/usuarios/me/reservas)
-        const reservas = await api.consultarReservas(); 
-        
+        const reservas = await api.consultarReservas();
+
         // 2. Separa em "Reservas Ativas" e "Histórico"
         const ativas = reservas.filter(r => r.status === 'ATIVA');
         const historico = reservas.filter(r => r.status !== 'ATIVA');
@@ -31,7 +32,7 @@ export async function renderizarReservas() {
         let html = `
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <h2 class="text-3xl font-bold text-gray-800">Minhas Reservas</h2>
-                
+
                 <h3 class="text-2xl font-semibold text-blue-800 mt-6 border-b pb-2">Reservas Ativas</h3>
                 <div id="reservas-ativas" class="space-y-4 mt-4">
                     ${ativas.length > 0 ? ativas.map(r => ReservaCard(r)).join('') : '<p class="text-gray-600">Nenhuma reserva ativa encontrada.</p>'}
@@ -44,7 +45,7 @@ export async function renderizarReservas() {
             </div>
         `;
         containerReservas.innerHTML = html;
-        
+
         // 4. Adiciona listeners aos botões "Cancelar" e "Reagendar"
         adicionarListenersReservas();
 
@@ -58,15 +59,7 @@ export async function renderizarReservas() {
  */
 function ReservaCard(r) {
     const isAtiva = r.status === 'ATIVA';
-    // Converte a string ISO (ex: "2025-11-20T14:00:00") para um objeto Date
-    const dataObj = new Date(r.data_hora_reserva);
-    const dataFormatada = dataObj.toLocaleString('pt-BR', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
+    const dataFormatada = formatarDataHoraBR(r.data_hora_reserva);
 
     let statusClass = 'text-gray-500';
     if (isAtiva) statusClass = 'text-blue-600';
@@ -96,7 +89,7 @@ function ReservaCard(r) {
  * Adiciona os event listeners para os botões de ação nos cards.
  */
 function adicionarListenersReservas() {
-    
+
     // RF07.3 - Cancelar Reserva
     document.querySelectorAll('.btn-cancelar-reserva').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -117,7 +110,6 @@ function adicionarListenersReservas() {
                 },
                 'perigo' // Tipo do botão (vermelho)
             );
-            // --- FIM DA MODIFICAÇÃO ---
         });
     });
 
@@ -146,16 +138,16 @@ function gerarOpcoesDeData() {
     while (diasAdicionados < 7) {
         const data = new Date(hoje);
         data.setDate(hoje.getDate() + diasVerificados);
-        
+
         const diaDaSemana = data.getDay(); // 0 = Domingo, 6 = Sábado
 
         // Se NÃO for Sábado (6) ou Domingo (0)
         if (diaDaSemana !== 0 && diaDaSemana !== 6) {
-            
+
             let texto = '';
             if (diasVerificados === 0) {
                 texto = "Hoje";
-            } 
+            }
             else if (diasVerificados === 1 && diasAdicionados === 1) {
                 texto = "Amanhã";
             }
@@ -164,13 +156,13 @@ function gerarOpcoesDeData() {
             }
 
             const valor = data.toISOString().split('T')[0];
-            
+
             diasHtml += `<button type="button" class="slot-botao" data-valor="${valor}">${texto}</button>`;
-            
-            diasAdicionados++; 
+
+            diasAdicionados++;
         }
-        
-        diasVerificados++; 
+
+        diasVerificados++;
     }
     return diasHtml;
 }
@@ -207,7 +199,7 @@ export function abrirModalReserva(dados) {
                 <form id="formAgendamento">
                     <p class="text-lg font-semibold">${dados.nome_medicamento}</p>
                     <p class="text-gray-600 mb-4">${dados.nome_ubs}</p>
-                    
+
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Data da Retirada</label>
@@ -216,7 +208,7 @@ export function abrirModalReserva(dados) {
                             </div>
                             <p id="erroReservaData" class="error-message"></p>
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Horário da Retirada (09:00 - 18:00)</label>
                             <div id="container-horario" class="slot-container">
@@ -231,7 +223,7 @@ export function abrirModalReserva(dados) {
                             <p id="erroReservaQuantidade" class="error-message"></p>
                         </div>
                     </div>
-                    
+
                     <div class="pt-6 flex gap-4">
                         <button type="button" class="btnFecharModal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button>
                         <button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Confirmar Reserva</button>
@@ -248,7 +240,7 @@ export function abrirModalReserva(dados) {
     const containerHorario = document.getElementById('container-horario');
 
     modal.querySelectorAll('.btnFecharModal').forEach(btn => btn.addEventListener('click', fecharTodosModais));
-    
+
     containerData.addEventListener('click', (e) => {
         if (e.target.classList.contains('slot-botao')) {
             containerData.querySelectorAll('.slot-botao').forEach(btn => btn.classList.remove('selecionado'));
@@ -268,11 +260,11 @@ export function abrirModalReserva(dados) {
     // --- MODIFICADO: Adiciona fluxo de comprovante ---
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const dataSelecionada = containerData.querySelector('.slot-botao.selecionado')?.dataset.valor;
         const horarioSelecionado = containerHorario.querySelector('.slot-botao.selecionado')?.dataset.valor;
         const quantidade = parseInt(document.getElementById('reservaQuantidade').value);
-        
+
         // Validações
         let formValido = true;
         if (!dataSelecionada) {
@@ -306,10 +298,10 @@ export function abrirModalReserva(dados) {
 
             exibirToast('Reserva criada com sucesso!');
             fecharTodosModais(); // Fecha o modal de agendamento
-            
+
             // 2. Chama a nova função para abrir o modal de comprovante
             abrirModalComprovante(resposta.reserva, dados);
-            
+
             // 3. Atualiza a aba "Minhas Reservas" se ela estiver ativa
             if (document.getElementById('conteudo-reservas').classList.contains('ativo')) {
                 renderizarReservas();
@@ -330,11 +322,9 @@ export function abrirModalReserva(dados) {
  * @param {object} dadosBusca - Os dados da busca (para nomes).
  */
 function abrirModalComprovante(reserva, dadosBusca) {
-    if (!containerModalReserva) return; 
+    if (!containerModalReserva) return;
 
-    const dataFormatada = new Date(reserva.data_hora_reserva).toLocaleString('pt-BR', { 
-        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-    });
+    const dataFormatada = formatarDataHoraBR(reserva.data_hora_reserva);
 
     // Usa o id_reserva como "Código de Confirmação"
     containerModalReserva.innerHTML = `
@@ -351,7 +341,7 @@ function abrirModalComprovante(reserva, dadosBusca) {
                     <p><strong>Data e Hora:</strong> ${dataFormatada}</p>
                     <p><strong>Quantidade:</strong> ${reserva.quantidade_reservada} unidades</p>
                 </div>
-                
+
                 <button type="button" class="btnFecharModal w-full btn-primario py-3 rounded-lg font-semibold mt-8">OK, Entendi</button>
             </div>
         </div>
@@ -365,7 +355,6 @@ function abrirModalComprovante(reserva, dadosBusca) {
         renderizarReservas();
     });
 }
-
 
 /**
  * Abre o modal para RF07.4 - Reagendar Reserva
@@ -425,7 +414,7 @@ function abrirModalReagendamento(reservaId) {
 
     document.getElementById('formReagendamento').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const dataSelecionada = containerDataReag.querySelector('.slot-botao.selecionado')?.dataset.valor;
         const horarioSelecionado = containerHorarioReag.querySelector('.slot-botao.selecionado')?.dataset.valor;
 
@@ -436,14 +425,14 @@ function abrirModalReagendamento(reservaId) {
         }
 
         const novaDataHora = `${dataSelecionada}T${horarioSelecionado}`;
-        
+
         try {
-            await api.reagendarReserva(reservaId, { novaDataHora: novaDataHora }); 
+            await api.reagendarReserva(reservaId, { novaDataHora: novaDataHora });
             exibirToast('Reserva reagendada com sucesso!');
             fecharTodosModais();
             renderizarReservas();
         } catch (err) {
-            alert('Erro ao reagendar: ' + err.message);
+            exibirToast('Erro ao reagendar: ' + err.message, true);
         }
     });
 }
@@ -453,7 +442,7 @@ function abrirModalReagendamento(reservaId) {
  */
 export function initUsuarioReservas(usuario) {
     containerReservas = document.getElementById('conteudo-reservas');
-    
+
     // Busca o container onde os modais de reserva serão injetados
     containerModalReserva = document.getElementById('modal-reserva-container');
     if (!containerModalReserva) {

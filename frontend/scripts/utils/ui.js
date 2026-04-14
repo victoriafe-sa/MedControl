@@ -62,7 +62,7 @@ export function iniciarTimer(duracaoSegundos, timerEl, reenviarBtn) {
     const atualizarTimer = () => {
         const minutos = Math.floor(tempoRestante / 60).toString().padStart(2, '0');
         const segundos = (tempoRestante % 60).toString().padStart(2, '0');
-        
+
         if(timerEl) timerEl.textContent = `${minutos}:${segundos}`;
 
         if (tempoRestante <= 0) {
@@ -75,7 +75,7 @@ export function iniciarTimer(duracaoSegundos, timerEl, reenviarBtn) {
 
     atualizarTimer(); // Executa imediatamente
     timerEl.intervalId = setInterval(atualizarTimer, 1000);
-    
+
     return timerEl.intervalId;
 }
 
@@ -90,7 +90,6 @@ export function abrirConfirmacao(titulo, mensagem, callback, tipo = 'perigo') {
     const modalConfirmacao = document.getElementById('modalConfirmacao');
     if (!modalConfirmacao) return;
 
-    // --- INÍCIO DA CORREÇÃO (Botões de fechar) ---
     // Mapeia os botões de fechar/cancelar DENTRO do modal de confirmação
     const btnCancelar = modalConfirmacao.querySelector('#btnCancelarConfirmacao');
     const btnFecharX = modalConfirmacao.querySelector('.btnFecharModalConfirmacao'); // Usaremos uma classe específica
@@ -110,15 +109,12 @@ export function abrirConfirmacao(titulo, mensagem, callback, tipo = 'perigo') {
         btnFecharX.removeEventListener('click', fecharEsteModal); // Remove antigo
         btnFecharX.addEventListener('click', fecharEsteModal); // Adiciona novo
     }
-    // --- FIM DA CORREÇÃO ---
-
-
     // Popula o conteúdo dinâmico
     document.getElementById('tituloConfirmacao').textContent = titulo;
     document.getElementById('mensagemConfirmacao').textContent = mensagem;
-    
+
     const btnConfirmar = document.getElementById('btnConfirmarAcao');
-    
+
     // Adiciona o texto ao botão de confirmação
     btnConfirmar.textContent = 'Confirmar';
 
@@ -129,7 +125,7 @@ export function abrirConfirmacao(titulo, mensagem, callback, tipo = 'perigo') {
     } else {
         btnConfirmar.classList.add('btn-primario');
     }
-    
+
     // Clona o botão de AÇÃO para remover listeners antigos e adicionar o novo callback
     const novoBtn = btnConfirmar.cloneNode(true);
     btnConfirmar.parentNode.replaceChild(novoBtn, btnConfirmar);
@@ -138,6 +134,6 @@ export function abrirConfirmacao(titulo, mensagem, callback, tipo = 'perigo') {
         callback(); // Executa a ação (ex: cancelarReserva)
         fecharEsteModal(); // Fecha o modal de confirmação
     });
-    
+
     modalConfirmacao.classList.add('ativo');
 }

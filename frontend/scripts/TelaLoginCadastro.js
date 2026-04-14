@@ -39,57 +39,37 @@ document.addEventListener('DOMContentLoaded', () => {
         container.classList.add("painel-direito-ativo");
     }
 
-
     // --- LÓGICA DE LOGIN RF02.1 ---
-    // A função dentro dele será executada sempre que o formulário for "enviado" (submit).
     formularioLogin.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Pega os valores digitados pelo usuário nos campos de input.
         const emailOuCpf = document.getElementById('loginEmailCpf').value;
         const senha = document.getElementById('loginSenha').value;
 
-        // Seleciona o elemento HTML onde as mensagens de feedback (como "Entrando..." ou "Senha incorreta") serão exibidas.
         const elMensagem = document.getElementById('mensagemLogin');
 
-        // Mostra uma mensagem de "carregando" para o usuário saber que algo está acontecendo.
         exibirMensagem(elMensagem, 'Entrando...', false);
 
-        // O bloco try...catch é usado para lidar com erros que podem acontecer
-        // durante a comunicação com o servidor (ex: servidor offline).
         try {
-            // Inicia a requisição de rede assíncrona (fetch) para a API de login.
-            // 'await' pausa a execução da função até que a resposta do servidor chegue.
             const resposta = await fetch('http://localhost:7071/api/login', {
                 method: 'POST', // Define o método HTTP como POST, usado para enviar dados.
                 headers: {
-                    // Informa ao servidor que os dados enviados no corpo (body) estão no formato JSON.
                     'Content-Type': 'application/json'
                 },
-                // Converte o objeto JavaScript {emailOuCpf, senha} em uma string JSON para enviar ao servidor.
                 body: JSON.stringify({ emailOuCpf, senha })
             });
 
-            // Converte a resposta do servidor (que vem como JSON) em um objeto JavaScript.
             const dados = await resposta.json();
 
-            // Verifica se o login foi bem-sucedido, com base na propriedade 'success' enviada pelo servidor.
             if (dados.success) {
-                // Se o login for bem-sucedido, armazena os dados do usuário no 'sessionStorage'.
-                // Isso "mantém" o usuário logado enquanto a aba do navegador estiver aberta.
                 sessionStorage.setItem('medControlUser', JSON.stringify(dados.user));
 
-                // Redireciona o usuário para a página correta com base no seu perfil.
-                // É um operador ternário: SE (dados.user.perfil === 'usuario') ENTÃO vai para 'TelaUsuario.html',
                 // SENÃO (ex: admin) vai para 'Admin.html'.
                 window.location.href = (dados.user.perfil === 'usuario') ? 'TelaUsuario.html' : 'Admin.html';
             } else {
-                // Se 'dados.success' for falso, exibe a mensagem de erro vinda do servidor (ex: "Usuário ou senha inválidos").
-                // O 'true' sinaliza que é uma mensagem de erro (controlando o estilo, ex: cor vermelha).
                 exibirMensagem(elMensagem, dados.message, true);
             }
         } catch (erro) {
-            // Este bloco 'catch' é executado se houver um erro de rede (ex: servidor não respondeu, sem internet).
             exibirMensagem(elMensagem, 'Erro de conexão com o servidor.', true);
         }
     });
@@ -109,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function validarCadastro() {
-        // (Implementação da validação do formulário no lado do cliente)
         limparErros('formularioCadastro');
         let isValid = true;
         const fields = [
@@ -168,12 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (!validarCadastro()) return; // Validação client-side
 
-        // **MODIFICADO**: Adicionado botão de loading
+        // Adicionado botão de loading
         const btnSubmit = formularioCadastro.querySelector('button[type="submit"]');
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Carregando...';
 
-        // Armazena os dados do formulário temporariamente.
         dadosUsuarioTemporario = {
             nome: document.getElementById('cadastroNome').value,
             email: document.getElementById('cadastroEmail').value,
@@ -192,8 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  throw new Error(erroCep.message || 'CEP não retornou dados válidos.');
             }
             cepData = await cepRes.json();
-            
-            // MODIFICAÇÃO 3.1: Remove lat/lon e adiciona campos de endereço
+
             dadosUsuarioTemporario.logradouro = cepData.logradouro || null;
             dadosUsuarioTemporario.bairro = cepData.bairro || null;
             dadosUsuarioTemporario.cidade = cepData.cidade || null;
@@ -209,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- ETAPA 3 (Fluxo) ---
-        // Faz uma requisição ao backend para verificar se e-mail/CPF já existem.
         try {
             const res = await fetch('http://localhost:7071/api/usuarios/verificar-existencia', {
                 method: 'POST',
@@ -237,13 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Se os dados forem únicos, inicia o processo de envio do código de verificação.
             fluxoAtual = 'cadastro';
             await iniciarFluxoVerificacao(dadosUsuarioTemporario.email, 'cadastro');
         } catch (err) {
-            alert('Erro de conexão ao verificar dados.');
+            document.getElementById('erroCadastroNome').textContent = 'Erro de conexão ao verificar dados.';
         }
-        
+
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Cadastrar';
     });
@@ -268,10 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (cep.length === 8) {
             try {
-                // MODIFICADO: Não retorna mais, apenas valida
+                // Não retorna mais, apenas valida
                 const response = await fetch(`http://localhost:7071/api/cep/${cep}`);
                 if (response.ok) {
-                    // **NOVO**: Pega os dados para popular o formulário (opcional)
+                    // Pega os dados para popular o formulário (opcional)
                     // const cepData = await response.json();
                     // document.getElementById('cadastroRua').value = cepData.street || '';
                     // document.getElementById('cadastroBairro').value = cepData.neighborhood || '';
@@ -301,23 +276,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Limpa a mensagem de validação (Ex: "CEP válido")
     document.getElementById('validacaoCadastroCep').textContent = '';
     document.getElementById('validacaoCadastroCep').className = 'validation-message';
-    
+
     // Limpa a mensagem de erro (Ex: "O CEP é obrigatório.")
     document.getElementById('erroCadastroCep').textContent = '';
-    
+
     // Remove as bordas coloridas
     inputCepCadastro.classList.remove('input-success', 'input-error');
 });
 
-
     // --- ETAPA 7 (Fluxo) ---
-    // Função central que envia a requisição para o backend gerar e enviar o código.
     async function iniciarFluxoVerificacao(email, motivo) {
         document.getElementById('emailParaVerificar').textContent = email;
         const msgEl = document.getElementById('mensagemVerificacao');
         exibirMensagem(msgEl, 'Enviando código...', false);
 
-        // Ajusta o texto do modal dependendo se é um cadastro ou recuperação de senha.
         if (motivo === 'cadastro') {
             document.getElementById('tituloModalVerificacao').textContent = 'Verifique seu E-mail';
             document.getElementById('btnVerificarCodigo').textContent = 'Verificar e Cadastrar';
@@ -331,18 +303,15 @@ document.addEventListener('DOMContentLoaded', () => {
         modalVerificacaoEmail.style.display = 'flex'; // Exibe o modal para o usuário.
 
         try {
-            // Faz a chamada à API do backend.
             const res = await fetch('http://localhost:7071/api/usuarios/enviar-codigo-verificacao', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, motivo })
             });
             if (res.ok) {
-                // Se o backend enviou o e-mail com sucesso, inicia o timer no frontend.
                 msgEl.style.display = 'none';
                 iniciarTimer();
             } else {
-                // Caso contrário, exibe a mensagem de erro vinda do backend (ex: e-mail inválido pelo Hunter).
                 const dataErro = await res.json();
                 const mensagem = dataErro.message || 'Falha ao enviar o código de verificação.';
                 exibirMensagem(msgEl, mensagem, true);
@@ -355,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Inicia o cronômetro de 2 minutos na tela.
     function iniciarTimer() {
         clearInterval(timerInterval);
         let tempoRestante = 120;
@@ -376,25 +344,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // Evento para o botão de reenviar o código.
     document.getElementById('btnReenviarCodigo').addEventListener('click', () => {
         const email = (fluxoAtual === 'cadastro') ? dadosUsuarioTemporario.email : emailParaRecuperar;
         iniciarFluxoVerificacao(email, fluxoAtual);
     });
 
     // --- ETAPA 8 e 11 (Fluxo) ---
-    // Evento disparado quando o usuário insere o código e clica em "Verificar".
     document.getElementById('formularioVerificacao').addEventListener('submit', async (e) => {
         e.preventDefault();
         const codigo = document.getElementById('codigoVerificacao').value;
         const msgEl = document.getElementById('mensagemVerificacao');
         const email = (fluxoAtual === 'cadastro') ? dadosUsuarioTemporario.email : emailParaRecuperar;
 
-        // Se o fluxo for de cadastro, a requisição já finaliza o registro.
         if (fluxoAtual === 'cadastro') {
             dadosUsuarioTemporario.codigoVerificacao = codigo;
             try {
-                // Envia todos os dados do usuário (AGORA COM ENDEREÇO) + o código para o endpoint de registro.
                 const res = await fetch('http://localhost:7071/api/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dadosUsuarioTemporario)
                 });

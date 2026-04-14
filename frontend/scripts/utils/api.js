@@ -1,9 +1,5 @@
 // frontend/scripts/utils/api.js
-// --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
-// Importa a função para buscar o usuário logado
 import { getUsuarioAtual } from './auth.js';
-// --- FIM DA MODIFICAÇÃO ---
-
 const BASE_URL = 'http://localhost:7071/api';
 
 /**
@@ -15,7 +11,6 @@ const BASE_URL = 'http://localhost:7071/api';
  */
 async function fetchApi(endpoint, options = {}) {
     try {
-        // --- INÍCIO DA MODIFICAÇÃO (AUDITORIA) ---
         // Adiciona o ID do usuário logado ao header para auditoria
         const usuarioLogado = getUsuarioAtual();
         if (usuarioLogado && usuarioLogado.id) {
@@ -27,8 +22,6 @@ async function fetchApi(endpoint, options = {}) {
             // O backend irá ler este header para salvar o log de auditoria
             options.headers['X-User-ID'] = usuarioLogado.id;
         }
-        // --- FIM DA MODIFICAÇÃO ---
-
         const response = await fetch(`${BASE_URL}${endpoint}`, options);
 
         // Tenta pegar o JSON mesmo se a resposta não for ok (para mensagens de erro)
@@ -212,10 +205,10 @@ export const api = {
 
     // --- FUNÇÃO RF05.5 (Validar Receita) ---
     validarReceita: (codigo) => fetchApi(`/receitas/validar/${codigo}`),
-    
+
     // --- RF08.4: AUDITORIA ---
     listarLogsAuditoria: () => fetchApi('/auditoria'),
-    
+
     // --- ADICIONADO RF10: REGISTRAR RETIRADA ---
     registrarRetirada: (dados) => fetchApi('/retiradas', defaultPostOptions(dados)),
 
@@ -226,12 +219,10 @@ export const api = {
     getRelatorioEstoque: (ubs_id) => fetchApi(`/relatorios/estoque?ubs_id=${ubs_id}`),
     getRelatorioDemanda: (inicio, fim) => fetchApi(`/relatorios/demanda?inicio=${inicio}&fim=${fim}`),
     getIndicadoresDashboard: () => fetchApi('/dashboard/indicadores'),
-
-    // --- INÍCIO DA ADIÇÃO (RF07) ---
     // Adiciona os 4 métodos necessários para o RF07
-    
+
     /**
-     * Cria uma nova reserva. (RF07.1) [cite_start][cite: 878-883]
+     * Cria uma nova reserva. (RF07.1)
      * POST /api/reservas
      * @param {object} dadosReserva - { id_medicamento, id_ubs, quantidadeReservada, dataHoraReserva }
      */
@@ -240,7 +231,7 @@ export const api = {
     },
 
     /**
-     * Busca as reservas do usuário logado. (RF07.2) [cite_start][cite: 884-886]
+     * Busca as reservas do usuário logado. (RF07.2)
      * GET /api/usuarios/me/reservas
      */
     consultarReservas: () => {
@@ -248,9 +239,9 @@ export const api = {
     },
 
     /**
-     * Cancela uma reserva ativa. (RF07.3) [cite_start][cite: 887-890]
+     * Cancela uma reserva ativa. (RF07.3)
      * PUT /api/reservas/{id}/cancelar
-     * @param {string|number} id 
+     * @param {string|number} id
      */
     cancelarReserva: (id) => {
         // Envia um PUT sem corpo
@@ -258,13 +249,12 @@ export const api = {
     },
 
     /**
-     * Reagenda uma reserva ativa. (RF07.4) [cite_start][cite: 891-894]
+     * Reagenda uma reserva ativa. (RF07.4)
      * PUT /api/reservas/{id}/reagendar
-     * @param {string|number} id 
+     * @param {string|number} id
      * @param {object} dadosReagendamento - { novaDataHora: "YYYY-MM-DDTHH:MM" }
      */
     reagendarReserva: (id, dadosReagendamento) => {
         return fetchApi(`/reservas/${id}/reagendar`, defaultPutOptions(dadosReagendamento));
     }
-    // --- FIM DA ADIÇÃO (RF07) ---
 };

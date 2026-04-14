@@ -59,8 +59,8 @@ export async function carregarFarmaceuticos() {
  */
 function abrirModalFarmaceutico(farm = null) {
     limparErrosFormulario('formularioFarmaceutico');
-    formularioFarmaceutico.reset(); 
-    
+    formularioFarmaceutico.reset();
+
     if (farm) {
         estaEditando = true;
         document.getElementById('tituloModalFarmaceutico').textContent = 'Editar Farmacêutico';
@@ -85,7 +85,7 @@ function validarFormulario() {
     let camposValidos = true;
     const nomeInput = document.getElementById('farmNome');
     const crfInput = document.getElementById('farmCrf');
-    
+
     if (!nomeInput.value.trim()) {
         nomeInput.classList.add('input-error');
         document.getElementById('erroFarmNome').textContent = 'O nome é obrigatório.';
@@ -105,12 +105,12 @@ function validarFormulario() {
  */
 async function salvarFarmaceutico(e) {
     e.preventDefault();
-    
+
     if (!validarFormulario()) {
         exibirToast('Verifique os campos obrigatórios.', true);
         return;
     }
-    
+
     const id = document.getElementById('idFarmaceuticoForm').value;
     const dados = {
         nome: document.getElementById('farmNome').value,

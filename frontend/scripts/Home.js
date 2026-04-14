@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resultadosBusca.innerHTML = `<p class="text-red-600 text-center">Não foi possível conectar ao servidor.</p>`;
         }
     });
-    // --- INÍCIO DA MODIFICAÇÃO (Menu Responsivo) ---
     const btnMenu = document.getElementById('mobile-menu-button');
     const menu = document.getElementById('mobile-menu');
 
@@ -78,5 +77,4 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    // --- FIM DA MODIFICAÇÃO ---
 });

@@ -2,12 +2,13 @@
 import { api } from '../utils/api.js';
 import { exibirToast, fecharTodosModais, limparErrosFormulario, exibirMensagemNoModal, iniciarTimer } from '../utils/ui.js';
 import { isValidEmail, isMaisDe18 } from '../utils/validacao.js';
-import { formatarCep, validarCep, preencherValidacaoCep } from '../utils/cep.js';
+import { formatarCep, validarCep, preencherValidacaoCep, configurarCamposCep } from '../utils/cep.js';
+import { formatarNascimentoBR } from '../utils/formatadores.js';
 import { fazerLogout, salvarUsuarioSession, getUsuarioAtual } from '../utils/auth.js';
 
 // --- Variáveis de Estado do Módulo ---
 let usuarioAtual = null;
-let dadosParaSalvar = null; 
+let dadosParaSalvar = null;
 let timerInterval = null;
 let novaSenhaTemporaria = null;
 let acaoGerenciarContaSelecionada = null;
@@ -25,9 +26,7 @@ export function renderizarPerfil() {
     const container = document.getElementById('conteudo-perfil');
     if (!container) return;
 
-    const dataFormatada = usuarioAtual.data_nascimento 
-        ? new Date(usuarioAtual.data_nascimento + 'T00:00:00-03:00').toLocaleDateString('pt-BR')
-        : 'Não informada';
+    const dataFormatada = formatarNascimentoBR(usuarioAtual.data_nascimento);
 
     container.innerHTML = `
         <div class="bg-white p-8 rounded-xl shadow-lg">
@@ -54,7 +53,7 @@ export function renderizarPerfil() {
             </div>
         </div>
     `;
-    
+
     // Adiciona listeners aos botões recém-criados
     document.getElementById('btnEditarPerfil').addEventListener('click', abrirModalEdicaoPerfil);
     document.getElementById('btnAbrirRedefinirSenha').addEventListener('click', abrirModalRedefinirSenha);
@@ -68,7 +67,7 @@ export function renderizarPerfil() {
  */
 function abrirModalEdicaoPerfil() {
     limparErrosFormulario('formularioEditarPerfil');
-    
+
     document.getElementById('editarNome').value = usuarioAtual.nome;
     document.getElementById('editarEmail').value = usuarioAtual.email;
     document.getElementById('editarCpfCns').value = usuarioAtual.cpf_cns;
@@ -89,7 +88,7 @@ function abrirModalEdicaoPerfil() {
 function validarFormularioEdicao() {
     limparErrosFormulario('formularioEditarPerfil');
     let isValid = true;
-    
+
     const camposObrigatorios = {
         'editarNome': 'O nome é obrigatório.',
         'editarEmail': 'O e-mail é obrigatório.',
@@ -106,14 +105,14 @@ function validarFormularioEdicao() {
             isValid = false;
         }
     }
-    
+
     const emailInput = document.getElementById('editarEmail');
     if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
         emailInput.classList.add('input-error');
         document.getElementById('erroEditarEmail').textContent = 'Formato de e-mail inválido.';
         isValid = false;
     }
-    
+
     const nascimentoInput = document.getElementById('editarNascimento');
     if (nascimentoInput.value && !isMaisDe18(nascimentoInput.value)) {
         nascimentoInput.classList.add('input-error');
@@ -146,7 +145,6 @@ async function onFormularioEditarPerfilSubmit(e) {
         data_nascimento: document.getElementById('editarNascimento').value,
     };
 
-    // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
     try {
         const cepData = await api.validarCep(dadosParaSalvar.cep.replace(/\D/g, ''));
         dadosParaSalvar.logradouro = cepData.logradouro || null;
@@ -159,7 +157,7 @@ async function onFormularioEditarPerfilSubmit(e) {
         document.getElementById('erroEditarCep').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
         return; // Interrompe se a busca de CEP falhar
     }
-    
+
     // Etapa 2: Verificar duplicidade
     try {
         const data = await api.verificarExistencia(
@@ -211,30 +209,29 @@ async function salvarPerfil(comVerificacao, codigo = null) {
         } else {
             resposta = await api.atualizarUsuario(id, body);
         }
-        
+
         if (resposta.success) {
-            // --- ATUALIZAÇÃO ---
             // Atualiza os dados locais com o que foi salvo (incluindo endereço)
             usuarioAtual = { ...usuarioAtual, ...dadosParaSalvar };
             salvarUsuarioSession(usuarioAtual);
-            
+
             fecharTodosModais();
             renderizarPerfil(); // Re-renderiza a aba de perfil
-            
+
             // Atualiza a sidebar também
             document.getElementById('userInfoSidebar').innerHTML = `<p class="font-semibold text-gray-800">${usuarioAtual.nome}</p><p class="text-gray-600">${usuarioAtual.email}</p>`;
-            
+
             exibirToast('Perfil atualizado com sucesso!');
         }
     } catch (error) {
-         if (error.status === 409) { 
+         if (error.status === 409) {
             fecharTodosModais();
             modalEditarPerfil.classList.add('ativo');
             const campo = error.data.field === 'email' ? 'editarEmail' : 'editarCpfCns';
             const erroEl = error.data.field === 'email' ? 'erroEditarEmail' : 'erroEditarCpfCns';
             document.getElementById(campo).classList.add('input-error');
             document.getElementById(erroEl).textContent = `Este ${error.data.field} já está cadastrado.`;
-         } else if (error.status === 400 && comVerificacao) { 
+         } else if (error.status === 400 && comVerificacao) {
             exibirMensagemNoModal(document.getElementById('mensagemVerificacaoEdicao'), error.message, true);
          } else {
             // Exibe o erro no modal de edição, caso ele ainda esteja visível
@@ -265,7 +262,7 @@ async function iniciarFluxoVerificacaoEdicao() {
     try {
         await api.enviarCodigoVerificacao(dadosParaSalvar.email, 'alteracao');
         msgEl.style.display = 'none';
-        
+
         const timerEl = document.getElementById('timerEdicao');
         const reenviarBtn = document.getElementById('btnReenviarCodigoEdicao');
         timerInterval = iniciarTimer(120, timerEl, reenviarBtn);
@@ -296,11 +293,11 @@ function abrirModalRedefinirSenha() {
     const form = document.getElementById('formularioRedefinirSenha');
     form.reset();
     limparErrosFormulario('formularioRedefinirSenha');
-    
+
     document.getElementById('passo1Redefinir').style.display = 'block';
     document.getElementById('passo2Redefinir').style.display = 'none';
     form.querySelector('button[type="submit"]').textContent = 'Avançar';
-    
+
     modalRedefinirSenha.classList.add('ativo');
 }
 
@@ -349,7 +346,7 @@ function validarPrimeiroPassoSenha() {
 async function onFormularioRedefinirSenhaSubmit(e) {
     e.preventDefault();
     const passo1Visivel = document.getElementById('passo1Redefinir').style.display !== 'none';
-    
+
     if (passo1Visivel) {
         if (validarPrimeiroPassoSenha()) {
             novaSenhaTemporaria = document.getElementById('redefinirNovaSenha').value;
@@ -362,7 +359,7 @@ async function onFormularioRedefinirSenhaSubmit(e) {
         const erroSenhaAtual = document.getElementById('erroRedefinirSenhaAtual');
         senhaAtualInput.classList.remove('input-error');
         erroSenhaAtual.textContent = '';
-        
+
         if (!senhaAtualInput.value) {
              senhaAtualInput.classList.add('input-error');
              erroSenhaAtual.textContent = 'Por favor, informe sua senha atual.';
@@ -391,7 +388,7 @@ async function onFormularioConfirmarSenhaUsuarioSubmit(e) {
 
     try {
         await api.verificarSenha(usuarioAtual.id, senhaInput.value);
-        
+
         // Senha correta, executa a ação pendente
         if (typeof acaoAposConfirmarSenha === 'function') {
             await acaoAposConfirmarSenha();
@@ -412,7 +409,7 @@ async function desativarPropriaConta() {
         exibirToast('Conta desativada. Você será desconectado.');
         setTimeout(fazerLogout, 500);
     } catch (e) {
-        alert('Erro ao desativar a conta.');
+        exibirToast('Erro ao desativar a conta.', true);
     }
 }
 
@@ -426,10 +423,9 @@ async function excluirPropriaConta() {
         exibirToast('Conta excluída com sucesso. Você será desconectado.');
         setTimeout(fazerLogout, 500);
     } catch (e) {
-        alert('Erro ao excluir a conta.');
+        exibirToast('Erro ao excluir a conta.', true);
     }
 }
-
 
 /**
  * Inicializa o módulo de perfil do usuário.
@@ -451,16 +447,9 @@ export function initUsuarioPerfil(usuarioLogado) {
     document.getElementById('formularioVerificacaoEdicao').addEventListener('submit', onFormularioVerificacaoEdicaoSubmit);
     document.getElementById('formularioConfirmarSenhaUsuario').addEventListener('submit', onFormularioConfirmarSenhaUsuarioSubmit);
 
-    // Listeners do CEP
+    // CEP listeners centralizados
     const cepEditarInput = document.getElementById('editarCep');
-    cepEditarInput.addEventListener('input', () => formatarCep(cepEditarInput));
-    cepEditarInput.addEventListener('blur', () => validarCep(cepEditarInput, document.getElementById('validacaoEditarCep')));
-    cepEditarInput.addEventListener('focus', () => {
-        document.getElementById('validacaoEditarCep').textContent = '';
-        document.getElementById('validacaoEditarCep').className = 'validation-message';
-        document.getElementById('erroEditarCep').textContent = '';
-        cepEditarInput.classList.remove('input-success', 'input-error');
-    });
+    configurarCamposCep(cepEditarInput, document.getElementById('validacaoEditarCep'), document.getElementById('erroEditarCep'));
 
     // Listeners de Reenviar Código
     document.getElementById('btnReenviarCodigoEdicao').addEventListener('click', () => {
@@ -470,16 +459,16 @@ export function initUsuarioPerfil(usuarioLogado) {
 
     // Listeners de Gerenciamento de Conta
     document.querySelector('#modalEscolhaAcaoConta .btnCancelarAcaoConta').addEventListener('click', fecharTodosModais);
-    
+
     document.getElementById('btnConfirmarEscolhaAcaoUsuario').addEventListener('click', () => {
         acaoGerenciarContaSelecionada = document.querySelector('input[name="usuarioAcaoConta"]:checked').value;
-        
+
         if (acaoGerenciarContaSelecionada === 'desativar') {
             acaoAposConfirmarSenha = desativarPropriaConta;
         } else {
             acaoAposConfirmarSenha = excluirPropriaConta;
         }
-        
+
         fecharTodosModais();
         document.getElementById('formularioConfirmarSenhaUsuario').reset();
         limparErrosFormulario('formularioConfirmarSenhaUsuario');

@@ -2,7 +2,8 @@
 import { api } from '../utils/api.js';
 import { exibirToast, fecharTodosModais, limparErrosFormulario, exibirMensagemNoModal, iniciarTimer, abrirConfirmacao } from '../utils/ui.js';
 import { isValidEmail, isMaisDe18 } from '../utils/validacao.js';
-import { formatarCep, validarCep, preencherValidacaoCep } from '../utils/cep.js';
+import { formatarCep, validarCep, preencherValidacaoCep, configurarCamposCep } from '../utils/cep.js';
+import { formatarNascimentoBR } from '../utils/formatadores.js';
 
 // --- Variáveis de Estado do Módulo ---
 let dadosUsuarioAtualParaSalvar = null;
@@ -23,7 +24,7 @@ let modalFormularioUsuario, modalConfirmacao, modalVerificacaoEmail, modalConfir
 function validarFormulario(isEditing) {
     limparErrosFormulario('formularioUsuario');
     let isValid = true;
-    
+
     const camposObrigatorios = {
         'nomeUsuario': 'O nome é obrigatório.',
         'emailUsuario': 'O e-mail é obrigatório.',
@@ -45,7 +46,7 @@ function validarFormulario(isEditing) {
             isValid = false;
         }
     }
-    
+
     // Validações específicas
     const emailInput = document.getElementById('emailUsuario');
     if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
@@ -69,7 +70,7 @@ function validarFormulario(isEditing) {
             isValid = false;
         }
     }
-    
+
     const cepInput = document.getElementById('cepUsuario');
     if (cepInput.value.trim() && !cepInput.classList.contains('input-success')) {
         cepInput.classList.add('input-error');
@@ -95,12 +96,9 @@ export async function carregarUsuarios() {
         usuariosFiltrados.forEach(usuario => {
             const tr = document.createElement('tr');
             tr.className = `border-b border-gray-200 ${!usuario.ativo ? 'bg-red-50 text-gray-500' : ''}`;
-            
-            // Garante que a data seja tratada corretamente
-            const dataNascFormatada = usuario.data_nascimento 
-                ? new Date(usuario.data_nascimento + 'T00:00:00-03:00').toLocaleDateString('pt-BR') 
-                : 'N/A';
-            
+
+            const dataNascFormatada = formatarNascimentoBR(usuario.data_nascimento);
+
             tr.innerHTML = `
                 <td class="p-4">${usuario.nome}</td>
                 <td class="p-4">${usuario.email}</td>
@@ -147,7 +145,7 @@ function abrirModalParaEditar(usuario) {
     usuarioEditadoOriginal = { ...usuario };
     formularioUsuario.reset();
     limparErrosFormulario('formularioUsuario');
-    
+
     const cepInput = document.getElementById('cepUsuario');
     const cepValidationMsg = document.getElementById('validacaoCepUsuario');
     preencherValidacaoCep(cepInput, cepValidationMsg, usuario.cep);
@@ -205,7 +203,7 @@ async function iniciarFluxoVerificacao() {
     document.getElementById('emailParaVerificar').textContent = dadosUsuarioAtualParaSalvar.email;
     const msgEl = document.getElementById('mensagemVerificacao');
     exibirMensagemNoModal(msgEl, 'Enviando código...', false);
-    
+
     const motivo = fluxoVerificacao === 'adicionar' ? 'cadastro' : 'alteracao';
 
     const reenviarBtn = document.getElementById('btnReenviarCodigoAdmin');
@@ -234,11 +232,11 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
     try {
         let resposta;
         if (!estaEditando) {
-            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar); 
+            resposta = await api.registrarAdmin(dadosUsuarioAtualParaSalvar);
         } else if (comVerificacao) {
-            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar); 
+            resposta = await api.atualizarUsuarioComVerificacao(id, dadosUsuarioAtualParaSalvar);
         } else {
-            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar); 
+            resposta = await api.atualizarUsuario(id, dadosUsuarioAtualParaSalvar);
         }
 
         if (resposta.success) {
@@ -259,7 +257,7 @@ async function salvarUsuario(estaEditando, id, comVerificacao) {
             document.getElementById(campo).classList.add('input-error');
             document.getElementById(erroEl).textContent = `Este ${error.data.field} já está cadastrado.`;
         } else {
-            alert('Erro ao salvar usuário: ' + (error.message || 'Erro desconhecido'));
+            exibirToast('Erro ao salvar usuário: ' + (error.message || 'Erro desconhecido'), true);
         }
     }
 }
@@ -295,20 +293,20 @@ async function onFormularioUsuarioSubmit(e) {
     if (!estaEditando) {
         dadosUsuarioAtualParaSalvar.senha = document.getElementById('senhaUsuario').value;
     }
-    
+
     let cepData;
     try {
         cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
-        
+
         dadosUsuarioAtualParaSalvar.logradouro = cepData.logradouro || null;
         dadosUsuarioAtualParaSalvar.bairro = cepData.bairro || null;
         dadosUsuarioAtualParaSalvar.cidade = cepData.cidade || null;
         dadosUsuarioAtualParaSalvar.uf = cepData.uf || null;
 
     } catch (err) {
-        console.error("Erro ao buscar dados do CEP:", err); 
+        console.error("Erro ao buscar dados do CEP:", err);
         document.getElementById('cepUsuario').classList.add('input-error');
-        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; 
+        document.getElementById('erroCepUsuario').textContent = err.message || 'Não foi possível buscar dados para este CEP.';
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Salvar';
         return;
@@ -369,10 +367,10 @@ async function onFormularioUsuarioSubmit(e) {
  */
 async function onFormularioVerificacaoSubmit(e) {
     e.preventDefault();
-    
+
     const codigo = document.getElementById('codigoVerificacao').value;
     const msgEl = document.getElementById('mensagemVerificacao');
-    
+
     if (!codigo || codigo.length < 6) {
         exibirMensagemNoModal(msgEl, 'Código inválido.', true);
         return;
@@ -381,20 +379,20 @@ async function onFormularioVerificacaoSubmit(e) {
     try {
         // 1. Verifica se o código é válido
         await api.verificarCodigo(dadosUsuarioAtualParaSalvar.email, codigo);
-        
+
         // 2. Se válido, anexa o código e pede a senha do admin
         dadosUsuarioAtualParaSalvar.codigoVerificacao = codigo;
-        
+
         const id = (fluxoVerificacao === 'editarTabela') ? usuarioEditadoOriginal.id : null;
         const estaEditando = fluxoVerificacao !== 'adicionar';
 
         acaoAposConfirmarSenha = () => salvarUsuario(estaEditando, id, true);
-        
+
         fecharTodosModais();
         document.getElementById('formularioConfirmarSenha').reset();
         limparErrosFormulario('formularioConfirmarSenha');
         modalConfirmarSenhaAdmin.classList.add('ativo');
-    
+
     } catch (error) {
         // Código inválido ou expirado
         exibirMensagemNoModal(msgEl, error.message || 'Código inválido.', true);
@@ -412,7 +410,7 @@ async function onFormularioConfirmarSenhaSubmit(e) {
 
     try {
         await api.verificarSenha(usuarioAdminAtual.id, senhaAdminInput.value);
-        
+
         // Senha correta, executa a ação pendente
         if (typeof acaoAposConfirmarSenha === 'function') {
             await acaoAposConfirmarSenha(); // Adiciona await caso a ação seja assíncrona
@@ -429,11 +427,11 @@ async function onFormularioConfirmarSenhaSubmit(e) {
  * @param {object} usuarioLogado - O objeto do usuário admin logado.
  */
 export function initAdminUsuarios(usuarioLogado) {
-    // MODIFICADO: Previne reinicialização
+    // Previne reinicialização
     if (document.getElementById('corpoTabelaUsuarios')?.dataset.initialized) return;
 
     usuarioAdminAtual = usuarioLogado;
-    
+
     // Mapeia elementos DOM
     modalFormularioUsuario = document.getElementById('modalFormularioUsuario');
     modalConfirmacao = document.getElementById('modalConfirmacao');
@@ -448,16 +446,9 @@ export function initAdminUsuarios(usuarioLogado) {
 
     // Adiciona Listeners
     document.getElementById('abrirModalAdicionarUsuario').addEventListener('click', abrirModalParaAdicionar);
-    
-    // Listeners do CEP
-    cepUsuarioInput.addEventListener('input', () => formatarCep(cepUsuarioInput));
-    cepUsuarioInput.addEventListener('blur', () => validarCep(cepUsuarioInput, document.getElementById('validacaoCepUsuario')));
-    cepUsuarioInput.addEventListener('focus', () => {
-        document.getElementById('validacaoCepUsuario').textContent = '';
-        document.getElementById('validacaoCepUsuario').className = 'validation-message';
-        document.getElementById('erroCepUsuario').textContent = '';
-        cepUsuarioInput.classList.remove('input-success', 'input-error');
-    });
+
+    // CEP listeners centralizados
+    configurarCamposCep(cepUsuarioInput, document.getElementById('validacaoCepUsuario'), document.getElementById('erroCepUsuario'));
 
     // Listeners de Formulários
     formularioUsuario.addEventListener('submit', onFormularioUsuarioSubmit);
@@ -471,10 +462,10 @@ export function initAdminUsuarios(usuarioLogado) {
             abrirModalParaEditar(JSON.parse(target.dataset.usuario));
         } else if (target.classList.contains('btn-excluir')) {
             const id = target.dataset.id;
-            acaoAposConfirmarSenha = () => excluirUsuario(id); 
+            acaoAposConfirmarSenha = () => excluirUsuario(id);
             document.getElementById('formularioConfirmarSenha').reset();
             limparErrosFormulario('formularioConfirmarSenha');
-            modalConfirmarSenhaAdmin.classList.add('ativo'); 
+            modalConfirmarSenhaAdmin.classList.add('ativo');
         } else if (target.classList.contains('btn-status')) {
             const id = target.dataset.id;
             const statusAtual = target.dataset.statusAtual === 'true';
@@ -485,12 +476,11 @@ export function initAdminUsuarios(usuarioLogado) {
             );
         }
     });
-    
+
     // Listener de Reenviar Código
     document.getElementById('btnReenviarCodigoAdmin').addEventListener('click', () => {
         clearInterval(timerInterval);
         iniciarFluxoVerificacao();
     });
 
-    // REMOVIDO: carregarUsuarios() será chamado pelo Admin.js
 }

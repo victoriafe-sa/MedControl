@@ -1,5 +1,6 @@
 // frontend/scripts/admin/admin-auditoria.js
 import { api } from '../utils/api.js';
+import { formatarDataHoraBR } from '../utils/formatadores.js';
 import { exibirToast } from '../utils/ui.js';
 
 let corpoTabelaAuditoria;
@@ -10,7 +11,7 @@ export async function carregarLogs() {
 
     try {
         const logs = await api.listarLogsAuditoria();
-        
+
         if (logs.length === 0) {
             corpoTabelaAuditoria.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum log de auditoria encontrado.</td></tr>`;
             return;
@@ -21,16 +22,7 @@ export async function carregarLogs() {
             const tr = document.createElement('tr');
             tr.className = `border-b border-gray-200`;
 
-            // Formata a data
-            const dataLog = new Date(log.data_log).toLocaleString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'America/Sao_Paulo' // Ajuste para o fuso horário de Brasília
-            });
+            const dataLog = formatarDataHoraBR(log.data_log);
 
             // Formata os detalhes para exibição
             let detalhes = log.detalhes || '{}';
@@ -63,7 +55,7 @@ export async function carregarLogs() {
 }
 
 export function initAdminAuditoria(usuarioLogado) {
-    // MODIFICADO: Previne reinicialização
+    // Previne reinicialização
     if (document.getElementById('corpoTabelaAuditoria')?.dataset.initialized) return;
 
     corpoTabelaAuditoria = document.getElementById('corpoTabelaAuditoria');
@@ -83,5 +75,4 @@ export function initAdminAuditoria(usuarioLogado) {
 
     btnRecarregarLogs.addEventListener('click', carregarLogs);
 
-    // REMOVIDO: carregarLogs() será chamado pelo Admin.js
 }

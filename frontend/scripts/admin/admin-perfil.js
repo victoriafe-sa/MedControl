@@ -2,7 +2,8 @@
 import { api } from '../utils/api.js';
 import { exibirToast, fecharTodosModais, limparErrosFormulario, exibirMensagemNoModal, iniciarTimer } from '../utils/ui.js';
 import { isValidEmail, isMaisDe18 } from '../utils/validacao.js';
-import { formatarCep, validarCep, preencherValidacaoCep } from '../utils/cep.js';
+import { formatarCep, validarCep, preencherValidacaoCep, configurarCamposCep } from '../utils/cep.js';
+import { formatarNascimentoBR } from '../utils/formatadores.js';
 import { fazerLogout, salvarUsuarioSession } from '../utils/auth.js';
 
 // --- Variáveis de Estado do Módulo ---
@@ -22,11 +23,9 @@ let modalMeuPerfilAdmin, modalEditarPerfilAdmin, modalRedefinirSenhaAdmin,
 function renderizarPerfilAdmin() {
     const container = document.getElementById('conteudoMeuPerfilAdmin');
     if (!container) return;
-    
-    const dataFormatada = usuarioAdminAtual.data_nascimento 
-        ? new Date(usuarioAdminAtual.data_nascimento + 'T00:00:00-03:00').toLocaleDateString('pt-BR') 
-        : 'Não informada';
-    
+
+    const dataFormatada = formatarNascimentoBR(usuarioAdminAtual.data_nascimento);
+
     container.innerHTML = `
         <div class="space-y-5">
             <div><label class="font-semibold text-gray-600">Nome:</label><span class="ml-2 text-gray-800">${usuarioAdminAtual.nome}</span></div>
@@ -45,7 +44,7 @@ function renderizarPerfilAdmin() {
              </div>
         </div>
     `;
-    
+
     // Adiciona listeners aos botões recém-criados
     document.getElementById('btnAbrirModalEditarAdmin').addEventListener('click', abrirModalEdicaoAdmin);
     document.getElementById('btnAbrirModalRedefinirSenhaAdmin').addEventListener('click', abrirModalRedefinirSenhaAdmin);
@@ -62,7 +61,7 @@ function abrirModalEdicaoAdmin() {
     fecharTodosModais();
     const form = document.getElementById('formularioEditarPerfilAdmin');
     limparErrosFormulario('formularioEditarPerfilAdmin');
-    
+
     form.innerHTML = `
         <input type="hidden" id="adminEditEmailOriginal" value="${usuarioAdminAtual.email}">
         <div><label class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="adminEditNome" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAdminAtual.nome}"><p id="erroadminEditNome" class="error-message"></p></div>
@@ -77,27 +76,20 @@ function abrirModalEdicaoAdmin() {
         <div><label class="block text-sm font-medium text-gray-700">Data de Nascimento</label><input type="date" id="adminEditNascimento" class="mt-1 block w-full px-3 py-2 bg-gray-100 rounded-md" value="${usuarioAdminAtual.data_nascimento || ''}"><p id="erroadminEditNascimento" class="error-message"></p></div>
         <div class="pt-4 flex gap-4"><button type="button" class="fechar-modal w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Salvar Alterações</button></div>
     `;
-    
+
     form.onsubmit = onFormularioEditarAdminSubmit;
     form.querySelector('.fechar-modal').addEventListener('click', fecharTodosModais);
-    
+
     // Adiciona listeners do CEP
     const cepInput = form.querySelector('#adminEditCep');
     const validationElement = form.querySelector('#validacaoAdminEditCep');
 
     // Chama a nova função utilitária
     preencherValidacaoCep(cepInput, validationElement, usuarioAdminAtual.cep);
-    
-    // Adiciona os listeners do CEP 
-    cepInput.addEventListener('input', () => formatarCep(cepInput));
-    cepInput.addEventListener('blur', () => validarCep(cepInput, validationElement));
-    cepInput.addEventListener('focus', () => {
-        validationElement.textContent = '';
-        validationElement.className = 'validation-message';
-        document.getElementById('erroadminEditCep').textContent = '';
-        cepInput.classList.remove('input-success', 'input-error');
-    });
-    
+
+    // CEP listeners centralizados
+    configurarCamposCep(cepInput, validationElement, document.getElementById('erroadminEditCep'));
+
     modalEditarPerfilAdmin.classList.add('ativo');
 }
 
@@ -108,7 +100,7 @@ function abrirModalEdicaoAdmin() {
 function validarFormularioEdicaoAdmin() {
     limparErrosFormulario('formularioEditarPerfilAdmin');
     let isValid = true;
-    
+
     const camposObrigatorios = {
         'adminEditNome': 'O nome é obrigatório.',
         'adminEditEmail': 'O e-mail é obrigatório.',
@@ -125,7 +117,7 @@ function validarFormularioEdicaoAdmin() {
             isValid = false;
         }
     }
-    
+
     const emailInput = document.getElementById('adminEditEmail');
     if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
         emailInput.classList.add('input-error');
@@ -166,7 +158,6 @@ async function onFormularioEditarAdminSubmit(e) {
         perfil: usuarioAdminAtual.perfil // Mantém o perfil atual
     };
 
-    // --- CORREÇÃO: Buscar coordenadas ANTES de verificar existência ---
     try {
         const cepData = await api.validarCep(dadosUsuarioAtualParaSalvar.cep.replace(/\D/g, ''));
         // MODIFICAÇÃO 3.3: Remove lat/lon e adiciona campos de endereço
@@ -180,7 +171,7 @@ async function onFormularioEditarAdminSubmit(e) {
         document.getElementById('erroadminEditCep').textContent = err.message || 'Não foi possível buscar dados para este CEP.'; // Modificado
         return; // Interrompe se a busca de CEP falhar
     }
-    
+
     // Etapa 2: Verificar duplicidade
     try {
         const data = await api.verificarExistencia(
@@ -201,7 +192,7 @@ async function onFormularioEditarAdminSubmit(e) {
             hasError = true;
         }
         if (hasError) return;
-        
+
         // Etapa 3: Decidir fluxo
         const emailOriginal = document.getElementById('adminEditEmailOriginal').value;
         const emailAlterado = dadosUsuarioAtualParaSalvar.email.toLowerCase() !== emailOriginal.toLowerCase();
@@ -261,11 +252,10 @@ async function salvarPerfilAdmin(comVerificacao) {
 
         if (resposta.success) {
             // Atualiza os dados locais
-            // --- ATUALIZAÇÃO ---
             // Atualiza os dados locais com o que foi salvo (incluindo endereço)
             usuarioAdminAtual = { ...usuarioAdminAtual, ...dadosUsuarioAtualParaSalvar };
             salvarUsuarioSession(usuarioAdminAtual);
-            
+
             fecharTodosModais();
             exibirToast('Perfil atualizado com sucesso!');
             document.getElementById('boasVindasAdmin').textContent = `Olá, ${usuarioAdminAtual.nome.split(' ')[0]}!`;
@@ -296,7 +286,7 @@ function abrirModalRedefinirSenhaAdmin() {
     fecharTodosModais();
     const form = document.getElementById('formularioRedefinirSenhaAdmin');
     limparErrosFormulario('formularioRedefinirSenhaAdmin');
-    
+
     form.innerHTML = `
         <div id="adminPasso1">
             <div><label class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="adminNovaSenha" class="mt-1 block w-full"><p id="erroAdminNovaSenha" class="error-message"></p></div>
@@ -308,7 +298,7 @@ function abrirModalRedefinirSenhaAdmin() {
         </div>
         <div class="pt-4 flex gap-4"><button type="button" class="fechar-modal w-full bg-gray-200 py-3 rounded-lg font-semibold">Cancelar</button><button type="submit" class="w-full btn-primario py-3 rounded-lg font-semibold">Avançar</button></div>
     `;
-    
+
     form.onsubmit = onFormularioRedefinirSenhaAdminSubmit;
     form.querySelector('.fechar-modal').addEventListener('click', fecharTodosModais);
     modalRedefinirSenhaAdmin.classList.add('ativo');
@@ -320,7 +310,7 @@ function abrirModalRedefinirSenhaAdmin() {
 async function onFormularioRedefinirSenhaAdminSubmit(e) {
     e.preventDefault();
     const passo1Visivel = document.getElementById('adminPasso1').style.display !== 'none';
-    
+
     if (passo1Visivel) {
         // Validação do Passo 1
         let isValid = true;
@@ -355,7 +345,7 @@ async function onFormularioRedefinirSenhaAdminSubmit(e) {
             erroSenhaAtual.textContent = 'A senha atual é obrigatória.';
             return;
         }
-        
+
         try {
             await api.redefinirSenhaLogado(usuarioAdminAtual.id, senhaAtualInput.value, novaSenhaTemporaria);
             fecharTodosModais();
@@ -374,7 +364,7 @@ async function onFormularioVerificacaoAdminSubmit(e) {
     e.preventDefault();
     const codigo = document.getElementById('codigoVerificacao').value;
     const msgEl = document.getElementById('mensagemVerificacao');
-    
+
     if (!codigo || codigo.length < 6) {
         exibirMensagemNoModal(msgEl, 'Código inválido.', true);
         return;
@@ -382,17 +372,17 @@ async function onFormularioVerificacaoAdminSubmit(e) {
 
     try {
         await api.verificarCodigo(dadosUsuarioAtualParaSalvar.email, codigo);
-        
+
         dadosUsuarioAtualParaSalvar.codigoVerificacao = codigo;
-        
+
         // Pede a senha do admin para confirmar a alteração
         acaoAposConfirmarSenha = () => salvarPerfilAdmin(true);
-        
+
         fecharTodosModais();
         document.getElementById('formularioConfirmarSenha').reset();
         limparErrosFormulario('formularioConfirmarSenha');
         modalConfirmarSenhaAdmin.classList.add('ativo');
-    
+
     } catch (error) {
         exibirMensagemNoModal(msgEl, error.message || 'Código inválido.', true);
     }
@@ -409,7 +399,7 @@ async function onFormularioConfirmarSenhaAdminSubmit(e) {
 
     try {
         await api.verificarSenha(usuarioAdminAtual.id, senhaAdminInput.value);
-        
+
         if (typeof acaoAposConfirmarSenha === 'function') {
             await acaoAposConfirmarSenha();
             acaoAposConfirmarSenha = null;
@@ -429,7 +419,7 @@ async function desativarPropriaConta() {
         exibirToast('Conta desativada. Você será desconectado.');
         setTimeout(fazerLogout, 500);
     } catch (e) {
-        alert('Erro ao desativar a conta.');
+        exibirToast('Erro ao desativar a conta.', true);
     }
 }
 
@@ -443,7 +433,7 @@ async function excluirPropriaConta() {
         exibirToast('Conta excluída com sucesso. Você será desconectado.');
         setTimeout(fazerLogout, 500);
     } catch (e) {
-        alert('Erro ao excluir a conta.');
+        exibirToast('Erro ao excluir a conta.', true);
     }
 }
 
@@ -470,16 +460,16 @@ export function initAdminPerfil(usuarioLogado) {
 
     // Listeners dos modais de gerenciamento de conta
     document.querySelector('#modalEscolhaAcaoConta .btnCancelarAcaoConta').addEventListener('click', fecharTodosModais);
-    
+
     document.getElementById('btnConfirmarEscolhaAcao').addEventListener('click', () => {
         const acaoSelecionada = document.querySelector('input[name="acaoConta"]:checked').value;
-        
+
         if (acaoSelecionada === 'desativar') {
             acaoAposConfirmarSenha = desativarPropriaConta;
         } else {
             acaoAposConfirmarSenha = excluirPropriaConta;
         }
-        
+
         fecharTodosModais();
         document.getElementById('formularioConfirmarSenha').reset();
         limparErrosFormulario('formularioConfirmarSenha');
@@ -491,7 +481,7 @@ export function initAdminPerfil(usuarioLogado) {
     // Para evitar conflitos, a lógica foi movida para os módulos específicos
     // e o listener central só verifica a senha e chama 'acaoAposConfirmarSenha'.
     // Vamos garantir que o listener de `admin-usuarios` também use `acaoAposConfirmarSenha`.
-    
+
     // Este listener agora é compartilhado, vamos usar o do `admin-usuarios.js`
     // e apenas garantir que o de verificação de código (para edição de perfil)
     // também use o fluxo correto.
@@ -504,7 +494,7 @@ export function initAdminPerfil(usuarioLogado) {
             await onFormularioVerificacaoAdminSubmit(e);
         }
     });
-    
+
     // Sobrescreve o listener de confirmação de senha
     document.getElementById('formularioConfirmarSenha').onsubmit = onFormularioConfirmarSenhaAdminSubmit;
 

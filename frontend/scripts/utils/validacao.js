@@ -20,12 +20,12 @@ export function isMaisDe18(dataNasc) {
     try {
         const hoje = new Date();
         const dezoitoAnosAtras = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
-        
+
         // Corrige o problema de fuso horário ao comparar datas
         // Cria a data de nascimento em UTC para evitar deslocamentos
         const dataNascimentoUTC = new Date(dataNasc + 'T00:00:00Z');
-        
-        // Ajusta para o fuso horário local (ex: Brasília -3h) se necessário, 
+
+        // Ajusta para o fuso horário local (ex: Brasília -3h) se necessário,
         // mas para esta lógica, comparar UTC com UTC (implícito do 'new Date()') é mais seguro.
         // A forma mais simples é garantir que ambas as datas estão em UTC "meia-noite"
         const dataNascObj = new Date(Date.UTC(
@@ -33,7 +33,7 @@ export function isMaisDe18(dataNasc) {
             dataNascimentoUTC.getUTCMonth(),
             dataNascimentoUTC.getUTCDate()
         ));
-        
+
         const dezoitoAnosAtrasObj = new Date(Date.UTC(
             dezoitoAnosAtras.getUTCFullYear(),
             dezoitoAnosAtras.getUTCMonth(),

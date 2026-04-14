@@ -1,5 +1,6 @@
 // frontend/scripts/admin/admin-relatorios.js
 import { api } from '../utils/api.js';
+import { formatarDataBR } from '../utils/formatadores.js';
 import { exibirToast } from '../utils/ui.js';
 
 // Armazena a instância do gráfico para destruí-la antes de recriar
@@ -32,7 +33,7 @@ async function carregarFiltros() {
 async function carregarDashboard() {
     try {
         const indicadores = await api.getIndicadoresDashboard();
-        
+
         // 1. Renderizar Indicadores (Estoque Crítico e Mais Pesquisados)
         renderizarIndicadores(indicadores.estoqueCritico, indicadores.maisPesquisados);
 
@@ -98,18 +99,13 @@ function renderizarGraficoDemanda(projecaoDemanda) {
     }
 
     const ctx = canvasGraficoDemanda.getContext('2d');
-    
+
     // --- CORREÇÃO: Adicionar verificação de nulidade ---
     // Garante que projecaoDemanda é um array, mesmo que a API falhe
-    const dadosProjecao = projecaoDemanda || []; 
-    
+    const dadosProjecao = projecaoDemanda || [];
+
     // Formata os dados para o Chart.js
-    // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
-    // Substitui '-' por '/' para forçar o parse como data local, não UTC
-    const labels = dadosProjecao.map(item => 
-        new Date(item.dia.replace(/-/g, '/')).toLocaleDateString('pt-BR')
-    );
-    // --- FIM DA MODIFICAÇÃO ---
+    const labels = dadosProjecao.map(item => formatarDataBR(item.dia));
     const data = dadosProjecao.map(item => item.total_itens);
 
     meuGraficoDemanda = new Chart(ctx, {
@@ -145,7 +141,6 @@ function renderizarGraficoDemanda(projecaoDemanda) {
     });
 }
 
-
 /**
  * RF09.1 - Busca e renderiza o relatório de estoque.
  * @param {string} ubs_id
@@ -153,10 +148,10 @@ function renderizarGraficoDemanda(projecaoDemanda) {
 async function buscarRelatorioEstoque(ubs_id) {
     if (!tabelaRelatorioEstoqueCorpo) return;
     tabelaRelatorioEstoqueCorpo.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando...</td></tr>';
-    
+
     try {
         const dados = await api.getRelatorioEstoque(ubs_id);
-        
+
         tabelaRelatorioEstoqueCorpo.innerHTML = '';
         if (dados.length === 0) {
             tabelaRelatorioEstoqueCorpo.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum item de estoque encontrado.</td></tr>';
@@ -164,35 +159,8 @@ async function buscarRelatorioEstoque(ubs_id) {
         }
 
         dados.forEach(item => {
-            // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DE DATA) ---
-            let dataValidade = 'N/A';
-            if (item.data_validade) {
-                try {
-                    let dataObj;
-                    if (typeof item.data_validade === 'string') {
-                        // Se for string (ex: "2027-10-01"), substitui '-' por '/'
-                        dataObj = new Date(item.data_validade.replace(/-/g, '/'));
-                    } else if (typeof item.data_validade === 'number') {
-                        // Se for número (timestamp), usa diretamente
-                        dataObj = new Date(item.data_validade);
-                    } else {
-                        // Tenta criar a data com o que vier
-                        dataObj = new Date(item.data_validade);
-                    }
-                    
-                    // Verifica se a data criada é válida
-                    if (isNaN(dataObj.getTime())) {
-                        dataValidade = 'Inválida';
-                    } else {
-                        dataValidade = dataObj.toLocaleDateString('pt-BR');
-                    }
-                } catch (e) {
-                    console.error("Erro ao formatar data:", item.data_validade, e);
-                    dataValidade = 'Inválida';
-                }
-            }
-            // --- FIM DA MODIFICAÇÃO ---
-            
+            const dataValidade = formatarDataBR(item.data_validade);
+
             let statusCor = 'text-green-600';
             if (item.status === 'Vencido') statusCor = 'text-red-700 bg-red-100 font-bold';
             else if (item.status === 'Crítico') statusCor = 'text-red-600 font-medium';
@@ -223,45 +191,18 @@ async function buscarRelatorioEstoque(ubs_id) {
  */
 async function buscarRelatorioDemanda(inicio, fim) {
     if (!tabelaRelatorioDemandaCorpo) return;
-    // --- INÍCIO DA MODIFICAÇÃO ---
     tabelaRelatorioDemandaCorpo.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
-    // --- FIM DA MODIFICAÇÃO ---
-
     try {
         const dados = await api.getRelatorioDemanda(inicio, fim);
-        
+
         tabelaRelatorioDemandaCorpo.innerHTML = '';
         if (dados.length === 0) {
-            // --- INÍCIO DA MODIFICAÇÃO ---
             tabelaRelatorioDemandaCorpo.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma retirada encontrada no período.</td></tr>';
-            // --- FIM DA MODIFICAÇÃO ---
             return;
         }
 
         dados.forEach(item => {
-            // --- INÍCIO DA MODIFICAÇÃO (CORREÇÃO DATA INVÁLIDA) ---
-            let dataRetirada = 'N/A';
-            // O backend agora envia "YYYY-MM-DD" como string ou null.
-            if (item.dia_retirada && typeof item.dia_retirada === 'string') {
-                try {
-                    // `item.dia_retirada` está no formato "YYYY-MM-DD".
-                    // `new Date("YYYY-MM-DD")` pode interpretar como UTC (meia-noite).
-                    // `new Date("YYYY/MM/DD")` interpreta como data local.
-                    // Substituir hífens por barras resolve o problema de fuso horário.
-                    const dataObj = new Date(item.dia_retirada.replace(/-/g, '/')); 
-                    
-                    if (isNaN(dataObj.getTime())) {
-                        dataRetirada = 'Inválida'; // Fallback caso a string seja "0000-00-00" etc.
-                    } else {
-                        dataRetirada = dataObj.toLocaleDateString('pt-BR');
-                    }
-                } catch (e) {
-                    console.error("Erro ao formatar data de retirada:", item.dia_retirada, e);
-                    dataRetirada = 'Inválida';
-                }
-            }
-            // Se item.dia_retirada for null, continua como 'N/A'.
-            // --- FIM DA MODIFICAÇÃO (CORREÇÃO DATA INVÁLIDA) ---
+            const dataRetirada = formatarDataBR(item.dia_retirada);
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -270,15 +211,12 @@ async function buscarRelatorioDemanda(inicio, fim) {
                 <td class="p-3 text-gray-600">${item.principio_ativo}</td>
                 <td class="p-3 font-medium">${item.total_retirado}</td>
             `;
-            // --- FIM DA MODIFICAÇÃO ---
             tabelaRelatorioDemandaCorpo.appendChild(tr);
         });
 
     } catch (erro) {
         exibirToast(`Erro ao carregar relatório de demanda: ${erro.message}`, true);
-        // --- INÍCIO DA MODIFICAÇÃO ---
         tabelaRelatorioDemandaCorpo.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${erro.message}</td></tr>`;
-        // --- FIM DA MODIFICAÇÃO ---
     }
 }
 
@@ -288,8 +226,8 @@ async function buscarRelatorioDemanda(inicio, fim) {
  */
 export function carregarTodosRelatorios() {
     // Adiciona guarda para caso os elementos não estejam prontos
-    if (!tabelaRelatorioEstoqueCorpo || !filtroRelatorioUBS) return; 
-    
+    if (!tabelaRelatorioEstoqueCorpo || !filtroRelatorioUBS) return;
+
     // Coleta os valores dos filtros
     const filtros = {
         ubs_id: filtroRelatorioUBS.value || '',
@@ -308,7 +246,7 @@ export function carregarTodosRelatorios() {
  * @param {object} usuarioLogado
  */
 export function initAdminRelatorios(usuarioLogado) {
-    // MODIFICADO: Previne reinicialização
+    // Previne reinicialização
     if (document.getElementById('graficoDemanda')?.dataset.initialized) return;
 
     // Mapeamento dos elementos
@@ -319,7 +257,7 @@ export function initAdminRelatorios(usuarioLogado) {
     tabelaRelatorioDemandaCorpo = document.getElementById('tabelaRelatorioDemandaCorpo');
     containerDashboardIndicadores = document.getElementById('containerDashboardIndicadores');
     canvasGraficoDemanda = document.getElementById('graficoDemanda');
-    
+
     // ***** INÍCIO DA MODIFICAÇÃO *****
     const btnBaixarRelatorio = document.getElementById('btnBaixarRelatorio');
     // ***** FIM DA MODIFICAÇÃO *****
@@ -333,11 +271,9 @@ export function initAdminRelatorios(usuarioLogado) {
     // Carregar filtros (só precisa ser feito uma vez)
     carregarFiltros();
 
-    // REMOVIDO: carregarTodosRelatorios() será chamado pelo Admin.js
-
     // Adicionar Listeners
     document.getElementById('btnAplicarFiltros').addEventListener('click', carregarTodosRelatorios);
-    
+
     // ***** INÍCIO DA MODIFICAÇÃO *****
     btnBaixarRelatorio.addEventListener('click', baixarRelatorioHTML);
     // ***** FIM DA MODIFICAÇÃO *****
@@ -360,7 +296,7 @@ function baixarRelatorioHTML() {
     // Pega o HTML do container .bg-white que envolve o relatório
     const relatorioEstoqueHTML = document.getElementById('tabelaRelatorioEstoqueCorpo').closest('.bg-white').innerHTML;
     const relatorioDemandaHTML = document.getElementById('tabelaRelatorioDemandaCorpo').closest('.bg-white').innerHTML;
-    
+
     // 3. Obter imagem do gráfico como Base64
     let graficoImgSrc = '';
     try {
@@ -444,7 +380,7 @@ function baixarRelatorioHTML() {
 <body class="bg-gray-100 p-8">
     <div class="max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Relatório de Gestão MedControl</h1>
-        
+
         <div class="bg-white p-4 rounded-xl shadow-md mb-8">
             <h3 class="text-lg font-semibold mb-2">Filtros Aplicados (em ${dataFiltro})</h3>
             <p><strong>UBS:</strong> ${ubsFiltro}</p>
@@ -486,7 +422,7 @@ function baixarRelatorioHTML() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     exibirToast("Relatório baixado com sucesso!");
 }
 // ***** FIM DA MODIFICAÇÃO *****

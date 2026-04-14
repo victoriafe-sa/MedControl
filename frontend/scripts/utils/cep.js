@@ -56,15 +56,33 @@ export async function validarCep(inputElement, validationElement) {
 export function preencherValidacaoCep(inputElement, validationElement, cepValue) {
     if (!inputElement || !validationElement) return;
 
-    // Limpa o estado
     inputElement.classList.remove('input-success', 'input-error');
     validationElement.textContent = '';
     validationElement.className = 'validation-message';
 
-    // Se o CEP do usuário já for válido (completo, XXXXX-XXX), marca como sucesso.
     if (cepValue && cepValue.length === 9) {
         inputElement.classList.add('input-success');
         validationElement.textContent = 'CEP válido';
         validationElement.classList.add('success');
     }
+}
+
+/**
+ * Configura todos os listeners de um campo CEP (input, blur, focus) de uma só vez.
+ * Elimina a necessidade de repetir o mesmo bloco de 3 listeners em cada módulo.
+ * @param {HTMLInputElement} inputElement - O campo de input do CEP.
+ * @param {HTMLElement} validationElement - O <p> que exibe "CEP válido/inválido".
+ * @param {HTMLElement} [erroElement=null] - O <p> que exibe erros de formulário (opcional).
+ */
+export function configurarCamposCep(inputElement, validationElement, erroElement = null) {
+    if (!inputElement || !validationElement) return;
+
+    inputElement.addEventListener('input', () => formatarCep(inputElement));
+    inputElement.addEventListener('blur', () => validarCep(inputElement, validationElement));
+    inputElement.addEventListener('focus', () => {
+        validationElement.textContent = '';
+        validationElement.className = 'validation-message';
+        if (erroElement) erroElement.textContent = '';
+        inputElement.classList.remove('input-success', 'input-error');
+    });
 }

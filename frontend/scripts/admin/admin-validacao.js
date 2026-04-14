@@ -1,6 +1,7 @@
 // frontend/scripts/admin/admin-validacao.js
 import { api } from '../utils/api.js';
 import { exibirToast, abrirConfirmacao } from '../utils/ui.js';
+import { popularSelect } from '../utils/formatadores.js';
 
 // Caches de dados
 let usuariosPacientes = [];
@@ -17,10 +18,7 @@ let selectUsuario, selectUbs, selectMedicamento, inputQuantidade,
     btnAdicionarItem, tabelaCestaCorpo, btnConfirmarRetirada,
     containerValidacao;
 
-// --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
 let inputCodigoReceita, btnValidarReceita, resultadoValidacaoReceita;
-// --- FIM DA MODIFICAÇÃO RF05.5 ---
-
 /**
  * Carrega dados essenciais para os dropdowns.
  * MODIFICADO: Função exportada para ser chamada pelo Admin.js
@@ -36,7 +34,7 @@ export async function carregarDadosValidacao() {
 
         // Busca todas as UBS
         const todasUbs = await api.listarUbs();
-        
+
         ubsPermitidas = todasUbs; // Por enquanto, permite todas
         popularSelect(selectUbs, ubsPermitidas, 'id_ubs', 'nome', 'Selecione uma UBS...');
 
@@ -50,15 +48,12 @@ export async function carregarDadosValidacao() {
         renderizarCesta();
         carregarEstoqueDaUbs(); // Limpa o select de medicamentos
 
-        // --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
         // Limpa o validador de receita
         if (inputCodigoReceita) inputCodigoReceita.value = '';
         if (resultadoValidacaoReceita) {
             resultadoValidacaoReceita.innerHTML = '';
             resultadoValidacaoReceita.style.display = 'none';
         }
-        // --- FIM DA MODIFICAÇÃO RF05.5 ---
-
     } catch (erro) {
         exibirToast(`Erro ao carregar dados: ${erro.message}`, true);
     }
@@ -76,7 +71,7 @@ function carregarEstoqueDaUbs() {
     }
 
     // Filtra o estoque cacheado para a UBS selecionada
-    estoqueUbsAtual = estoqueCompleto.filter(item => 
+    estoqueUbsAtual = estoqueCompleto.filter(item =>
         item.id_ubs === idUbsSelecionada && item.quantidade > 0
     );
 
@@ -144,7 +139,6 @@ function exibirResultadoValidacao(mensagem, status) {
 
 // --- FIM DAS FUNÇÕES RF05.5 ---
 
-
 /**
  * Adiciona o item selecionado à cesta de retirada.
  */
@@ -167,7 +161,7 @@ function adicionarItemCesta() {
         exibirToast('Item de estoque não encontrado.', true);
         return;
     }
-    
+
     if (quantidade > itemEstoque.quantidade) {
         exibirToast(`Quantidade indisponível. Máximo: ${itemEstoque.quantidade}`, true);
         return;
@@ -190,7 +184,7 @@ function adicionarItemCesta() {
     });
 
     renderizarCesta();
-    
+
     // Limpa campos
     selectMedicamento.value = '';
     inputQuantidade.value = '';
@@ -259,7 +253,7 @@ function confirmarRetirada() {
             quantidade: item.quantidade
         }))
     };
-    
+
     abrirConfirmacao(
         'Confirmar Retirada',
         `Você confirma a retirada de ${cestaDeRetirada.length} tipo(s) de medicamento(s) para o paciente selecionado? Esta ação atualizará o estoque.`,
@@ -267,19 +261,19 @@ function confirmarRetirada() {
             try {
                 await api.registrarRetirada(dadosRetirada);
                 exibirToast('Retirada registrada com sucesso!');
-                
+
                 // Limpa tudo
                 cestaDeRetirada = [];
                 renderizarCesta();
                 selectUsuario.value = '';
                 // Não reseta a UBS, o usuário pode querer fazer outra retirada
-                
+
                 // Recarrega o estoque (pois ele mudou)
                 estoqueCompleto = await api.listarEstoque();
-                
+
                 // --- CORREÇÃO: Atualiza o dropdown de medicamentos da UBS selecionada ---
-                carregarEstoqueDaUbs(); 
-                
+                carregarEstoqueDaUbs();
+
             } catch (erro) {
                 exibirToast(`Erro ao confirmar retirada: ${erro.message}`, true);
             }
@@ -287,27 +281,18 @@ function confirmarRetirada() {
     );
 }
 
-/**
- * Utilitário para popular selects.
- */
-function popularSelect(selectEl, lista, valorKey, textoKey, placeholder) {
-    if (!selectEl) return;
-    selectEl.innerHTML = `<option value="">${placeholder}</option>`;
-    lista.forEach(item => {
-        selectEl.innerHTML += `<option value="${item[valorKey]}">${item[textoKey]}</option>`;
-    });
-}
+// popularSelect importado de utils/formatadores.js
 
 /**
  * Inicializa o módulo de validação/retirada.
  * @param {object} usuario - O usuário admin/farmacêutico logado.
  */
 export function initAdminValidacao(usuario) {
-    // MODIFICADO: Previne reinicialização
+    // Previne reinicialização
     if (document.getElementById('containerValidacao')?.dataset.initialized) return;
-    
+
     usuarioLogado = usuario;
-    
+
     // Mapeamento dos elementos (RF05.6)
     containerValidacao = document.getElementById('containerValidacao');
     selectUsuario = document.getElementById('validacaoSelectUsuario');
@@ -318,26 +303,21 @@ export function initAdminValidacao(usuario) {
     tabelaCestaCorpo = document.getElementById('validacaoTabelaCestaCorpo');
     btnConfirmarRetirada = document.getElementById('validacaoBtnConfirmar');
 
-    // --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
     // Mapeamento dos elementos (RF05.5)
     inputCodigoReceita = document.getElementById('inputCodigoReceita');
     btnValidarReceita = document.getElementById('btnValidarReceita');
     resultadoValidacaoReceita = document.getElementById('resultadoValidacaoReceita');
-    // --- FIM DA MODIFICAÇÃO RF05.5 ---
-
     if (!containerValidacao || !selectUsuario || !selectUbs || !selectMedicamento) {
         console.warn('Elementos da aba Validação ainda não estão no DOM.');
         return;
     }
     containerValidacao.dataset.initialized = true; // Marca como inicializado
 
-    // REMOVIDO: carregarDadosIniciais() será chamado pelo Admin.js
-
     // Adicionar Listeners (RF05.6)
     selectUbs.addEventListener('change', carregarEstoqueDaUbs);
     btnAdicionarItem.addEventListener('click', adicionarItemCesta);
     btnConfirmarRetirada.addEventListener('click', confirmarRetirada);
-    
+
     tabelaCestaCorpo.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-remover-cesta')) {
             const idEstoque = parseInt(e.target.dataset.idEstoque);
@@ -345,8 +325,6 @@ export function initAdminValidacao(usuario) {
         }
     });
 
-    // --- INÍCIO DA MODIFICAÇÃO RF05.5 ---
     // Adicionar Listener (RF05.5)
     btnValidarReceita.addEventListener('click', handleValidarReceita);
-    // --- FIM DA MODIFICAÇÃO RF05.5 ---
 }

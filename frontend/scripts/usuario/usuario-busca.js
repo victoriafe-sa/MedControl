@@ -1,15 +1,14 @@
 // frontend/scripts/usuario/usuario-busca.js
 import { api } from '../utils/api.js';
+import { exibirToast } from '../utils/ui.js';
 // --- ADIÇÃO RF07 ---
 // Importa a função para abrir o modal de reserva (que será criada no novo módulo)
-import { abrirModalReserva } from './usuario-reservas.js'; 
-// --- FIM DA ADIÇÃO RF07 ---
-
+import { abrirModalReserva } from './usuario-reservas.js';
 // 🟩 Variáveis globais do mapa e dados
 let mapa = null;
 let marcadores = [];
 let listaUbsCompleta = []; // Armazena as UBSs retornadas da API para reordenação
-let medicamentoBuscado = null; // MODIFICADO: Armazena o nome do medicamento buscado
+let medicamentoBuscado = null; // Armazena o nome do medicamento buscado
 
 // =========================================================================
 // FUNÇÕES DE UTILIDADE (HAERSINE)
@@ -23,7 +22,7 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
     const R = 6371; // Raio da Terra em km
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a = 
+    const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -42,11 +41,8 @@ function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
     const divMapa = document.getElementById('mapaUbs');
     if (!divMapa) return;
 
-    // --- INÍCIO DA CORREÇÃO (Bug Mapa) ---
     // Garante que o mapa seja exibido
     divMapa.style.display = 'block';
-    // --- FIM DA CORREÇÃO ---
-
     // 1. Inicializar o Mapa (ou limpar o existente)
     if (mapa) {
         mapa.remove();
@@ -68,17 +64,14 @@ function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
     });
-    
-    // --- INÍCIO DA CORREÇÃO (Bug Mapa) ---
+
     // O erro 'ubsComCoords is not defined' ocorria aqui.
     // A variável 'ubsComCoords' não existia.
     // Criamos ela filtrando a 'listaUbs' recebida, garantindo que só UBSs
     // com coordenadas válidas (enviadas pelo Controller corrigido) sejam usadas.
-    const ubsComCoords = listaUbs.filter(ubs => 
+    const ubsComCoords = listaUbs.filter(ubs =>
         ubs.latitude != null && ubs.longitude != null
     );
-    // --- FIM DA CORREÇÃO ---
-
     // --- 5. Adicionar Marcadores das UBSs ---
     ubsComCoords.forEach(ubs => { // Agora 'ubsComCoords' está definida
         const lat = parseFloat(ubs.latitude);
@@ -94,11 +87,9 @@ function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
                 .bindPopup(`
                     <b>${ubs.nome}</b><br>
                     ${ubs.endereco}<br>
-                    Disponível: ${ubs.quantidade_disponivel}<br> 
+                    Disponível: ${ubs.quantidade_disponivel}<br>
                     ${distanciaTexto}
                 `);
-            // --- FIM DA MODIFICAÇÃO ---
-
             marcadores.push(marker);
             todosPontos.push([lat, lng]);
         }
@@ -123,7 +114,7 @@ function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
     if (todosPontos.length > 0) {
         mapa.fitBounds(todosPontos, { padding: [50, 50] });
     }
-    
+
     // Força o mapa a recalcular seu tamanho (corrige bug de renderização parcial)
     setTimeout(() => { mapa.invalidateSize() }, 100);
 }
@@ -139,15 +130,14 @@ function exibirMapa(listaUbs, latUsuario = null, lngUsuario = null) {
 function renderizarResultados(listaUbs) {
     const containerResultados = document.getElementById('containerResultados');
     containerResultados.innerHTML = '';
-    
+
     let htmlResultados = '<ul class="space-y-4">';
 
     listaUbs.forEach(ubs => {
         const distanciaTexto = ubs.distancia ? ` (${ubs.distancia} km)` : '';
 
-        // --- INÍCIO DA MODIFICAÇÃO RF07 ---
         // 1. Altera 'ubs.quantidade' para 'ubs.quantidade_disponivel' (vinda da API)
-        // 2. Adiciona o botão "Reservar" com data-attributes para o RF07.1 [cite: 1769-1770]
+        // 2. Adiciona o botão "Reservar" com data-attributes para o RF07.1
         htmlResultados += `
             <li class="bg-white p-6 rounded-lg shadow-md flex justify-between items-center">
                 <div>
@@ -155,17 +145,16 @@ function renderizarResultados(listaUbs) {
                     <p class="text-gray-600">${ubs.endereco}</p>
                     <p class="text-green-600 font-medium">Disponível: ${ubs.quantidade_disponivel} unidades${distanciaTexto}</p>
                 </div>
-                
+
                 <button class="btn-reservar btn-primario py-2 px-6 rounded-lg font-semibold"
                         data-id-medicamento="${ubs.id_medicamento}"
                         data-id-ubs="${ubs.id_ubs}"
-                        data-nome-med="${medicamentoBuscado}" 
+                        data-nome-med="${medicamentoBuscado}"
                         data-nome-ubs="${ubs.nome}"
                         data-disponivel="${ubs.quantidade_disponivel}">
                     Reservar
                 </button>
             </li>`;
-        // --- FIM DA MODIFICAÇÃO RF07 ---
     });
 
     htmlResultados += '</ul>';
@@ -187,9 +176,7 @@ function renderizarResultados(listaUbs) {
             });
         });
     });
-    // --- FIM DA ADIÇÃO RF07 ---
 }
-
 
 /**
  * Lida com o resultado de sucesso da Geolocalização.
@@ -200,7 +187,7 @@ function mostrarUbsProximas(posicao) {
     const lngUsuario = posicao.coords.longitude;
     const statusGps = document.getElementById('mensagemStatus');
     statusGps.textContent = `Resultados ordenados por proximidade:`;
-    
+
     // 1. Calcular distância e ordenar UBSs
     let ubsOrdenadas = listaUbsCompleta.map(ubs => {
         // --- MODIFICAÇÃO RF07 ---
@@ -211,13 +198,11 @@ function mostrarUbsProximas(posicao) {
         // da UBS na busca do RF06.
         const ubsLat = parseFloat(ubs.latitude); // Assumindo que a API do RF06 ainda retorna isso
         const ubsLng = parseFloat(ubs.longitude); // Assumindo que a API do RF06 ainda retorna isso
-        // --- FIM DA MODIFICAÇÃO ---
-
         let distancia = 'N/A';
         if (!isNaN(ubsLat) && !isNaN(ubsLng)) {
             distancia = calcularDistancia(latUsuario, lngUsuario, ubsLat, ubsLng).toFixed(1);
         }
-        
+
         return { ...ubs, distancia: distancia };
     }).sort((a, b) => {
         if (a.distancia === 'N/A') return 1;
@@ -252,7 +237,7 @@ function erroGeolocalizacao(error) {
             break;
     }
     statusGps.textContent = mensagemErro;
-    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario'); 
+    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario');
     btnBuscarGps.textContent = 'Erro ao usar GPS. Tentar novamente?';
     btnBuscarGps.disabled = false;
 }
@@ -262,10 +247,10 @@ function erroGeolocalizacao(error) {
  * (Nenhuma alteração nesta função)
  */
 function iniciarBuscaGps() {
-    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario'); 
+    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario');
     btnBuscarGps.disabled = true;
     btnBuscarGps.textContent = 'Obtendo localização...';
-    
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(mostrarUbsProximas, erroGeolocalizacao, {
             enableHighAccuracy: true,
@@ -273,12 +258,11 @@ function iniciarBuscaGps() {
             maximumAge: 0
         });
     } else {
-        alert("Geolocalização não é suportada por este navegador.");
+        exibirToast("Geolocalização não é suportada por este navegador.", true);
         btnBuscarGps.disabled = false;
         btnBuscarGps.textContent = 'Ordenar pela localização (GPS)';
     }
 }
-
 
 // =========================================================================
 // INICIALIZAÇÃO DA BUSCA
@@ -290,18 +274,17 @@ function iniciarBuscaGps() {
  */
 async function handleSearch(e) {
     e.preventDefault();
-    
+
     const inputNomeMedicamento = document.getElementById('nomeMedicamento');
     const containerResultados = document.getElementById('containerResultados');
     const mensagemStatus = document.getElementById('mensagemStatus');
-    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario'); 
-    
+    const btnBuscarGps = document.getElementById('btnBuscarGpsUsuario');
+
     const nome = inputNomeMedicamento.value.trim();
     containerResultados.innerHTML = '';
-    listaUbsCompleta = []; 
+    listaUbsCompleta = [];
     // --- MODIFICAÇÃO RF07 ---
     medicamentoBuscado = null; // Limpa o nome do medicamento anterior
-    // --- FIM DA MODIFICAÇÃO ---
     if (btnBuscarGps) btnBuscarGps.style.display = 'none';
 
     if (!nome) {
@@ -310,19 +293,17 @@ async function handleSearch(e) {
     }
 
     mensagemStatus.textContent = 'Buscando...';
-    document.getElementById('mapaUbs').style.display = 'none'; 
+    document.getElementById('mapaUbs').style.display = 'none';
 
     try {
         // A API agora retorna a disponibilidade calculada (RF06 + RF07)
         const ubsRetornadas = await api.buscarMedicamento(nome);
-        
+
         if (ubsRetornadas && ubsRetornadas.length > 0) {
             mensagemStatus.textContent = `Resultados para "${nome}":`;
-            listaUbsCompleta = ubsRetornadas; 
+            listaUbsCompleta = ubsRetornadas;
             // --- ADIÇÃO RF07 ---
             medicamentoBuscado = nome; // Salva o nome para usar no botão "Reservar"
-            // --- FIM DA ADIÇÃO ---
-
             if (btnBuscarGps) {
                 btnBuscarGps.style.display = 'block';
                 btnBuscarGps.textContent = 'Ordenar pela localização (GPS)';
@@ -344,7 +325,6 @@ async function handleSearch(e) {
     }
 }
 
-
 /**
  * Inicializa os event listeners da tela de busca do usuário.
  */
@@ -355,17 +335,17 @@ export function initUsuarioBusca() {
     if (formularioBusca) {
         formularioBusca.addEventListener('submit', handleSearch);
     }
-    
+
     if (btnBuscarGpsUsuario) {
         btnBuscarGpsUsuario.addEventListener('click', () => {
              if (listaUbsCompleta.length > 0) {
                  iniciarBuscaGps();
              } else {
-                 alert('Busque um medicamento primeiro.');
+                 exibirToast('Busque um medicamento primeiro.', true);
              }
         });
     }
-    
+
     const mapaUbsDiv = document.getElementById('mapaUbs');
     if (mapaUbsDiv) {
         mapaUbsDiv.style.display = 'none';

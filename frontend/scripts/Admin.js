@@ -33,7 +33,6 @@ const funcoesRecarregarAba = {
     'auditoria': carregarLogs,
 };
 
-
 document.addEventListener('DOMContentLoaded', () => {
     // --- Autenticação e Inicialização ---
     const usuarioAtual = verificarAutenticacao();
@@ -55,12 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const permissoes = {
-            // --- INÍCIO DA MODIFICAÇÃO RF05/RF08 ---
             'admin': ['usuarios', 'medicamentos', 'ubs', 'farmaceuticos', 'validacao', 'relatorios', 'auditoria'],
             'farmaceutico': ['validacao'], // Pode validar receita (RF05.5) e registrar retirada (RF05.6)
             'gestor_estoque': ['medicamentos'], // Pode ver medicamentos/estoque
             'gestor_ubs': ['ubs', 'medicamentos', 'validacao', 'relatorios'] // Modificado RF09 e RF5.6
-            // --- FIM DA MODIFICAÇÃO RF05/RF08 ---
         };
 
         // Esconde todas as abas e conteúdos primeiro
@@ -70,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
 
         const abasVisiveis = permissoes[perfil] || [];
-        
+
         // Mostra as abas permitidas
         abasVisiveis.forEach(nomeAba => {
             if (abas[nomeAba]) {
@@ -110,20 +107,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.btn-aba').forEach(aba => {
         aba.addEventListener('click', () => {
             const nomeAba = aba.dataset.aba;
-            
+
             // --- Se a aba já está ativa, não faz nada ---
             if (aba.classList.contains('ativo')) return;
 
             document.querySelectorAll('.btn-aba').forEach(a => a.classList.remove('ativo'));
             document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.remove('ativo'));
-            
+
             aba.classList.add('ativo');
             const conteudoId = `conteudo-${nomeAba}`;
             const conteudoEl = document.getElementById(conteudoId);
             if (conteudoEl) {
                 conteudoEl.classList.add('ativo');
             }
-            
+
             // --- MODIFICADO: Chama a função de recarregar dados CADA VEZ que a aba é clicada ---
             const recarregarFn = funcoesRecarregarAba[nomeAba];
             if (recarregarFn) {
@@ -134,10 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Inicialização dos Módulos ---
     configurarVisibilidadeAbas(usuarioAtual.perfil);
-    
+
     // Inicializa o módulo de perfil (que cuida do botão "Meu Perfil")
     initAdminPerfil(usuarioAtual);
-    
+
     // Adiciona listeners para fechar modais
     document.querySelectorAll('.fechar-modal').forEach(btn => btn.addEventListener('click', fecharTodosModais));
     document.getElementById('btnCancelarConfirmacao').addEventListener('click', fecharTodosModais);
